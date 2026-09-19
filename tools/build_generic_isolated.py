@@ -158,7 +158,7 @@ def read_coexist(paths, targets):
         overlap = selected_ids & existing_ids
         if overlap:
             raise ValueError("Coexisting package selects the same Kit: " + ", ".join(sorted(overlap)))
-        for row in manifest["mapping"]:
+        for row in [*manifest["mapping"], *manifest.get("preserved_unbound_mapping", [])]:
             value, kind = int(row["target"], 16), int(row["type"], 16)
             if kind not in archive.KINDS or not 0 < value < (1 << 64):
                 raise ValueError(f"Invalid coexisting resource mapping: {path}")
@@ -233,7 +233,7 @@ def open_lane(source, lane):
 
 
 def write_archive(source, destination, table, original, relocated, payloads, sizes):
-    destination.parent.mkdir(parents=True)
+    destination.parent.mkdir(parents=True, exist_ok=True)
     for lane, suffix in enumerate(archive.SUFFIXES):
         with open_lane(source, lane) as before, Path(str(destination) + suffix).open("xb") as after:
             if lane == 0:

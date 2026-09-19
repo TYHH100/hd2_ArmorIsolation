@@ -60,6 +60,17 @@ class GenericUiTests(unittest.TestCase):
         self.app._set_busy(False, "done")
         self.assertTrue(self.app.generate_button.instate(["!disabled"]))
 
+    def test_modular_analysis_keeps_target_choice_explicit_and_reports_options(self):
+        self.app.selected.add("00000001")
+        self.app.events.put(("analyzed", {"source_kind": "modular",
+                             "modular": {"patches": [{"path": "base"}, {"path": "materials"}],
+                                         "option_count": 3},
+                             "candidates": list(self.app.candidates.values())}))
+        self.app._drain_events()
+        self.assertEqual(self.app.selected, set())
+        self.assertTrue(self.app.generate_button.instate(["disabled"]))
+        self.assertIn("2 个补丁，3 个选项", self.app.log.get("1.0", "end"))
+
 
 if __name__ == "__main__":
     unittest.main()

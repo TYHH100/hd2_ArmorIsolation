@@ -161,6 +161,9 @@ class GenericBuilderTests(unittest.TestCase):
             reserved, records = builder.read_coexist([path], [kit(2, 10)])
             self.assertEqual(reserved, {0x1234567800000001})
             self.assertEqual(len(records), 1)
+            value["preserved_unbound_mapping"] = [{"target": "2234567800000001", "type": f"{archive.UNIT:016x}"}]
+            path.write_text(json.dumps(value), encoding="utf-8")
+            self.assertIn(0x2234567800000001, builder.read_coexist([path], [kit(2, 10)])[0])
             with patch.object(archive, "murmur64a", side_effect=[0x1234567800000002, 0x8765432100000001]):
                 _, _, rows, _ = builder.make_resource_mappings([(kit(2, 10), {(archive.UNIT, 10)})], reserved, "abc")
             self.assertEqual(rows[0]["target"], "8765432100000001")

@@ -96,7 +96,7 @@ class ArmorIsolationApp:
         paths = ttk.Frame(outer)
         paths.grid(row=1, column=0, sticky="ew")
         paths.columnconfigure(1, weight=1)
-        self._path_row(paths, 0, "source", "模组补丁", source=True)
+        self._path_row(paths, 0, "source", "模组或补丁", source=True)
         self._path_row(paths, 1, "game", "游戏目录")
         self._path_row(paths, 2, "output", "输出目录")
         self.advanced_button = self._button(paths, "展开附加设置", self._toggle_advanced)
@@ -212,7 +212,7 @@ class ArmorIsolationApp:
         options = {"parent": self.root, "initialdir": str(initial), "title": "选择文件" if file else "选择目录"}
         if file:
             options["filetypes"] = [("JSON 文件", "*.json"), ("所有文件", "*.*")] if key == "kits" else [
-                ("模组补丁", "*.patch_*"), ("所有文件", "*.*")]
+                ("模组清单", "manifest.json"), ("模组补丁", "*.patch_*"), ("所有文件", "*.*")]
         result = filedialog.askopenfilename(**options) if file else filedialog.askdirectory(**options)
         if result:
             self.values[key].set(result)
@@ -327,7 +327,7 @@ class ArmorIsolationApp:
             self._render_candidates()
 
     def _capture_paths(self) -> dict[str, Path | None]:
-        for key, label in (("source", "模组补丁"), ("game", "游戏目录"), ("reader_tools", "资源读取工具"),
+        for key, label in (("source", "模组或补丁"), ("game", "游戏目录"), ("reader_tools", "资源读取工具"),
                            ("kits", "Kit 数据"), ("output", "输出目录")):
             if not self.values[key].get().strip():
                 raise ValueError(f"{label}不能为空")
@@ -413,6 +413,10 @@ class ArmorIsolationApp:
                     self._set_busy(False, "分析完成" if self.candidates else "未找到候选套装")
                     self._render_candidates()
                     self._append_log(self.candidate_summary.get())
+                    if value.get("source_kind") == "modular":
+                        modular = value.get("modular", {})
+                        self._append_log(f"选项模组：{len(modular.get('patches', []))} 个补丁，"
+                                         f"{modular.get('option_count', 0)} 个选项；保留原目录，配件继续在管理器中选择。")
                 elif kind == "generated":
                     self.package = value
                     self._set_busy(False, "隔离包已生成")
@@ -442,7 +446,7 @@ class ArmorIsolationApp:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="护甲资源隔离桌面工具")
-    parser.add_argument("--source", default="", help="补丁文件或只含一个主补丁的目录")
+    parser.add_argument("--source", default="", help="模组目录、旧版/V1 manifest.json 或主 patch 文件")
     parser.add_argument("--smoke-test", action="store_true")
     args = parser.parse_args()
     backend = importlib.import_module("armor_isolation_tool")

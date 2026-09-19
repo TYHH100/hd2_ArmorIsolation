@@ -72,6 +72,8 @@ DiagnosticOnly=0
 
 配置解析覆盖多包、重复/损坏配置、归属和字段、容量限制、指针稳定等边界；事务测试覆盖声明式目标的源数据守卫、披风与标量保留、独立指针发布。游戏内验证另行进行，本轮不部署。
 
-2026-09-19 验证结果：41 项 Python 测试通过；通用配置/事务两项原生测试，以及在全新目录重编的 CM-14/B-01 两项回归通过。旧补丁兼容组经校验器报告 `packages=2 targets=10 resources=157 fields=119 required=255`。重新生成的两包使用相同 DLL，SHA-256 均为 `65525e0d7af5f088d628a84275f2e29139542fb4235a24652348cbb4f7f4fcf7`，详见[样本验证记录](generic-sample-validation.json)；临时测试大包和构建目录已清理。
+2026-09-19 初版验证结果：41 项 Python 测试通过；通用配置/事务两项原生测试，以及在全新目录重编的 CM-14/B-01 两项回归通过。旧补丁兼容组经校验器报告 `packages=2 targets=10 resources=157 fields=119 required=255`。初版两包使用相同 DLL，SHA-256 均为 `65525e0d7af5f088d628a84275f2e29139542fb4235a24652348cbb4f7f4fcf7`，详见[历史样本验证记录](generic-sample-validation.json)；临时测试大包和构建目录已清理。
+
+同日模块化扩展修正了 TG-122 头盔带默认 Slot1 披风的校验：允许保留披风元数据，但不新增披风写入。新版 DLL SHA-256 为 `1bd484fb5ea14ea3380e1d0db2cd752a25209c17316ae014172333d03342b300`；JSON schema 与旧私有资源 ID 不变。新版两项原生测试、CM14/B01 旧配置兼容检查及 TG-122/4K/8K 两个真实模块化样本验证通过。Python 全套 76 项中 75 通过、1 项因本机创建 symlink 权限不足跳过，Windows reparse 拒绝检查通过；GUI 启动检查通过。详见[模块化处理与验证](modular-isolation-tool.md)。
 
 JSON 库使用官方 [nlohmann/json 3.12.0](https://github.com/nlohmann/json/releases/tag/v3.12.0)，单头文件 SHA-256 为 `aaf127c04cb31c406e5b04a63f1ae89369fccde6d8fa7cdda1ed4f32dfc5de63`，已按官方公布值核对，MIT 许可随源文件保留。ReShade 接口依据 [6.5.1 SDK](https://github.com/crosire/reshade/tree/v6.5.1/include)。

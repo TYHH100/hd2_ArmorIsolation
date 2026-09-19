@@ -1,0 +1,84 @@
+{
+  "sample": "milltina 修女 替换tg-122",
+  "source": "G:\\Temp\\Githud\\hd2_mods-test\\1\\milltina 修女 替换tg-122",
+  "targets": [
+    "a45385cd",
+    "c1611ac9"
+  ],
+  "game_runtime_verified": false,
+  "temporary_packages_removed": true,
+  "runtime_mode": "universal_runtime",
+  "source_patch_count": 9,
+  "binary_accessory_count": 5,
+  "head_variant_count": 3,
+  "option_combination_count": 96,
+  "package_id": "556fb58b7abf8c3e290ae6fc",
+  "source_file_count": 29,
+  "source_directory_count": 10,
+  "all_relative_paths_preserved": true,
+  "all_non_patch_bytes_preserved": true,
+  "original_manifest_bytes_preserved": true,
+  "private_resource_counts": {
+    "texture": 28,
+    "material": 8,
+    "unit": 23
+  },
+  "component_variants": [
+    {
+      "patch": "内裤/9ba626afa44a3aa3.patch_0",
+      "unit_count": 2,
+      "same_private_ids_as_base": true,
+      "distinct_main_and_gpu_preserved": true
+    },
+    {
+      "patch": "内裤链珠/9ba626afa44a3aa3.patch_0",
+      "unit_count": 2,
+      "same_private_ids_as_base": true,
+      "distinct_main_and_gpu_preserved": true
+    },
+    {
+      "patch": "头/去头盖/9ba626afa44a3aa3.patch_0",
+      "unit_count": 1,
+      "same_private_ids_as_base": true,
+      "distinct_main_and_gpu_preserved": true
+    },
+    {
+      "patch": "头/去长发/9ba626afa44a3aa3.patch_0",
+      "unit_count": 1,
+      "same_private_ids_as_base": true,
+      "distinct_main_and_gpu_preserved": true
+    },
+    {
+      "patch": "翅膀/9ba626afa44a3aa3.patch_0",
+      "unit_count": 2,
+      "same_private_ids_as_base": true,
+      "distinct_main_and_gpu_preserved": true
+    },
+    {
+      "patch": "胸衣/9ba626afa44a3aa3.patch_0",
+      "unit_count": 2,
+      "same_private_ids_as_base": true,
+      "distinct_main_and_gpu_preserved": true
+    },
+    {
+      "patch": "腰裙/9ba626afa44a3aa3.patch_0",
+      "unit_count": 2,
+      "same_private_ids_as_base": true,
+      "distinct_main_and_gpu_preserved": true
+    }
+  ],
+  "shared_material_patch_count": 1,
+  "source_gpu_file_bytes": 546745072,
+  "output_gpu_file_bytes": 546745120,
+  "all_stream_gpu_resource_payloads_equal": true,
+  "required_resources_available_from_base_and_shared": true,
+  "equivalent_compositions_checked": 192,
+  "simulated_precedence": [
+    "first_selected_patch_wins",
+    "last_selected_patch_wins"
+  ],
+  "actual_game_precedence_verified": false,
+  "runtime_configuration_validated": true,
+  "addon_sha256": "1bd484fb5ea14ea3380e1d0db2cd752a25209c17316ae014172333d03342b300",
+  "source_unchanged": true
+}

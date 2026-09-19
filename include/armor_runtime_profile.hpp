@@ -189,7 +189,9 @@ inline void parse_target(const json &input, const std::string &package_id, Profi
             keys(piece, {"slot", "type", "weight", "tone_variations", "resources"});
             ExpectedPiece expected{body_type, integer(piece.at("slot"), 9), integer(piece.at("type"), 2),
                                    integer(piece.at("weight"), 2), integer(piece.at("tone_variations"), 255), 0};
-            if ((target.type == 1 && expected.slot != 0) || (target.type == 0 && expected.slot == 0))
+            // Some helmet Kits also carry an unchanged default cape (TG-122).
+            if ((target.type == 1 && expected.slot != 0 && expected.slot != 1) ||
+                (target.type == 0 && expected.slot == 0))
                 reject("piece slot does not belong to the armor or helmet Kit type");
             const auto &references = piece.at("resources");
             keys(references, {"unit", "material_lut", "pattern_lut", "cape_lut", "cape_gradient", "cape_nac",

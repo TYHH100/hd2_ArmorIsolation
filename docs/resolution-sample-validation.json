@@ -1,0 +1,99 @@
+{
+  "sample": "shinano Chromium替换CM-21战壕护理员 CE-07拆除专家_5dc4aef9",
+  "source": "G:\\Temp\\HD2ModManager\\Mods\\Mods\\shinano Chromium替换CM-21战壕护理员 CE-07拆除专家_5dc4aef9",
+  "targets": [
+    "d52bb413",
+    "bd1e5e84",
+    "5a17d6d6",
+    "65c07df2"
+  ],
+  "game_runtime_verified": false,
+  "temporary_packages_removed": true,
+  "runtime_mode": "universal_runtime",
+  "source_patch_count": 3,
+  "mutually_exclusive_resolution_branches": [
+    "4K",
+    "8K"
+  ],
+  "package_id": "ee6ca9254c520f6e36dc704d",
+  "source_file_count": 14,
+  "source_directory_count": 4,
+  "all_relative_paths_preserved": true,
+  "all_non_patch_bytes_preserved": true,
+  "original_manifest_bytes_preserved": true,
+  "private_resource_counts": {
+    "texture": 3,
+    "material": 1,
+    "unit": 54
+  },
+  "texture_slot_aliases": [
+    {
+      "slot": "4c567810",
+      "source_variants": [
+        "3e1e14c2266f7337",
+        "114cab1f3dd1f68f"
+      ],
+      "private_id": "272bf7d7cd5fa0fe",
+      "gpu_bytes": [
+        16777216,
+        67108864
+      ]
+    },
+    {
+      "slot": "90b84a53",
+      "source_variants": [
+        "5e666342f28d9a26",
+        "c930fcf0d7697f6a"
+      ],
+      "private_id": "39126dbf6f573a13",
+      "gpu_bytes": [
+        65536,
+        65536
+      ]
+    },
+    {
+      "slot": "e67ac0c7",
+      "source_variants": [
+        "1729c9d61ea34e28",
+        "7e4db14a8fb37ba7"
+      ],
+      "private_id": "642eaf9db6c5b996",
+      "gpu_bytes": [
+        16777216,
+        67108864
+      ]
+    }
+  ],
+  "resolution_selections": [
+    {
+      "resolution": "4K",
+      "selected_patches": [
+        "模型/9ba626afa44a3aa3.patch_29",
+        "贴图/4K/9ba626afa44a3aa3.patch_31"
+      ],
+      "selected_gpu_file_bytes": 107346432,
+      "runtime_required_satisfied": true
+    },
+    {
+      "resolution": "8K",
+      "selected_patches": [
+        "模型/9ba626afa44a3aa3.patch_29",
+        "贴图/8K/9ba626afa44a3aa3.patch_30"
+      ],
+      "selected_gpu_file_bytes": 208009728,
+      "runtime_required_satisfied": true
+    }
+  ],
+  "source_gpu_file_bytes": 211189912,
+  "output_gpu_file_bytes": 241629696,
+  "all_stream_gpu_resource_payloads_equal": true,
+  "equivalent_compositions_checked": 4,
+  "simulated_precedence": [
+    "first_selected_patch_wins",
+    "last_selected_patch_wins"
+  ],
+  "actual_game_precedence_verified": false,
+  "runtime_configuration_validated": true,
+  "addon_sha256": "1bd484fb5ea14ea3380e1d0db2cd752a25209c17316ae014172333d03342b300",
+  "source_unchanged": true
+}

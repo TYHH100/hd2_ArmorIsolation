@@ -146,6 +146,15 @@ void run()
     fixed_style["mapping"][1]["kit"] = "00000001";
     fixed_style["mapping"][2]["kit"] = "00000001";
     check(load_documents({document(fixed_style)}, output, error), "fixed CM14-style owned materials/textures rejected");
+    auto helmet_with_cape = valid_profile();
+    auto cape = helmet_with_cape["selected_kit_metadata"][0]["bodies"][0]["pieces"][0];
+    cape["slot"] = 1;
+    cape["resources"]["unit"] = "7000000000000001";
+    helmet_with_cape["selected_kit_metadata"][0]["bodies"][0]["pieces"].push_back(cape);
+    check(load_documents({document(helmet_with_cape)}, output, error), "helmet default cape rejected");
+    check(output.targets[0].expected_unit_changes == 1 && output.targets[0].piece_count == 2 &&
+          output.piece_fields.size() == 2 && output.resources.size() == 3,
+          "helmet default cape incorrectly added to isolation writes");
     mutate_refuses([](json &v) { v["expected_game_version"] = "1.0.0.1"; }, "wrong game version accepted");
     mutate_refuses([](json &v) { v["expected_game_dll_sha256"] = std::string(64, 'a'); }, "wrong game hash accepted");
     mutate_refuses([](json &v) { v["schema"] = "hd2-armor-runtime/2"; }, "wrong runtime schema accepted");
@@ -173,6 +182,7 @@ void run()
     mutate_refuses([](json &v) { v["selected_kit_metadata"][0]["type"] = 0;
         v["selected_kit_metadata"][0]["bodies"][0]["pieces"][0]["slot"] = 1; }, "cape-only target accepted");
     mutate_refuses([](json &v) { v["selected_kit_metadata"][0]["bodies"][0]["pieces"][0]["slot"] = 2; }, "helmet using armor slot accepted");
+    mutate_refuses([](json &v) { v["selected_kit_metadata"][0]["bodies"][0]["pieces"][0]["slot"] = 1; }, "cape-only helmet accepted");
     mutate_refuses([](json &v) { v["mapping"] = json::array(); for (std::size_t i = 0; i <= max_resources; ++i)
         v["mapping"].push_back(json::object()); }, "oversized resource array accepted");
 

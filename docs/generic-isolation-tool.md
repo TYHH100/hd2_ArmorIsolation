@@ -9,7 +9,7 @@
 ## 使用入口
 
 1. 双击项目根目录 `Start-ArmorIsolation.cmd`。也可在 PowerShell 执行 `Start-ArmorIsolation.ps1`，用 `-Python` 指定解释器，用 `-Source` 预填源模组。
-2. 选择一个主 `.patch_N` 文件，或只含一个主补丁的目录。stream/GPU 从同名文件读取，输入只读。
+2. 选择旧版或 V1 模组根目录或其中的 `manifest.json`，保留整套选项目录；也可继续选择单个主 `.patch_N` 文件或只含一个主补丁的目录。stream/GPU 从同名文件读取，输入只读。
 3. 核对游戏和输出目录。附加设置可调整资源读取器、Kit 数据、名称目录以及准备并存的隔离包 `manifest.json`。
 4. 点击“分析候选”，按名称、Kit ID、部位和 Unit 覆盖数量选择实际目标。体甲和头盔分别选择，共享资源命中的装备不会自动全选。
 5. 点击“生成隔离包”。完整输出在 `dist/generated/armor-<24位包ID>`，已有同名结果不覆盖；失败清理本次临时目录。
@@ -25,9 +25,12 @@
 | 单补丁三路数据，类型为 Unit/Material/Texture | 解析并校验 |
 | 输入覆盖所选体甲或头盔全部非披风 Unit | 继续依赖检查和生成 |
 | 模组内多个目标共用材质/纹理 | 共用一组模组私有资源 |
+| V1 模组的本体、外挂材质与配件覆盖 | 保留目录和原清单，整套组件使用一致私有映射 |
+| 缺 Version 的旧版清单 | 字符串 Options 为一组多选一；无/null/空 Options 读取根目录补丁 |
+| 单选 4K/8K 使用不同纹理 ID | 材质槽结构与独占引用检查通过后归一逻辑纹理，仍只加载所选分支 |
 | 不同模组改同一原资源 ID，目标 Kit 不同 | 按包分配私有 ID，允许并存 |
 | 多个包控制同一 Kit | 生成时与启动时均可检测；通用插件拒绝冲突组 |
-| 部分 Unit、纯材质/纹理、多主补丁、披风或未知类型 | 本版不支持，明确拒绝 |
+| 部分 Unit、纯材质/纹理、无清单的多主补丁、披风或未知类型 | 本版不支持，明确拒绝 |
 | 外部原版材质再指向模组修改的纹理/基材质 | 需要额外依赖克隆，本版拒绝 |
 | 游戏 DLL 或 Kit 快照不同 | 拒绝沿用旧布局 |
 
@@ -43,11 +46,11 @@
 6. 从清单导出 `runtime/ArmorIsolation/<包ID>.json`。绑定目标元数据、typed 映射、允许修改的 Piece 字段和各 Kit 实际依赖；JSON 不提供任意地址、RVA 或可执行脚本。
 7. 使用与插件相同加载器的原生校验器检查配置；提供并存清单时一起转换并整组检查。成功后附带同一个预编译 DLL、INI、校验器和说明，再发布最终输出目录。
 
-`generated/generic_resource_map.hpp` 仍作为离线映射导出保留，不参与通用插件编译。每个生成包的 `addon.mode` 为 `universal_runtime`，对应 JSON 路径与 DLL SHA 记入 manifest；`package_files` 记录所有输出文件的大小和哈希。
+单补丁模式仍生成 `generated/generic_resource_map.hpp` 离线映射，不参与通用插件编译。模块化模式的逐补丁映射直接记录在外层 manifest；完整处理流程见[保留选项目录的隔离生成](modular-isolation-tool.md)。每个生成包的 `addon.mode` 为 `universal_runtime`，对应 JSON 路径与 DLL SHA 记入 manifest；`package_files` 记录所有输出文件的大小和哈希。
 
 ## 部署与迁移
 
-生成工具不写游戏目录。退出游戏后通过管理器安装 `patch/` 三件套并分配连续编号，将 `runtime/` 内容按目录结构放入游戏 `bin/`。固定 DLL 只需一份，多个包各放自己的 JSON。
+生成工具不写游戏目录。单补丁模式退出游戏后通过管理器安装 `patch/` 三件套；选项模组导入输出的 `mod/<原目录名>/`，仍在管理器中勾选配件，每个 SubOptions 组单选。不要把所有子目录补丁同时启用，也不要导入外层隔离报告。将 `runtime/` 内容按目录结构放入游戏 `bin/`，固定 DLL 只需一份，多个包各放自己的 JSON。
 
 旧 `CM14Isolation.addon64`、`B01Isolation.addon64` 和 `ArmorIsolation_<包ID>.addon64` 不能与通用插件同时使用。现有隔离补丁可以从对应 manifest 导出 JSON，无需重打包或更改私有 ID；详见[通用插件与旧包迁移](universal-reshade-runtime.md)。
 
@@ -65,6 +68,8 @@
 
 开发者重编固定插件使用 `tools/build_universal_addon.ps1`；脚本新建自有构建目录，运行原生配置/事务测试，生成发布哈希清单后清理临时构建目录。没有新 DLL 的游戏验收记录时，不能因自动测试通过而将生成包标成已实测。
 
-后续扩展仍按部分模型/纯纹理的依赖克隆、多补丁优先级、安装事务逐项推进。
+后续扩展仍按部分模型/纯纹理的依赖克隆、更多可选依赖结构、安装事务逐项推进。
+
+模块化输入的原始参考见 [TG-122 配件与外挂材质分析](modular-tg122-reference.md)，现已实现保留结构的多补丁生成。原清单和非补丁文件字节保留；未选择目标的资源也另用私有 ID 保存，不留下旧资源覆盖。每个模组一份有效运行时 JSON，模型配件与分辨率切换不需要重新生成 JSON，仍需完整退出游戏后部署并重启。
 
 格式参考：[Filediver Unit](https://github.com/xypwn/filediver/blob/70f3447cd415c964e0bd29ff0770b97a4d0f160d/stingray/unit/unit.go)、[Material](https://github.com/xypwn/filediver/blob/70f3447cd415c964e0bd29ff0770b97a4d0f160d/stingray/unit/material/material.go)、[ReShade 6.5.1 SDK](https://github.com/crosire/reshade/tree/v6.5.1/include)。本机 Kit 与修复证据见固定实验记录。
