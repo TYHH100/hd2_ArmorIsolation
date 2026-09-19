@@ -1,0 +1,236 @@
+{"module": "game.dll", "pid": 24496, "base": "0x7ffb3d320000", "timestamp": "0x6a86132e", "image_size": "0x3a6b000", "function_entries": 152914}
+CODE_RANGE 0x1432870..0x1432895
+01432870 4881ec38010000           sub rsp, 0x138
+01432877 488b059217f600           mov rax, qword ptr [rip + 0xf61792] ; RVA 0x2394010
+0143287e 4833c4                   xor rax, rsp
+01432881 4889842420010000         mov qword ptr [rsp + 0x120], rax
+01432889 488b0590466a01           mov rax, qword ptr [rip + 0x16a4690] ; RVA 0x2ad6f20
+01432890 4885c0                   test rax, rax
+01432893 757c                     jne 0x1432911
+CODE_RANGE 0x1342820..0x13428bf
+01342820 4053                     push rbx
+01342822 4883ec20                 sub rsp, 0x20
+01342826 8bd9                     mov ebx, ecx
+01342828 b968000000               mov ecx, 0x68
+0134282d e80eeb4f00               call 0x1841340
+01342832 488bd0                   mov rdx, rax
+01342835 4885c0                   test rax, rax
+01342838 747b                     je 0x13428b5
+0134283a 895808                   mov dword ptr [rax + 8], ebx
+0134283d 488d4820                 lea rcx, [rax + 0x20]
+01342841 81601c000000ff           and dword ptr [rax + 0x1c], 0xff000000
+01342848 81623c000000ff           and dword ptr [rdx + 0x3c], 0xff000000
+0134284f 81624c000000ff           and dword ptr [rdx + 0x4c], 0xff000000
+01342856 48894810                 mov qword ptr [rax + 0x10], rcx
+0134285a 33c9                     xor ecx, ecx
+0134285c 81625c000000ff           and dword ptr [rdx + 0x5c], 0xff000000
+01342863 894818                   mov dword ptr [rax + 0x18], ecx
+01342866 c6401f01                 mov byte ptr [rax + 0x1f], 1
+0134286a 488d0507e7d200           lea rax, [rip + 0xd2e707] ; RVA 0x2070f78
+01342871 488902                   mov qword ptr [rdx], rax
+01342874 488d4240                 lea rax, [rdx + 0x40]
+01342878 48894230                 mov qword ptr [rdx + 0x30], rax
+0134287c 488d4250                 lea rax, [rdx + 0x50]
+01342880 48894240                 mov qword ptr [rdx + 0x40], rax
+01342884 488d4260                 lea rax, [rdx + 0x60]
+01342888 48894250                 mov qword ptr [rdx + 0x50], rax
+0134288c 488bc2                   mov rax, rdx
+0134288f 884a20                   mov byte ptr [rdx + 0x20], cl
+01342892 48894a28                 mov qword ptr [rdx + 0x28], rcx
+01342896 894a38                   mov dword ptr [rdx + 0x38], ecx
+01342899 c6423f01                 mov byte ptr [rdx + 0x3f], 1
+0134289d 894a48                   mov dword ptr [rdx + 0x48], ecx
+013428a0 c6424f01                 mov byte ptr [rdx + 0x4f], 1
+013428a4 894a58                   mov dword ptr [rdx + 0x58], ecx
+013428a7 c6425f01                 mov byte ptr [rdx + 0x5f], 1
+013428ab 48894a60                 mov qword ptr [rdx + 0x60], rcx
+013428af 4883c420                 add rsp, 0x20
+013428b3 5b                       pop rbx
+013428b4 c3                       ret 
+013428b5 33c9                     xor ecx, ecx
+013428b7 8bc1                     mov eax, ecx
+013428b9 4883c420                 add rsp, 0x20
+013428bd 5b                       pop rbx
+013428be c3                       ret 
+CODE_RANGE 0x1342b40..0x1342c04
+01342b40 48895c2408               mov qword ptr [rsp + 8], rbx
+01342b45 4889742410               mov qword ptr [rsp + 0x10], rsi
+01342b4a 48897c2418               mov qword ptr [rsp + 0x18], rdi
+01342b4f 4c89742420               mov qword ptr [rsp + 0x20], r14
+01342b54 4157                     push r15
+01342b56 4883ec40                 sub rsp, 0x40
+01342b5a 4c8bf1                   mov r14, rcx
+01342b5d 498bd9                   mov rbx, r9
+01342b60 b948000000               mov ecx, 0x48
+01342b65 498bf8                   mov rdi, r8
+01342b68 4c8bfa                   mov r15, rdx
+01342b6b e8a03ca900               call 0x1dd6810
+01342b70 0f2803                   movaps xmm0, xmmword ptr [rbx]
+01342b73 488bcf                   mov rcx, rdi
+01342b76 0f11442430               movups xmmword ptr [rsp + 0x30], xmm0
+01342b7b 488bf0                   mov rsi, rax
+01342b7e 48c744242000000000       mov qword ptr [rsp + 0x20], 0
+01342b87 c744242800000000         mov dword ptr [rsp + 0x28], 0
+01342b8f e83c0b4f00               call 0x18336d0
+01342b94 8bd8                     mov ebx, eax
+01342b96 e8d5fc0e00               call 0x1432870
+01342b9b 0f10442430               movups xmm0, xmmword ptr [rsp + 0x30]
+01342ba0 895e08                   mov dword ptr [rsi + 8], ebx
+01342ba3 488bd6                   mov rdx, rsi
+01342ba6 816624000000ff           and dword ptr [rsi + 0x24], 0xff000000
+01342bad 48894610                 mov qword ptr [rsi + 0x10], rax
+01342bb1 488d4628                 lea rax, [rsi + 0x28]
+01342bb5 48894618                 mov qword ptr [rsi + 0x18], rax
+01342bb9 488d05d02ecf00           lea rax, [rip + 0xcf2ed0] ; RVA 0x2035a90
+01342bc0 c7462000000000           mov dword ptr [rsi + 0x20], 0
+01342bc7 c6462701                 mov byte ptr [rsi + 0x27], 1
+01342bcb 0f114628                 movups xmmword ptr [rsi + 0x28], xmm0
+01342bcf 488906                   mov qword ptr [rsi], rax
+01342bd2 0f10442420               movups xmm0, xmmword ptr [rsp + 0x20]
+01342bd7 0f114638                 movups xmmword ptr [rsi + 0x38], xmm0
+01342bdb 498b0e                   mov rcx, qword ptr [r14]
+01342bde e8cd904d00               call 0x181bcb0
+01342be3 488b5c2450               mov rbx, qword ptr [rsp + 0x50]
+01342be8 498bc7                   mov rax, r15
+01342beb 488b7c2460               mov rdi, qword ptr [rsp + 0x60]
+01342bf0 4c8b742468               mov r14, qword ptr [rsp + 0x68]
+01342bf5 498937                   mov qword ptr [r15], rsi
+01342bf8 488b742458               mov rsi, qword ptr [rsp + 0x58]
+01342bfd 4883c440                 add rsp, 0x40
+01342c01 415f                     pop r15
+01342c03 c3                       ret 
+CODE_RANGE 0x1298b54..0x1298b8a
+01298b54 4883ec28                 sub rsp, 0x28
+01298b58 488b05f1bf8301           mov rax, qword ptr [rip + 0x183bff1] ; RVA 0x2ad4b50
+01298b5f 4885c0                   test rax, rax
+01298b62 7521                     jne 0x1298b85
+01298b64 4c8d05559d0a00           lea r8, [rip + 0xa9d55] ; RVA 0x13428c0
+01298b6b 488d15ae9c0a00           lea rdx, [rip + 0xa9cae] ; RVA 0x1342820
+01298b72 488d0dffe6d800           lea rcx, [rip + 0xd8e6ff] ; RVA 0x2027278 'testament.MenuTabViewArmor'
+01298b79 e8a20f5800               call 0x1819b20
+01298b7e 488905cbbf8301           mov qword ptr [rip + 0x183bfcb], rax ; RVA 0x2ad4b50
+01298b85 4883c428                 add rsp, 0x28
+01298b89 c3                       ret 
+CODE_RANGE 0x1298a10..0x1298aa2
+01298a10 48895c2410               mov qword ptr [rsp + 0x10], rbx
+01298a15 57                       push rdi
+01298a16 4883ec20                 sub rsp, 0x20
+01298a1a 488bd9                   mov rbx, rcx
+01298a1d 488bfa                   mov rdi, rdx
+01298a20 488b8968010000           mov rcx, qword ptr [rcx + 0x168]
+01298a27 483bca                   cmp rcx, rdx
+01298a2a 746b                     je 0x1298a97
+01298a2c 4885d2                   test rdx, rdx
+01298a2f 7412                     je 0x1298a43
+01298a31 488b4220                 mov rax, qword ptr [rdx + 0x20]
+01298a35 488d4a20                 lea rcx, [rdx + 0x20]
+01298a39 ff5018                   call qword ptr [rax + 0x18]
+01298a3c 488b8b68010000           mov rcx, qword ptr [rbx + 0x168]
+01298a43 4885c9                   test rcx, rcx
+01298a46 740b                     je 0x1298a53
+01298a48 488b4120                 mov rax, qword ptr [rcx + 0x20]
+01298a4c 4883c120                 add rcx, 0x20
+01298a50 ff5020                   call qword ptr [rax + 0x20]
+01298a53 4889bb68010000           mov qword ptr [rbx + 0x168], rdi
+01298a5a 488b4328                 mov rax, qword ptr [rbx + 0x28]
+01298a5e 4885c0                   test rax, rax
+01298a61 7434                     je 0x1298a97
+01298a63 4883f801                 cmp rax, 1
+01298a67 750d                     jne 0x1298a76
+01298a69 488b4330                 mov rax, qword ptr [rbx + 0x30]
+01298a6d 0fb75022                 movzx edx, word ptr [rax + 0x22]
+01298a71 395030                   cmp dword ptr [rax + 0x30], edx
+01298a74 7421                     je 0x1298a97
+01298a76 488d0d1be8d800           lea rcx, [rip + 0xd8e81b] ; RVA 0x2027298 'PreviewArmor'
+01298a7d e81eaa5900               call 0x18334a0
+01298a82 4c8d442430               lea r8, [rsp + 0x30]
+01298a87 89442430                 mov dword ptr [rsp + 0x30], eax
+01298a8b 488bd3                   mov rdx, rbx
+01298a8e 488d4b28                 lea rcx, [rbx + 0x28]
+01298a92 e8599b4e00               call 0x17825f0
+01298a97 488b5c2438               mov rbx, qword ptr [rsp + 0x38]
+01298a9c 4883c420                 add rsp, 0x20
+01298aa0 5f                       pop rdi
+01298aa1 c3                       ret 
+CODE_RANGE 0x1298ac0..0x1298b52
+01298ac0 48895c2410               mov qword ptr [rsp + 0x10], rbx
+01298ac5 57                       push rdi
+01298ac6 4883ec20                 sub rsp, 0x20
+01298aca 488bd9                   mov rbx, rcx
+01298acd 488bfa                   mov rdi, rdx
+01298ad0 488b8970010000           mov rcx, qword ptr [rcx + 0x170]
+01298ad7 483bca                   cmp rcx, rdx
+01298ada 746b                     je 0x1298b47
+01298adc 4885d2                   test rdx, rdx
+01298adf 7412                     je 0x1298af3
+01298ae1 488b4220                 mov rax, qword ptr [rdx + 0x20]
+01298ae5 488d4a20                 lea rcx, [rdx + 0x20]
+01298ae9 ff5018                   call qword ptr [rax + 0x18]
+01298aec 488b8b70010000           mov rcx, qword ptr [rbx + 0x170]
+01298af3 4885c9                   test rcx, rcx
+01298af6 740b                     je 0x1298b03
+01298af8 488b4120                 mov rax, qword ptr [rcx + 0x20]
+01298afc 4883c120                 add rcx, 0x20
+01298b00 ff5020                   call qword ptr [rax + 0x20]
+01298b03 4889bb70010000           mov qword ptr [rbx + 0x170], rdi
+01298b0a 488b4328                 mov rax, qword ptr [rbx + 0x28]
+01298b0e 4885c0                   test rax, rax
+01298b11 7434                     je 0x1298b47
+01298b13 4883f801                 cmp rax, 1
+01298b17 750d                     jne 0x1298b26
+01298b19 488b4330                 mov rax, qword ptr [rbx + 0x30]
+01298b1d 0fb75022                 movzx edx, word ptr [rax + 0x22]
+01298b21 395030                   cmp dword ptr [rax + 0x30], edx
+01298b24 7421                     je 0x1298b47
+01298b26 488d0ddbdad800           lea rcx, [rip + 0xd8dadb] ; RVA 0x2026608 'EquippedArmor'
+01298b2d e86ea95900               call 0x18334a0
+01298b32 4c8d442430               lea r8, [rsp + 0x30]
+01298b37 89442430                 mov dword ptr [rsp + 0x30], eax
+01298b3b 488bd3                   mov rdx, rbx
+01298b3e 488d4b28                 lea rcx, [rbx + 0x28]
+01298b42 e8a99a4e00               call 0x17825f0
+01298b47 488b5c2438               mov rbx, qword ptr [rsp + 0x38]
+01298b4c 4883c420                 add rsp, 0x20
+01298b50 5f                       pop rdi
+01298b51 c3                       ret 
+CODE_RANGE 0x1298b94..0x1298c38
+01298b94 4053                     push rbx
+01298b96 4883ec30                 sub rsp, 0x30
+01298b9a 8364242800               and dword ptr [rsp + 0x28], 0
+01298b9f 488d054afeffff           lea rax, [rip - 0x1b6] ; RVA 0x12989f0
+01298ba6 4889442420               mov qword ptr [rsp + 0x20], rax
+01298bab 4c8d4c2420               lea r9, [rsp + 0x20]
+01298bb0 0f28442420               movaps xmm0, xmmword ptr [rsp + 0x20]
+01298bb5 488d542448               lea rdx, [rsp + 0x48]
+01298bba 660f7f442420             movdqa xmmword ptr [rsp + 0x20], xmm0
+01298bc0 488bd9                   mov rbx, rcx
+01298bc3 e8b89e0a00               call 0x1342a80
+01298bc8 8364242800               and dword ptr [rsp + 0x28], 0
+01298bcd 488d052cfeffff           lea rax, [rip - 0x1d4] ; RVA 0x1298a00
+01298bd4 4889442420               mov qword ptr [rsp + 0x20], rax
+01298bd9 4c8d4c2420               lea r9, [rsp + 0x20]
+01298bde 0f28442420               movaps xmm0, xmmword ptr [rsp + 0x20]
+01298be3 4c8d05aee6d800           lea r8, [rip + 0xd8e6ae] ; RVA 0x2027298 'PreviewArmor'
+01298bea 488d542448               lea rdx, [rsp + 0x48]
+01298bef 660f7f442420             movdqa xmmword ptr [rsp + 0x20], xmm0
+01298bf5 488bcb                   mov rcx, rbx
+01298bf8 e8439f0a00               call 0x1342b40
+01298bfd 8364242800               and dword ptr [rsp + 0x28], 0
+01298c02 488d05a7feffff           lea rax, [rip - 0x159] ; RVA 0x1298ab0
+01298c09 4889442420               mov qword ptr [rsp + 0x20], rax
+01298c0e 4c8d4c2420               lea r9, [rsp + 0x20]
+01298c13 0f28442420               movaps xmm0, xmmword ptr [rsp + 0x20]
+01298c18 4c8d05e9d9d800           lea r8, [rip + 0xd8d9e9] ; RVA 0x2026608 'EquippedArmor'
+01298c1f 488d542448               lea rdx, [rsp + 0x48]
+01298c24 660f7f442420             movdqa xmmword ptr [rsp + 0x20], xmm0
+01298c2a 488bcb                   mov rcx, rbx
+01298c2d e80e9f0a00               call 0x1342b40
+01298c32 4883c430                 add rsp, 0x30
+01298c36 5b                       pop rbx
+01298c37 c3                       ret 
+CODE_RANGE 0x1298a00..0x1298a08
+01298a00 488b8168010000           mov rax, qword ptr [rcx + 0x168]
+01298a07 c3                       ret 
+CODE_RANGE 0x1298ab0..0x1298ab8
+01298ab0 488b8170010000           mov rax, qword ptr [rcx + 0x170]
+01298ab7 c3                       ret 

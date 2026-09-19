@@ -1,0 +1,29 @@
+2026-09-19 read-only probe, PID 20640, before B01 installation
+BASELINE_CAPE ready
+PRIVATE_READY 0/204
+TARGET_READY kit=61b31723 0/36
+TARGET_READY kit=4f7fb2bd 0/36
+TARGET_READY kit=6351a9aa 0/36
+TARGET_READY kit=6d30f386 0/36
+TARGET_READY kit=261c4a52 0/15
+TARGET_READY kit=45d80a38 0/15
+TARGET_READY kit=b4027b70 0/15
+TARGET_READY kit=df8e4ada 0/15
+TARGET_CONFIG kit=61b31723 found=1 original=22 private=0 expected=22 wrong_owner_private=0
+TARGET_CONFIG kit=4f7fb2bd found=1 original=22 private=0 expected=22 wrong_owner_private=0
+TARGET_CONFIG kit=6351a9aa found=1 original=22 private=0 expected=22 wrong_owner_private=0
+TARGET_CONFIG kit=6d30f386 found=1 original=22 private=0 expected=22 wrong_owner_private=0
+TARGET_CONFIG kit=261c4a52 found=1 original=1 private=0 expected=1 wrong_owner_private=0
+TARGET_CONFIG kit=45d80a38 found=1 original=1 private=0 expected=1 wrong_owner_private=0
+TARGET_CONFIG kit=b4027b70 found=1 original=1 private=0 expected=1 wrong_owner_private=0
+TARGET_CONFIG kit=df8e4ada found=1 original=1 private=0 expected=1 wrong_owner_private=0
+CONFIG_SCAN complete target_count=8 original=92 private=0 other_private=0 wrong_owner_private=0
+
+INSTALL_PREFLIGHT Passed
+GameRunning True
+PlannedPatch 9ba626afa44a3aa3.patch_1
+ActivePatches 1
+SourceResources 136
+PrivateResources 204
+ExistingCM14Addon True
+UserDecision Keep candidate files; test later. No installation performed.

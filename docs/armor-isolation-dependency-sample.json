@@ -1,0 +1,196 @@
+{
+  "archive": "58e4bd4b2278d15c",
+  "unit": "f6d665ef313b5a3c",
+  "unit_main_bytes": 15776,
+  "unit_stream_bytes": 0,
+  "unit_gpu_bytes": 524672,
+  "materials_table_offset": "0x3d60",
+  "material_count": 3,
+  "materials": [
+    {
+      "slot_hash": "0bf81d82",
+      "resource_id": "a781f50f508ed81b",
+      "source_archive": "58e4bd4b2278d15c",
+      "bytes": 2464,
+      "base_material": "5a4597ed9ab5f84f",
+      "base_material_found_in_sample_or_base_archive": false,
+      "texture_count": 12,
+      "setting_count": 87,
+      "textures": [
+        {
+          "usage": "204eb619",
+          "resource_id": "f37a4e756300ab32"
+        },
+        {
+          "usage": "5637e5d3",
+          "resource_id": "f001498ea40718fb"
+        },
+        {
+          "usage": "a856db0d",
+          "resource_id": "4656ac419388a0d4"
+        },
+        {
+          "usage": "ac652e43",
+          "resource_id": "68acd4177fa5f4db"
+        },
+        {
+          "usage": "caed6cd6",
+          "resource_id": "8e42f23230ab525e"
+        },
+        {
+          "usage": "18daef8a",
+          "resource_id": "4656ac419388a0d4"
+        },
+        {
+          "usage": "faecf369",
+          "resource_id": "7fc8b2e634181f66"
+        },
+        {
+          "usage": "5c774481",
+          "resource_id": "82ba9a2d6997cc4b"
+        },
+        {
+          "usage": "f79fe864",
+          "resource_id": "f37a4e756300ab32"
+        },
+        {
+          "usage": "af1dc221",
+          "resource_id": "bf281073a422022c"
+        },
+        {
+          "usage": "756f6fa6",
+          "resource_id": "9e0595f7f9d158d1"
+        },
+        {
+          "usage": "493966e5",
+          "resource_id": "486c27ee43065178"
+        }
+      ]
+    },
+    {
+      "slot_hash": "69adc318",
+      "resource_id": "75f87ad2ae08e9c2",
+      "source_archive": null,
+      "status": "Not in sample or base archive; cross-package lookup still required"
+    },
+    {
+      "slot_hash": "a838f8a6",
+      "resource_id": "79006f535c1b73c7",
+      "source_archive": "58e4bd4b2278d15c",
+      "bytes": 1232,
+      "base_material": "f5ebd93181fdf00c",
+      "base_material_found_in_sample_or_base_archive": false,
+      "texture_count": 12,
+      "setting_count": 35,
+      "textures": [
+        {
+          "usage": "0f5ff78d",
+          "resource_id": "f8b2508e99fb9f28"
+        },
+        {
+          "usage": "a17b45a8",
+          "resource_id": "7db10f0a89343dc7"
+        },
+        {
+          "usage": "81d4c49d",
+          "resource_id": "cf0cc31b981786c9"
+        },
+        {
+          "usage": "c2eb8d6e",
+          "resource_id": "bcbfd1fcad1c719d"
+        },
+        {
+          "usage": "30e2d136",
+          "resource_id": "e21128ca48e27a13"
+        },
+        {
+          "usage": "d2f99d38",
+          "resource_id": "17c4075f57e4211a"
+        },
+        {
+          "usage": "05a27dd5",
+          "resource_id": "8ead802d8dd7d65b"
+        },
+        {
+          "usage": "b281e5f2",
+          "resource_id": "6cc8ea6bb964ea48"
+        },
+        {
+          "usage": "37831285",
+          "resource_id": "e21128ca48e27a13"
+        },
+        {
+          "usage": "632a8b80",
+          "resource_id": "cf56f70bd0ae1fd1"
+        },
+        {
+          "usage": "7e662968",
+          "resource_id": "3f1edd42aa27a59a"
+        },
+        {
+          "usage": "6834aa9b",
+          "resource_id": "bfefc8b1b381a00f"
+        }
+      ]
+    }
+  ],
+  "dry_run_variants": [
+    {
+      "kit": "61b31723",
+      "new_unit": "b638ae8b3954d589",
+      "unit_material_ids": [
+        "a27f1a2d1e838313",
+        "8af8e78eb1c91e2c",
+        "eec5a794c1b3bd66"
+      ],
+      "unit_other_bytes_unchanged": true,
+      "material_slot_keys_unchanged": true,
+      "material_checks": [
+        {
+          "source": "a781f50f508ed81b",
+          "new": "a27f1a2d1e838313",
+          "byte_length_preserved": true,
+          "non_reference_bytes_preserved": true
+        },
+        {
+          "source": "79006f535c1b73c7",
+          "new": "eec5a794c1b3bd66",
+          "byte_length_preserved": true,
+          "non_reference_bytes_preserved": true
+        }
+      ]
+    },
+    {
+      "kit": "8b9ed77d",
+      "new_unit": "7730028a5c3a0228",
+      "unit_material_ids": [
+        "870b31f54dec3925",
+        "95b7e818945f4174",
+        "31cbde69e200c545"
+      ],
+      "unit_other_bytes_unchanged": true,
+      "material_slot_keys_unchanged": true,
+      "material_checks": [
+        {
+          "source": "a781f50f508ed81b",
+          "new": "870b31f54dec3925",
+          "byte_length_preserved": true,
+          "non_reference_bytes_preserved": true
+        },
+        {
+          "source": "79006f535c1b73c7",
+          "new": "31cbde69e200c545",
+          "byte_length_preserved": true,
+          "non_reference_bytes_preserved": true
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Only structured references rewritten in memory; no archive or game changes.",
+    "One referenced material is outside the two inspected archives.",
+    "Base materials were identified but not recursively cloned here.",
+    "Texture blobs and global resource-ID collisions not validated.",
+    "Not an engine load or visual test."
+  ]
+}

@@ -1,0 +1,79 @@
+{"module": "game.dll", "pid": 24496, "base": "0x7ffb3d320000", "timestamp": "0x6a86132e", "image_size": "0x3a6b000", "function_entries": 152914}
+STRING 0x1f9a120 nui_customization_type_hellpod_skins
+STRING 0x1f9a170 nui_customization_type_shuttle_skins
+STRING 0x1f9c418 RenderVoronoiMaterials
+STRING 0x1f9caa0 AttachLocationsToRouteCells
+STRING 0x1f9ed28 material_id
+STRING 0x1f9f160 spawn_customization_chamber_enter
+STRING 0x1f9f1c0 spawn_customization_chamber_exit
+STRING 0x1fa0180 objective_upload_escape_pod_progress
+STRING 0x1fa0ef8 material_wetness
+STRING 0x1fa1dd0 "two_point_chain_attach_target" : { "max" : %u, "capacity" : 384 }
+STRING 0x1fa1e18 TwoPointChainAttachTargetComponent
+STRING 0x1fa28e8 Materials
+STRING 0x1fa35e8 MaterialVariablesComponent
+STRING 0x1fa3640 MaterialSwapComponent
+STRING 0x1fa3658 "material_variables" : { "max" : %u, "capacity" : 256 }
+STRING 0x1fa36a8 "material_swap" : { "max" : %u, "capacity" : 32 }
+STRING 0x1fa54a0 AttachableComponent
+STRING 0x1fa5500 "attachable" : { "max" : %u, "capacity" : 1024 }
+STRING 0x1fa5608 cape_velocity_change
+STRING 0x1fa5620 cape_velocity
+STRING 0x1fa5c50 convoy_escaped
+STRING 0x1faa508 UndergarmentToBodyType
+STRING 0x1faa540 BoosterAndBodyTypeIndexToIdString
+STRING 0x1faaad0 WeaponCustomizationPreferredFireModeDataChange
+STRING 0x1fafb88 ,"lighting_and_material_quality":
+STRING 0x1fb1b98 attach_locations_to_route_cells_1
+STRING 0x1fb1d58 attach_locations_to_route_cells_2
+STRING 0x1fb27d8 render_voronoi_materials
+STRING 0x1fb2cc8 attach_locations_to_route_cells
+STRING 0x1fb30c0 terrain_deformation_scorch_material_id
+STRING 0x1fb57c8 lighting_and_material_quality
+STRING 0x1fb7958 claimedItemAttachments
+STRING 0x1fb7970 itemAttachments
+STRING 0x1fb81c0 cape_set
+STRING 0x1fbb340 tutorial_cape_ceremony
+STRING 0x1fbb450 Instance has no targeting component! The encounter will not be able to spawn any units.
+STRING 0x1fbb4e0 Failed to materialize child unit: child unit was not valid. entity=%u, path:%s, child_unit_ref:%u
+STRING 0x2008c18 vo_tutorial_mod01_sec04_instructor_caperoom_enter_a
+STRING 0x2008c50 vo_tutorial_mod01_sec04_instructor_caperoom_done_a
+STRING 0x20164e8 Objective_gen_find_escape_pod
+STRING 0x20174c8 invalid character in unicode escape
+STRING 0x2017540 unknown escape
+STRING 0x201f990 UiPreviewSystem::spawn_weapon Weapon unit invalid!
+STRING 0x2020730 ,"%s_customizations_hash":[
+STRING 0x2021d68 Cape
+STRING 0x2021eec Capes
+STRING 0x20265e8 EquippeCapes
+STRING 0x2027308 testament.MenuTabViewArmoryCapes
+STRING 0x20273f8 testament.MenuTabViewBodyType
+STRING 0x2027570 PreviewCapes
+STRING 0x2027608 testament.MenuTabViewCapes
+STRING 0x2027df0 testament.MenuTabWeaponAttachments
+STRING 0x2028f98 testament.ScrollListWeaponAttachment
+STRING 0x2028fc0 WeaponAttachment
+STRING 0x2029c68 testament.WeaponAttachments
+STRING 0x205db44 cape
+STRING 0x2074b20 D:\libraries\noesisgui\code\Native\Src\Packages\Gui\Interactivity\Include\NsGui\AttachableCollection.inl
+STRING 0x2074b90 '%s' already attached to another object '%s'
+STRING 0x2080070 IAttachedObject
+STRING 0x2080080 AttachableObject
+STRING 0x20800a0 D:\libraries\noesisgui\code\Native\Src\Packages\Gui\Interactivity\Src\AttachableObject.cpp
+STRING 0x20873f0 Can't solve PropertyPath: '%s' type cannot use '%s.%s' attached property
+STRING 0x2096fb0 AttachableCollection<T>
+STRING 0x20bb7d0 bool __cdecl `anonymous-namespace'::OT::AttachList::sanitize(struct `anonymous-namespace'::hb_sanitize_context_t *) const
+STRING 0x20c5990 bool __cdecl `anonymous-namespace'::OT::OffsetTo<struct `anonymous namespace'::OT::AttachList,struct A0x1c6f5e8a::OT::IntType<unsigned short,2>,1>::sanitize<>(struct `anonymous-namespace'::hb_sanitize_context_t *,const void *) const
+STRING 0x20c6170 bool __cdecl `anonymous-namespace'::OT::ArrayOf<struct `anonymous namespace'::OT::OffsetTo<struct `anonymous namespace'::OT::AttachPoint,struct A0x1c6f5e8a::OT::IntType<unsigned short,2>,1>,struct A0x1c6f5e8a::OT::IntType<unsigned short,2> >::sanitize<const struct `anonymous-namespace'::OT::AttachList*>(struct `anonymous-namespace'::hb_sanitize_context_t *,const struct `anonymous-namespace'::OT::AttachList *&&) const
+STRING 0x20d11c0 bool __cdecl `anonymous-namespace'::OT::OffsetTo<struct `anonymous namespace'::OT::AttachList,struct A0x1c6f5e8a::OT::IntType<unsigned short,2>,1>::sanitize_shallow(struct `anonymous-namespace'::hb_sanitize_context_t *,const void *) const
+STRING 0x20d1980 bool __cdecl `anonymous-namespace'::OT::ArrayOf<struct `anonymous namespace'::OT::OffsetTo<struct `anonymous namespace'::OT::AttachPoint,struct A0x1c6f5e8a::OT::IntType<unsigned short,2>,1>,struct A0x1c6f5e8a::OT::IntType<unsigned short,2> >::sanitize_shallow(struct `anonymous-namespace'::hb_sanitize_context_t *) const
+STRING 0x20d7770 bool __cdecl `anonymous-namespace'::OT::OffsetTo<struct `anonymous namespace'::OT::AttachPoint,struct A0x1c6f5e8a::OT::IntType<unsigned short,2>,1>::sanitize<>(struct `anonymous-namespace'::hb_sanitize_context_t *,const void *) const
+STRING 0x20dc520 bool __cdecl `anonymous-namespace'::OT::OffsetTo<struct `anonymous namespace'::OT::AttachPoint,struct A0x1c6f5e8a::OT::IntType<unsigned short,2>,1>::sanitize_shallow(struct `anonymous-namespace'::hb_sanitize_context_t *,const void *) const
+XREF_CANDIDATE 0x568b38 -> 0x1fa5e48 function (5655936, 5677969) lea r8, [rip + 0x1a3d309]
+XREF_CANDIDATE 0x869810 -> 0x1fa5d80 function (8820176, 8821965) lea rcx, [rip + 0x173c569]
+XREF_CANDIDATE 0x86981c -> 0x1fa5d80 function (8820176, 8821965) lea rcx, [rip + 0x173c55d]
+XREF_CANDIDATE 0x869841 -> 0x1fa5d80 function (8820176, 8821965) lea rcx, [rip + 0x173c538]
+XREF_CANDIDATE 0x86d469 -> 0x1fa5db0 function (8835901, 8836246) lea rdx, [rip + 0x1738940]
+XREF_CANDIDATE 0x86d566 -> 0x1fa5e30 function (8836359, 8836512) lea rcx, [rip + 0x17388c3]
+XREF_CANDIDATE 0x8720e0 -> 0x1fa5e48 function None lea r8, [rip + 0x1733d61]
+POINTER 0x1fa4968 -> 0x1fa5e30

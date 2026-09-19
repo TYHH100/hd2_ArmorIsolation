@@ -1,0 +1,64 @@
+Runtime: PID 24496, 2026-09-19.
+game.dll base=0x7ffb3d320000, timestamp=0x6a86132e.
+helldivers2.exe base=0x7ff6f8240000, timestamp=0x6a85c636.
+These are observations of loaded code, not a breakpoint execution trace.
+
+Game material application: RVA 0x10f3f30..0x10f426f.
+Piece pointer is R9, UnitRef is R8D, player/preview index is EDX.
+For each unit mesh, for each mesh material, apply nonzero texture IDs:
+Piece+18 -> 0x7e662968 = material_lut
+Piece+20 -> 0x81d4c49d = pattern_lut
+Piece+28 -> 0x0e494183 = cape_lut
+Piece+48 -> 0xc2eb8d6e = base_data
+Piece+30 -> 0x8d28873d = cape_gradient
+Piece+40 -> 0x11761abe (shader slot name unresolved; community field DecalScalarFields)
+Piece+50 -> 0x632a8b80 = decal_sheet
+Piece+38 (community CapeNac) is not read by this routine.
+Piece+58 is a byte divisor, used only when nonzero:
+  Material.set_scalar(material, 0x575f7f6e, float(player_value % divisor))
+  0x575f7f6e = tone_variation.
+Then Material.set_scalar(material, 0x205e89cc, 0.0); semantic name unresolved.
+Names above verified by murmur64a(ASCII,0)>>32, not guessed from proximity.
+
+ReadProcessMemory pointer chain:
+*(game+0x276c020) = 0x7ff6faa0cc20.
+root+08 world table = 0x7ff6faa0e9f0:
+  +08 -> exe+0x334330 (create/spawn candidate)
+  +d0 -> exe+0x3353a0 (queued link command candidate)
+root+10 resource/application table = 0x7ff6faa0dd10:
+  +318 -> exe+0x320540 (load queue membership predicate; no load issued here)
+  +328 -> exe+0x320600 (package present, dependencies state==4, no queued entry)
+root+18 unit table = 0x7ff6faa0cdb0:
+  +038 -> exe+0x1fc050 (three-float queued command, semantic name not independently proved)
+  +1a8 -> exe+0x200600 = num_meshes
+  +1b8 -> exe+0x200650 (mesh by index)
+  +658 -> exe+0x204fb0 (queued command 0x15, semantic name not independently proved)
+root+28 material table = 0x7ff6faa0d800:
+  +000 -> exe+0x30e120 -> exe+0x4f2240 = set_scalar
+  +028 -> exe+0x30e190 (4-byte element array setter; not independently named)
+  +078 -> exe+0x30e350 = set_texture
+  +0a0 -> exe+0x30e680 (semantic name unresolved)
+  +0b0 -> exe+0x30e7c0 (semantic name unresolved)
+root+e8 mesh table = 0x7ff6faa0f550:
+  +08 -> exe+0x343330 (material count)
+  +18 -> exe+0x343380 (material pointer by index)
+  +20 -> exe+0x343390 -> exe+0x50e680 (post-material update; name unresolved)
+
+Same-build API naming proofs (all EXE RVAs):
+Material.set_texture: 0x49effe registration names string 0x1689df8,
+  registers wrapper 0x49f690, which calls 0x30e350 at 0x49f7aa.
+Material.set_scalar: 0x49c6a0 registration names string 0x1687958,
+  registers wrapper 0x49cb50, which calls 0x4f2240 at 0x49cc42;
+  material table function 0x30e120 jumps to exactly 0x4f2240.
+Unit.num_meshes: 0x4083d0 registration names string 0x1685880,
+  registers wrapper 0x408530, resolving UnitRef through 0x9da50 then
+  calling unit virtual +0xf8; table function 0x200600 has the same operation.
+Mesh.num_materials: 0x4873d0 registration names string 0x1688240,
+  registers wrapper 0x4875c0, which reads mesh+0x18;
+  table function 0x343330 reads the same count after flag checks.
+
+Raw evidence: appearance-material-native.txt, appearance-engine-api-native.txt.
+Vehicle/unit customization exclusion:
+  0x6e56c0 iterates 11 category slots and looks up skins through 0xf53370.
+  This branch is separate from the armor-set Piece pipeline. Do not use its
+  'set_customization: set skin' log as proof of player armor material changes.

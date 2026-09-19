@@ -1,0 +1,3325 @@
+{
+  "source": "G:\\Temp\\HD2ModManager\\Mods\\Mods\\VRC_夏菲 替换 B-01系列_6cb08803\\蓝光\\9ba626afa44a3aa3.patch_6",
+  "source_files": [
+    {
+      "name": "9ba626afa44a3aa3.patch_6",
+      "size": 1604756,
+      "sha256": "474189e13921676549cc65b400359ac7766e76a5951ef2d0226625e097d374ea"
+    },
+    {
+      "name": "9ba626afa44a3aa3.patch_6.stream",
+      "size": 14155896,
+      "sha256": "976d4e6515045c29b03869cf2fb1d1d0c855e99495dd71d0993392e619318620"
+    },
+    {
+      "name": "9ba626afa44a3aa3.patch_6.gpu_resources",
+      "size": 384623496,
+      "sha256": "a21a17fbab30d8d50f0c4e141370c3e903b425cee065ab446d903d6b001b5489"
+    }
+  ],
+  "snapshot": "docs\\armor-isolation-live-kits.json",
+  "snapshot_sha256": "e68b82eb7dacde3219f7d049b692dfb418f7f2a35516d98c3dab7515eb0409c1",
+  "expected_game_version": "1.0.0.18930",
+  "expected_game_dll_sha256": "cc75948d90fdfde259dcb519e9933db7ffa3ccb281ce4fb89e6b1b011557470c",
+  "source_counts": {
+    "material": 4,
+    "texture": 26,
+    "unit": 106
+  },
+  "zero_length_lane_validation": "Validate bounds only for non-empty data; zero-length lanes may use EOF alignment offset",
+  "targets": [
+    {
+      "kit": "61b31723",
+      "archive": "58e4bd4b2278d15c",
+      "name": "B-01 Tactical (Variation 1)",
+      "type": 0,
+      "passive": 1,
+      "body_layout": [
+        [
+          3,
+          7
+        ],
+        [
+          0,
+          8
+        ],
+        [
+          1,
+          8
+        ]
+      ],
+      "non_cape_piece_count": 22,
+      "non_cape_unique_unit_count": 22,
+      "missing_source_units": [],
+      "direct_modified_textures": [],
+      "private_closure_counts": {
+        "unit": 22,
+        "texture": 13,
+        "material": 1
+      },
+      "private_closure": [
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "143df9049534d482"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "1e5e330583798402"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "3f023552f000614c"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "4a2c9f9782924a53"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "728a5964cafe1e06"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "899f786c70cd4cde"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "9847d78672a358d4"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "a7d9f0ade0f39853"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "aa002ae3baf17859"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "bb5517aee06899d1"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "cbc8e6cf376da1fc"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "eb36f482e08d0eb1"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "f16489afba26aef1"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "01144a44b65471bd"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "0387a158d04848f4"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "18902007139a6060"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "23a244c877843da3"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "293d8135eb95873b"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "29b877b122acc704"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "2d9ce590011788ac"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "2f66b9373cb58485"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "30204ad0fe720352"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "34bebf638031371a"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "3b2875408869343e"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "41cce3f64f2eaf3a"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "49c3b6a9e0367370"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "620f7dcb7f6cd8f2"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "79740c9dbb23a2d8"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "9ef5adcfb96fdc57"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "9f40a6bdb5e4707f"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "ca672d99456b3ffe"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "e57627fe6214bdd8"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "f6d665ef313b5a3c"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "f7f232ee26ec35fb"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "fa269172bd08695b"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "ad686c7fb5d3db1c"
+        }
+      ],
+      "external_references": [
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "12fcc0157b3f155d"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "2474bb049073fff8"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "58b1670a61bfbdf6"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "6135204a71fd3f47"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "6f8e3d096b015b0a"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "8f669f365f24594e"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "a781f50f508ed81b"
+        }
+      ]
+    },
+    {
+      "kit": "4f7fb2bd",
+      "archive": "562a45e9bc984eb9",
+      "name": "B-01 Tactical (Variation 2)",
+      "type": 0,
+      "passive": 1,
+      "body_layout": [
+        [
+          3,
+          7
+        ],
+        [
+          0,
+          8
+        ],
+        [
+          1,
+          8
+        ]
+      ],
+      "non_cape_piece_count": 22,
+      "non_cape_unique_unit_count": 22,
+      "missing_source_units": [],
+      "direct_modified_textures": [],
+      "private_closure_counts": {
+        "unit": 22,
+        "texture": 13,
+        "material": 1
+      },
+      "private_closure": [
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "143df9049534d482"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "1e5e330583798402"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "3f023552f000614c"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "4a2c9f9782924a53"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "728a5964cafe1e06"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "899f786c70cd4cde"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "9847d78672a358d4"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "a7d9f0ade0f39853"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "aa002ae3baf17859"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "bb5517aee06899d1"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "cbc8e6cf376da1fc"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "eb36f482e08d0eb1"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "f16489afba26aef1"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "0387a158d04848f4"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "18902007139a6060"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "23a244c877843da3"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "2598829bc4aca31d"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "2d9ce590011788ac"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "2f66b9373cb58485"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "30204ad0fe720352"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "34bebf638031371a"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "3b2875408869343e"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "40b23d9faeb7f3da"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "41cce3f64f2eaf3a"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "49c3b6a9e0367370"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "620f7dcb7f6cd8f2"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "79740c9dbb23a2d8"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "970cef3ae566058c"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "9ef5adcfb96fdc57"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "9f40a6bdb5e4707f"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "afab315462536d78"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "ca672d99456b3ffe"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "e57627fe6214bdd8"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "f6d665ef313b5a3c"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "fa269172bd08695b"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "ad686c7fb5d3db1c"
+        }
+      ],
+      "external_references": [
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "12fcc0157b3f155d"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "2474bb049073fff8"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "381664fca5dd928a"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "58b1670a61bfbdf6"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "6135204a71fd3f47"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "6f8e3d096b015b0a"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "8f669f365f24594e"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "a781f50f508ed81b"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "c271c993f92665b2"
+        }
+      ]
+    },
+    {
+      "kit": "6351a9aa",
+      "archive": "6cd3d55c05d4eac1",
+      "name": "B-01 Tactical (Variation 3)",
+      "type": 0,
+      "passive": 1,
+      "body_layout": [
+        [
+          3,
+          7
+        ],
+        [
+          0,
+          8
+        ],
+        [
+          1,
+          8
+        ]
+      ],
+      "non_cape_piece_count": 22,
+      "non_cape_unique_unit_count": 22,
+      "missing_source_units": [],
+      "direct_modified_textures": [],
+      "private_closure_counts": {
+        "unit": 22,
+        "texture": 13,
+        "material": 1
+      },
+      "private_closure": [
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "143df9049534d482"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "1e5e330583798402"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "3f023552f000614c"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "4a2c9f9782924a53"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "728a5964cafe1e06"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "899f786c70cd4cde"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "9847d78672a358d4"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "a7d9f0ade0f39853"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "aa002ae3baf17859"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "bb5517aee06899d1"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "cbc8e6cf376da1fc"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "eb36f482e08d0eb1"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "f16489afba26aef1"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "01144a44b65471bd"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "0387a158d04848f4"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "1202202bbfb7a58e"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "23a244c877843da3"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "293d8135eb95873b"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "29b877b122acc704"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "2f66b9373cb58485"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "30204ad0fe720352"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "3b2875408869343e"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "49c3b6a9e0367370"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "51bebdd0bfbaaeee"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "620f7dcb7f6cd8f2"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "79740c9dbb23a2d8"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "8604d5563be6b04a"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "9f40a6bdb5e4707f"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "ca672d99456b3ffe"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "d1674382476d544d"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "d9b56ce4130b8c54"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "e57627fe6214bdd8"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "f6d665ef313b5a3c"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "fa269172bd08695b"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "fdb5edf4d512bade"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "ad686c7fb5d3db1c"
+        }
+      ],
+      "external_references": [
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "12fcc0157b3f155d"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "303277bd96c92ab2"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "58b1670a61bfbdf6"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "5e535aabee2a3fd5"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "6135204a71fd3f47"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "6f8e3d096b015b0a"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "8f669f365f24594e"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "a781f50f508ed81b"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "ed4b7f613324b6e2"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "f666d70b1d7698e7"
+        }
+      ]
+    },
+    {
+      "kit": "6d30f386",
+      "archive": "519cc1ec2eb56e1d",
+      "name": "B-01 Tactical (Variation 4)",
+      "type": 0,
+      "passive": 1,
+      "body_layout": [
+        [
+          3,
+          7
+        ],
+        [
+          0,
+          8
+        ],
+        [
+          1,
+          8
+        ]
+      ],
+      "non_cape_piece_count": 22,
+      "non_cape_unique_unit_count": 22,
+      "missing_source_units": [],
+      "direct_modified_textures": [],
+      "private_closure_counts": {
+        "unit": 22,
+        "texture": 13,
+        "material": 1
+      },
+      "private_closure": [
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "143df9049534d482"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "1e5e330583798402"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "3f023552f000614c"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "4a2c9f9782924a53"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "728a5964cafe1e06"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "899f786c70cd4cde"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "9847d78672a358d4"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "a7d9f0ade0f39853"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "aa002ae3baf17859"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "bb5517aee06899d1"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "cbc8e6cf376da1fc"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "eb36f482e08d0eb1"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "f16489afba26aef1"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "02ecb3e7587540bb"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "0387a158d04848f4"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "1eb11e6e1644ef83"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "236bcbfba3ec3221"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "23a244c877843da3"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "2f66b9373cb58485"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "30204ad0fe720352"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "3b2875408869343e"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "3b913ad76446da76"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "49c3b6a9e0367370"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "620f7dcb7f6cd8f2"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "689396fdd9841801"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "9f40a6bdb5e4707f"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "a810e3416caffcf6"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "ac053376ddd1fd53"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "ca672d99456b3ffe"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "d6c3bdee3a651796"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "d8fb528180484f71"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "e57627fe6214bdd8"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "f1516791ba364337"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "f6d665ef313b5a3c"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "fa269172bd08695b"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "ad686c7fb5d3db1c"
+        }
+      ],
+      "external_references": [
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "12fcc0157b3f155d"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "297b41b6069b01a4"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "5cb1104f3f35d75f"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "6135204a71fd3f47"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "8976c25f87752fdb"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "8f669f365f24594e"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "a781f50f508ed81b"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "b54472208cd3e371"
+        }
+      ]
+    },
+    {
+      "kit": "261c4a52",
+      "archive": "fd109bfeeed36726",
+      "name": "B-01 Tactical (Variation 1)",
+      "type": 1,
+      "passive": 0,
+      "body_layout": [
+        [
+          3,
+          1
+        ]
+      ],
+      "non_cape_piece_count": 1,
+      "non_cape_unique_unit_count": 1,
+      "missing_source_units": [],
+      "direct_modified_textures": [],
+      "private_closure_counts": {
+        "texture": 13,
+        "unit": 1,
+        "material": 1
+      },
+      "private_closure": [
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "143df9049534d482"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "1e5e330583798402"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "3f023552f000614c"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "4a2c9f9782924a53"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "728a5964cafe1e06"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "899f786c70cd4cde"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "9847d78672a358d4"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "a7d9f0ade0f39853"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "aa002ae3baf17859"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "bb5517aee06899d1"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "cbc8e6cf376da1fc"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "eb36f482e08d0eb1"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "f16489afba26aef1"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "bc20d0b4efff128c"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "ad686c7fb5d3db1c"
+        }
+      ],
+      "external_references": [
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "8f669f365f24594e"
+        }
+      ]
+    },
+    {
+      "kit": "45d80a38",
+      "archive": "3b143cc283b7f707",
+      "name": "B-01 Tactical (Variation 2)",
+      "type": 1,
+      "passive": 0,
+      "body_layout": [
+        [
+          3,
+          1
+        ]
+      ],
+      "non_cape_piece_count": 1,
+      "non_cape_unique_unit_count": 1,
+      "missing_source_units": [],
+      "direct_modified_textures": [],
+      "private_closure_counts": {
+        "texture": 13,
+        "unit": 1,
+        "material": 1
+      },
+      "private_closure": [
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "143df9049534d482"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "1e5e330583798402"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "3f023552f000614c"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "4a2c9f9782924a53"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "728a5964cafe1e06"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "899f786c70cd4cde"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "9847d78672a358d4"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "a7d9f0ade0f39853"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "aa002ae3baf17859"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "bb5517aee06899d1"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "cbc8e6cf376da1fc"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "eb36f482e08d0eb1"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "f16489afba26aef1"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "7b23e3c0ab4cf618"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "ad686c7fb5d3db1c"
+        }
+      ],
+      "external_references": [
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "8f669f365f24594e"
+        }
+      ]
+    },
+    {
+      "kit": "b4027b70",
+      "archive": "f4880623d32bafa9",
+      "name": "B-01 Tactical (Variation 3)",
+      "type": 1,
+      "passive": 0,
+      "body_layout": [
+        [
+          3,
+          1
+        ]
+      ],
+      "non_cape_piece_count": 1,
+      "non_cape_unique_unit_count": 1,
+      "missing_source_units": [],
+      "direct_modified_textures": [],
+      "private_closure_counts": {
+        "texture": 13,
+        "unit": 1,
+        "material": 1
+      },
+      "private_closure": [
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "143df9049534d482"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "1e5e330583798402"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "3f023552f000614c"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "4a2c9f9782924a53"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "728a5964cafe1e06"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "899f786c70cd4cde"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "9847d78672a358d4"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "a7d9f0ade0f39853"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "aa002ae3baf17859"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "bb5517aee06899d1"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "cbc8e6cf376da1fc"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "eb36f482e08d0eb1"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "f16489afba26aef1"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "c96cb2e72d7a0525"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "ad686c7fb5d3db1c"
+        }
+      ],
+      "external_references": [
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "8f669f365f24594e"
+        }
+      ]
+    },
+    {
+      "kit": "df8e4ada",
+      "archive": "8313c9a556b8ee85",
+      "name": "B-01 Tactical (Variation 4)",
+      "type": 1,
+      "passive": 0,
+      "body_layout": [
+        [
+          3,
+          1
+        ]
+      ],
+      "non_cape_piece_count": 1,
+      "non_cape_unique_unit_count": 1,
+      "missing_source_units": [],
+      "direct_modified_textures": [],
+      "private_closure_counts": {
+        "texture": 13,
+        "material": 1,
+        "unit": 1
+      },
+      "private_closure": [
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "143df9049534d482"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "1e5e330583798402"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "3f023552f000614c"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "4a2c9f9782924a53"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "728a5964cafe1e06"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "899f786c70cd4cde"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "9847d78672a358d4"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "a7d9f0ade0f39853"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "aa002ae3baf17859"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "bb5517aee06899d1"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "cbc8e6cf376da1fc"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "eb36f482e08d0eb1"
+        },
+        {
+          "kind": "texture",
+          "type": "cd4238c6a0c69e32",
+          "id": "f16489afba26aef1"
+        },
+        {
+          "kind": "unit",
+          "type": "e0a48d0be9a7453f",
+          "id": "781134771dd69fbe"
+        },
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "ad686c7fb5d3db1c"
+        }
+      ],
+      "external_references": [
+        {
+          "kind": "material",
+          "type": "eac0b497876adedf",
+          "id": "8f669f365f24594e"
+        }
+      ]
+    }
+  ],
+  "target_unique_unit_count": 46,
+  "excluded_source_resources": [
+    {
+      "kind": "texture",
+      "type": "cd4238c6a0c69e32",
+      "id": "0152cd86c258bb67"
+    },
+    {
+      "kind": "texture",
+      "type": "cd4238c6a0c69e32",
+      "id": "0464100191b8aa00"
+    },
+    {
+      "kind": "texture",
+      "type": "cd4238c6a0c69e32",
+      "id": "1ed19f89fecc18f0"
+    },
+    {
+      "kind": "texture",
+      "type": "cd4238c6a0c69e32",
+      "id": "1f60a1505d6c3fb7"
+    },
+    {
+      "kind": "texture",
+      "type": "cd4238c6a0c69e32",
+      "id": "2b0014765c44e9dd"
+    },
+    {
+      "kind": "texture",
+      "type": "cd4238c6a0c69e32",
+      "id": "498458a31c475ecb"
+    },
+    {
+      "kind": "texture",
+      "type": "cd4238c6a0c69e32",
+      "id": "80f63c159b3fce60"
+    },
+    {
+      "kind": "texture",
+      "type": "cd4238c6a0c69e32",
+      "id": "904b2165e37db039"
+    },
+    {
+      "kind": "texture",
+      "type": "cd4238c6a0c69e32",
+      "id": "9cb9b6bb88225832"
+    },
+    {
+      "kind": "texture",
+      "type": "cd4238c6a0c69e32",
+      "id": "b4be32b6f19a30eb"
+    },
+    {
+      "kind": "texture",
+      "type": "cd4238c6a0c69e32",
+      "id": "d0a33da74bd12732"
+    },
+    {
+      "kind": "texture",
+      "type": "cd4238c6a0c69e32",
+      "id": "e56e496dc37a90c2"
+    },
+    {
+      "kind": "texture",
+      "type": "cd4238c6a0c69e32",
+      "id": "ef4f930fa9cc95a5"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "0364ca45cf3fb606"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "26aae8b522a2c53d"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "2a18613ccca0dab0"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "2bef87ad75905b26"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "307a30e47ffa7d2b"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "330d846c1a93fa1e"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "334393c6df6002e5"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "36dfe50265c0932e"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "3d4d42125cb2096d"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "3e615e0fb6334cc6"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "484592a195e25e29"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "4b98ae557fe6b624"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "4d09803a20112fe4"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "55a1d2718bd6c20f"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "5a0ecf345ed340fc"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "5cad10840c428a9b"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "64a71fbe6ef75b80"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "6612fc2ac51c20d1"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "697d6a57971da101"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "698da2bd78a2ea3a"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "6f2a7b35937723e3"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "704b51afc26f1349"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "7a6509254fd3715d"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "8388f68ab43053ab"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "863c35d319d266c0"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "8868bb0c6e923b44"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "897abcbaa487afe8"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "8d902f288e8baec4"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "932df742507e4954"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "934a8a7f3b5ab7c0"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "99a130858b3d8ff1"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "9a51b6707da0927c"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "9b068acb159af977"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "a15f3a638721a49e"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "a436a94c1a0be4da"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "abd7d23022e3de57"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "af049b267537d22b"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "b2af14e5ce8ee207"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "b3222572d8945432"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "b3e2e26299afa723"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "b47e3deac9a7ad6a"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "bcf47cef44aab934"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "c6368c3df2e97da9"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "c68481d5f6fb0362"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "c7e47f2d8d5f8b40"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "c82bcd4aaabb6cd3"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "c8444826a3d8f7ee"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "d502e2e7ca7136b7"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "dffda4486e68716b"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "e15680e4c4a89420"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "e7b26be779bdd9e5"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "ef6c60e8250976cf"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "effdfd2386aef629"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "f02b8ae2f24e8aaf"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "f087d1b65fe1cebe"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "f1567f92bbed4b06"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "f2fc9b59863f63e4"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "f3593e14d20087bc"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "f85fa4f5dcc275b8"
+    },
+    {
+      "kind": "unit",
+      "type": "e0a48d0be9a7453f",
+      "id": "f9ac47d4b5b89596"
+    },
+    {
+      "kind": "material",
+      "type": "eac0b497876adedf",
+      "id": "7e9a9406ca3cda82"
+    },
+    {
+      "kind": "material",
+      "type": "eac0b497876adedf",
+      "id": "9c1a5e11870f3bc0"
+    },
+    {
+      "kind": "material",
+      "type": "eac0b497876adedf",
+      "id": "cdefd40c9970eee4"
+    }
+  ],
+  "private_resource_count_if_per_kit": 204,
+  "other_kit_direct_unit_overlap_count": 56,
+  "other_kit_direct_unit_overlaps": [
+    {
+      "kit": "dae4a744",
+      "archive": "aade1a73a16b5fb5",
+      "type": 0,
+      "name": "SA-25 Steel Trooper",
+      "shared_units": [
+        "0387a158d04848f4",
+        "18902007139a6060",
+        "23a244c877843da3",
+        "2d9ce590011788ac",
+        "2f66b9373cb58485",
+        "307a30e47ffa7d2b",
+        "334393c6df6002e5",
+        "34bebf638031371a",
+        "3d4d42125cb2096d",
+        "41cce3f64f2eaf3a",
+        "55a1d2718bd6c20f",
+        "620f7dcb7f6cd8f2",
+        "9b068acb159af977",
+        "9ef5adcfb96fdc57",
+        "abd7d23022e3de57",
+        "b3222572d8945432",
+        "bcf47cef44aab934",
+        "e57627fe6214bdd8",
+        "ef6c60e8250976cf",
+        "f02b8ae2f24e8aaf",
+        "f6d665ef313b5a3c",
+        "f7f232ee26ec35fb",
+        "f9ac47d4b5b89596",
+        "fa269172bd08695b"
+      ]
+    },
+    {
+      "kit": "a3a7e93d",
+      "archive": "fd1028aaaa651c2f",
+      "type": 1,
+      "name": "SA-25 Steel Trooper",
+      "shared_units": [
+        "897abcbaa487afe8",
+        "bc20d0b4efff128c"
+      ]
+    },
+    {
+      "kit": "f2b7d3f5",
+      "archive": "1de000bcfe445daf",
+      "type": 0,
+      "name": "SA-12 Servo Assisted",
+      "shared_units": [
+        "0387a158d04848f4",
+        "18902007139a6060",
+        "23a244c877843da3",
+        "26aae8b522a2c53d",
+        "2bef87ad75905b26",
+        "2d9ce590011788ac",
+        "2f66b9373cb58485",
+        "334393c6df6002e5",
+        "3d4d42125cb2096d",
+        "620f7dcb7f6cd8f2",
+        "704b51afc26f1349",
+        "863c35d319d266c0",
+        "932df742507e4954",
+        "9ef5adcfb96fdc57",
+        "abd7d23022e3de57",
+        "b3e2e26299afa723",
+        "c68481d5f6fb0362",
+        "dffda4486e68716b",
+        "ef6c60e8250976cf",
+        "f6d665ef313b5a3c",
+        "f7f232ee26ec35fb",
+        "f9ac47d4b5b89596"
+      ]
+    },
+    {
+      "kit": "8cd3973b",
+      "archive": "3196ede0c925ba83",
+      "type": 1,
+      "name": "SA-12 Servo-Assisted",
+      "shared_units": [
+        "5cad10840c428a9b"
+      ]
+    },
+    {
+      "kit": "3c3ebaf0",
+      "archive": "d1421b2988398f0a",
+      "type": 0,
+      "name": "SA-32 Dynamo",
+      "shared_units": [
+        "334393c6df6002e5",
+        "f9ac47d4b5b89596"
+      ]
+    },
+    {
+      "kit": "135c4274",
+      "archive": "681a512c5a5c0de7",
+      "type": 0,
+      "name": "AF-91 Field Chemist",
+      "shared_units": [
+        "0364ca45cf3fb606",
+        "2a18613ccca0dab0",
+        "330d846c1a93fa1e",
+        "3e615e0fb6334cc6",
+        "484592a195e25e29",
+        "49c3b6a9e0367370",
+        "620f7dcb7f6cd8f2",
+        "698da2bd78a2ea3a",
+        "8388f68ab43053ab",
+        "8d902f288e8baec4",
+        "934a8a7f3b5ab7c0",
+        "9f40a6bdb5e4707f",
+        "b2af14e5ce8ee207",
+        "b47e3deac9a7ad6a",
+        "c6368c3df2e97da9",
+        "ca672d99456b3ffe",
+        "d502e2e7ca7136b7",
+        "e7b26be779bdd9e5",
+        "f1567f92bbed4b06",
+        "f2fc9b59863f63e4",
+        "f3593e14d20087bc",
+        "f85fa4f5dcc275b8"
+      ]
+    },
+    {
+      "kit": "6b619174",
+      "archive": "62c6fbc5cd90448d",
+      "type": 0,
+      "name": "AF-91 Field Chemist",
+      "shared_units": [
+        "0364ca45cf3fb606",
+        "2a18613ccca0dab0",
+        "330d846c1a93fa1e",
+        "3e615e0fb6334cc6",
+        "484592a195e25e29",
+        "49c3b6a9e0367370",
+        "620f7dcb7f6cd8f2",
+        "698da2bd78a2ea3a",
+        "8388f68ab43053ab",
+        "8d902f288e8baec4",
+        "934a8a7f3b5ab7c0",
+        "9f40a6bdb5e4707f",
+        "b2af14e5ce8ee207",
+        "b47e3deac9a7ad6a",
+        "c6368c3df2e97da9",
+        "ca672d99456b3ffe",
+        "d502e2e7ca7136b7",
+        "e7b26be779bdd9e5",
+        "f1567f92bbed4b06",
+        "f2fc9b59863f63e4",
+        "f3593e14d20087bc",
+        "f85fa4f5dcc275b8"
+      ]
+    },
+    {
+      "kit": "732693a1",
+      "archive": "fda9b1496320364e",
+      "type": 0,
+      "name": "AF-91 Field Chemist",
+      "shared_units": [
+        "0364ca45cf3fb606",
+        "2a18613ccca0dab0",
+        "330d846c1a93fa1e",
+        "3e615e0fb6334cc6",
+        "484592a195e25e29",
+        "49c3b6a9e0367370",
+        "620f7dcb7f6cd8f2",
+        "698da2bd78a2ea3a",
+        "8388f68ab43053ab",
+        "8d902f288e8baec4",
+        "934a8a7f3b5ab7c0",
+        "9f40a6bdb5e4707f",
+        "b2af14e5ce8ee207",
+        "b47e3deac9a7ad6a",
+        "c6368c3df2e97da9",
+        "ca672d99456b3ffe",
+        "d502e2e7ca7136b7",
+        "e7b26be779bdd9e5",
+        "f1567f92bbed4b06",
+        "f2fc9b59863f63e4",
+        "f3593e14d20087bc",
+        "f85fa4f5dcc275b8"
+      ]
+    },
+    {
+      "kit": "fb4b1254",
+      "archive": "4ceb3d4e31097c68",
+      "type": 0,
+      "name": "CE-35 Trench Engineer",
+      "shared_units": [
+        "01144a44b65471bd",
+        "0387a158d04848f4",
+        "23a244c877843da3",
+        "2f66b9373cb58485",
+        "30204ad0fe720352",
+        "3b2875408869343e",
+        "49c3b6a9e0367370",
+        "4b98ae557fe6b624",
+        "620f7dcb7f6cd8f2",
+        "6612fc2ac51c20d1",
+        "79740c9dbb23a2d8",
+        "7a6509254fd3715d",
+        "8868bb0c6e923b44",
+        "9ef5adcfb96fdc57",
+        "9f40a6bdb5e4707f",
+        "a15f3a638721a49e",
+        "af049b267537d22b",
+        "c7e47f2d8d5f8b40",
+        "ca672d99456b3ffe",
+        "f087d1b65fe1cebe",
+        "f6d665ef313b5a3c",
+        "f7f232ee26ec35fb"
+      ]
+    },
+    {
+      "kit": "affb955b",
+      "archive": "b72f72e3863c1611",
+      "type": 1,
+      "name": "CE-35 Trench Engineer",
+      "shared_units": [
+        "697d6a57971da101"
+      ]
+    },
+    {
+      "kit": "f34064ac",
+      "archive": "8079db396fbfd31c",
+      "type": 0,
+      "name": "CE-67 Titan",
+      "shared_units": [
+        "23a244c877843da3",
+        "30204ad0fe720352",
+        "3b2875408869343e",
+        "4d09803a20112fe4",
+        "c82bcd4aaabb6cd3",
+        "f6d665ef313b5a3c"
+      ]
+    },
+    {
+      "kit": "95903adf",
+      "archive": "d7e0e8a6c8ab0e2c",
+      "type": 0,
+      "name": "CM-17 Butcher",
+      "shared_units": [
+        "64a71fbe6ef75b80",
+        "e15680e4c4a89420"
+      ]
+    },
+    {
+      "kit": "cb7e9736",
+      "archive": "1120577ed1e095f8",
+      "type": 0,
+      "name": "B-22 Model Citizen",
+      "shared_units": [
+        "01144a44b65471bd",
+        "0387a158d04848f4",
+        "18902007139a6060",
+        "23a244c877843da3",
+        "293d8135eb95873b",
+        "29b877b122acc704",
+        "2d9ce590011788ac",
+        "2f66b9373cb58485",
+        "30204ad0fe720352",
+        "34bebf638031371a",
+        "3b2875408869343e",
+        "41cce3f64f2eaf3a",
+        "49c3b6a9e0367370",
+        "620f7dcb7f6cd8f2",
+        "79740c9dbb23a2d8",
+        "9ef5adcfb96fdc57",
+        "9f40a6bdb5e4707f",
+        "ca672d99456b3ffe",
+        "e57627fe6214bdd8",
+        "f6d665ef313b5a3c",
+        "f7f232ee26ec35fb",
+        "fa269172bd08695b"
+      ]
+    },
+    {
+      "kit": "ec49526f",
+      "archive": "d1a39b5edac646aa",
+      "type": 1,
+      "name": "B-22 Model Citizen",
+      "shared_units": [
+        "bc20d0b4efff128c"
+      ]
+    },
+    {
+      "kit": "b08e0939",
+      "archive": "08e906980c632592",
+      "type": 0,
+      "name": null,
+      "shared_units": [
+        "01144a44b65471bd",
+        "0387a158d04848f4",
+        "18902007139a6060",
+        "23a244c877843da3",
+        "293d8135eb95873b",
+        "29b877b122acc704",
+        "2d9ce590011788ac",
+        "2f66b9373cb58485",
+        "30204ad0fe720352",
+        "34bebf638031371a",
+        "3b2875408869343e",
+        "41cce3f64f2eaf3a",
+        "49c3b6a9e0367370",
+        "620f7dcb7f6cd8f2",
+        "79740c9dbb23a2d8",
+        "9ef5adcfb96fdc57",
+        "9f40a6bdb5e4707f",
+        "ca672d99456b3ffe",
+        "e57627fe6214bdd8",
+        "f6d665ef313b5a3c",
+        "f7f232ee26ec35fb",
+        "fa269172bd08695b"
+      ]
+    },
+    {
+      "kit": "95ac1cfd",
+      "archive": "687636554fbf6a46",
+      "type": 1,
+      "name": null,
+      "shared_units": [
+        "bc20d0b4efff128c"
+      ]
+    },
+    {
+      "kit": "a574d33d",
+      "archive": "0fecb336be1d287b",
+      "type": 0,
+      "name": "UF-84 Doubt Killer",
+      "shared_units": [
+        "49c3b6a9e0367370",
+        "620f7dcb7f6cd8f2",
+        "9f40a6bdb5e4707f",
+        "ca672d99456b3ffe"
+      ]
+    },
+    {
+      "kit": "537e8e45",
+      "archive": "68ac37dae3b424c1",
+      "type": 0,
+      "name": "FS-61 Dreadnought",
+      "shared_units": [
+        "23a244c877843da3",
+        "30204ad0fe720352",
+        "3b2875408869343e",
+        "64a71fbe6ef75b80",
+        "e15680e4c4a89420",
+        "f6d665ef313b5a3c"
+      ]
+    },
+    {
+      "kit": "38aa207d",
+      "archive": "b0db7f4f0a11debd",
+      "type": 0,
+      "name": "CM-14 Physician",
+      "shared_units": [
+        "01144a44b65471bd",
+        "0387a158d04848f4",
+        "2f66b9373cb58485",
+        "6612fc2ac51c20d1",
+        "79740c9dbb23a2d8",
+        "9ef5adcfb96fdc57",
+        "c7e47f2d8d5f8b40",
+        "f7f232ee26ec35fb"
+      ]
+    },
+    {
+      "kit": "9f73133e",
+      "archive": "5e9a360985f0a6e0",
+      "type": 0,
+      "name": "TR-117 Alpha Commander",
+      "shared_units": [
+        "01144a44b65471bd",
+        "0387a158d04848f4",
+        "2f66b9373cb58485",
+        "6612fc2ac51c20d1",
+        "79740c9dbb23a2d8",
+        "9ef5adcfb96fdc57",
+        "c7e47f2d8d5f8b40",
+        "f7f232ee26ec35fb"
+      ]
+    },
+    {
+      "kit": "8b9ed77d",
+      "archive": "788df19150915809",
+      "type": 0,
+      "name": "B-24 Enforcer",
+      "shared_units": [
+        "01144a44b65471bd",
+        "0387a158d04848f4",
+        "23a244c877843da3",
+        "2f66b9373cb58485",
+        "30204ad0fe720352",
+        "3b2875408869343e",
+        "49c3b6a9e0367370",
+        "4d09803a20112fe4",
+        "5a0ecf345ed340fc",
+        "620f7dcb7f6cd8f2",
+        "64a71fbe6ef75b80",
+        "6f2a7b35937723e3",
+        "99a130858b3d8ff1",
+        "9f40a6bdb5e4707f",
+        "a436a94c1a0be4da",
+        "c82bcd4aaabb6cd3",
+        "c8444826a3d8f7ee",
+        "ca672d99456b3ffe",
+        "e15680e4c4a89420",
+        "effdfd2386aef629",
+        "f6d665ef313b5a3c",
+        "f7f232ee26ec35fb"
+      ]
+    },
+    {
+      "kit": "803276ce",
+      "archive": "33cecc4e485ea3c4",
+      "type": 0,
+      "name": "B-24 Enforcer",
+      "shared_units": [
+        "01144a44b65471bd",
+        "0387a158d04848f4",
+        "23a244c877843da3",
+        "2f66b9373cb58485",
+        "30204ad0fe720352",
+        "3b2875408869343e",
+        "49c3b6a9e0367370",
+        "4d09803a20112fe4",
+        "5a0ecf345ed340fc",
+        "620f7dcb7f6cd8f2",
+        "64a71fbe6ef75b80",
+        "6f2a7b35937723e3",
+        "99a130858b3d8ff1",
+        "9f40a6bdb5e4707f",
+        "a436a94c1a0be4da",
+        "c82bcd4aaabb6cd3",
+        "c8444826a3d8f7ee",
+        "ca672d99456b3ffe",
+        "e15680e4c4a89420",
+        "effdfd2386aef629",
+        "f6d665ef313b5a3c",
+        "f7f232ee26ec35fb"
+      ]
+    },
+    {
+      "kit": "ac0adecd",
+      "archive": "1866f762c49358ea",
+      "type": 0,
+      "name": "B-24 Enforcer",
+      "shared_units": [
+        "01144a44b65471bd",
+        "0387a158d04848f4",
+        "23a244c877843da3",
+        "2f66b9373cb58485",
+        "30204ad0fe720352",
+        "3b2875408869343e",
+        "49c3b6a9e0367370",
+        "4d09803a20112fe4",
+        "5a0ecf345ed340fc",
+        "620f7dcb7f6cd8f2",
+        "64a71fbe6ef75b80",
+        "6f2a7b35937723e3",
+        "99a130858b3d8ff1",
+        "9f40a6bdb5e4707f",
+        "a436a94c1a0be4da",
+        "c82bcd4aaabb6cd3",
+        "c8444826a3d8f7ee",
+        "ca672d99456b3ffe",
+        "e15680e4c4a89420",
+        "effdfd2386aef629",
+        "f6d665ef313b5a3c",
+        "f7f232ee26ec35fb"
+      ]
+    },
+    {
+      "kit": "41211c7f",
+      "archive": "bb58aea9beba9e0e",
+      "type": 1,
+      "name": "B-24 Enforcer",
+      "shared_units": [
+        "36dfe50265c0932e"
+      ]
+    },
+    {
+      "kit": "076d9aad",
+      "archive": "31d06451a09679f1",
+      "type": 0,
+      "name": "FS-05 Marksman",
+      "shared_units": [
+        "64a71fbe6ef75b80",
+        "99a130858b3d8ff1",
+        "e15680e4c4a89420",
+        "effdfd2386aef629"
+      ]
+    },
+    {
+      "kit": "58dbdacd",
+      "archive": "ccac0a57aca3ae92",
+      "type": 0,
+      "name": "FS-05 Marksman",
+      "shared_units": [
+        "23a244c877843da3",
+        "30204ad0fe720352",
+        "3b2875408869343e",
+        "4d09803a20112fe4",
+        "64a71fbe6ef75b80",
+        "99a130858b3d8ff1",
+        "c82bcd4aaabb6cd3",
+        "e15680e4c4a89420",
+        "effdfd2386aef629",
+        "f6d665ef313b5a3c"
+      ]
+    },
+    {
+      "kit": "ecabadbf",
+      "archive": "8670598c1f4462dc",
+      "type": 0,
+      "name": "FS-05 Marksman",
+      "shared_units": [
+        "64a71fbe6ef75b80",
+        "99a130858b3d8ff1",
+        "e15680e4c4a89420",
+        "effdfd2386aef629"
+      ]
+    },
+    {
+      "kit": "77947add",
+      "archive": "24abba68248f7adf",
+      "type": 0,
+      "name": "FS-11 Executioner",
+      "shared_units": [
+        "23a244c877843da3",
+        "30204ad0fe720352",
+        "3b2875408869343e",
+        "64a71fbe6ef75b80",
+        "e15680e4c4a89420",
+        "f6d665ef313b5a3c"
+      ]
+    },
+    {
+      "kit": "5bb4bbb0",
+      "archive": "0bb13de574d4acce",
+      "type": 0,
+      "name": "SC-34 Infiltrator",
+      "shared_units": [
+        "23a244c877843da3",
+        "30204ad0fe720352",
+        "3b2875408869343e",
+        "4d09803a20112fe4",
+        "c82bcd4aaabb6cd3",
+        "f6d665ef313b5a3c"
+      ]
+    },
+    {
+      "kit": "250fd6c1",
+      "archive": "bf2208ff6eac2f43",
+      "type": 0,
+      "name": null,
+      "shared_units": [
+        "01144a44b65471bd",
+        "0387a158d04848f4",
+        "18902007139a6060",
+        "23a244c877843da3",
+        "293d8135eb95873b",
+        "29b877b122acc704",
+        "2d9ce590011788ac",
+        "2f66b9373cb58485",
+        "30204ad0fe720352",
+        "34bebf638031371a",
+        "3b2875408869343e",
+        "41cce3f64f2eaf3a",
+        "49c3b6a9e0367370",
+        "620f7dcb7f6cd8f2",
+        "79740c9dbb23a2d8",
+        "9ef5adcfb96fdc57",
+        "9f40a6bdb5e4707f",
+        "ca672d99456b3ffe",
+        "e57627fe6214bdd8",
+        "f6d665ef313b5a3c",
+        "f7f232ee26ec35fb",
+        "fa269172bd08695b"
+      ]
+    },
+    {
+      "kit": "8a957897",
+      "archive": "7dc940635e3dd573",
+      "type": 0,
+      "name": "TR-7 Ambassador of the Brand",
+      "shared_units": [
+        "01144a44b65471bd",
+        "0387a158d04848f4",
+        "18902007139a6060",
+        "23a244c877843da3",
+        "293d8135eb95873b",
+        "29b877b122acc704",
+        "2d9ce590011788ac",
+        "2f66b9373cb58485",
+        "30204ad0fe720352",
+        "34bebf638031371a",
+        "3b2875408869343e",
+        "41cce3f64f2eaf3a",
+        "49c3b6a9e0367370",
+        "620f7dcb7f6cd8f2",
+        "79740c9dbb23a2d8",
+        "9ef5adcfb96fdc57",
+        "9f40a6bdb5e4707f",
+        "ca672d99456b3ffe",
+        "e57627fe6214bdd8",
+        "f6d665ef313b5a3c",
+        "f7f232ee26ec35fb",
+        "fa269172bd08695b"
+      ]
+    },
+    {
+      "kit": "1d0e3431",
+      "archive": "e102d5fe68e16e5f",
+      "type": 0,
+      "name": null,
+      "shared_units": [
+        "01144a44b65471bd",
+        "0387a158d04848f4",
+        "18902007139a6060",
+        "23a244c877843da3",
+        "293d8135eb95873b",
+        "29b877b122acc704",
+        "2d9ce590011788ac",
+        "2f66b9373cb58485",
+        "30204ad0fe720352",
+        "34bebf638031371a",
+        "3b2875408869343e",
+        "41cce3f64f2eaf3a",
+        "49c3b6a9e0367370",
+        "620f7dcb7f6cd8f2",
+        "79740c9dbb23a2d8",
+        "9ef5adcfb96fdc57",
+        "9f40a6bdb5e4707f",
+        "ca672d99456b3ffe",
+        "e57627fe6214bdd8",
+        "f6d665ef313b5a3c",
+        "f7f232ee26ec35fb",
+        "fa269172bd08695b"
+      ]
+    },
+    {
+      "kit": "708451e9",
+      "archive": "d184206b2e0a0168",
+      "type": 0,
+      "name": null,
+      "shared_units": [
+        "01144a44b65471bd",
+        "0387a158d04848f4",
+        "18902007139a6060",
+        "23a244c877843da3",
+        "293d8135eb95873b",
+        "29b877b122acc704",
+        "2d9ce590011788ac",
+        "2f66b9373cb58485",
+        "30204ad0fe720352",
+        "34bebf638031371a",
+        "3b2875408869343e",
+        "41cce3f64f2eaf3a",
+        "49c3b6a9e0367370",
+        "620f7dcb7f6cd8f2",
+        "79740c9dbb23a2d8",
+        "9ef5adcfb96fdc57",
+        "9f40a6bdb5e4707f",
+        "ca672d99456b3ffe",
+        "e57627fe6214bdd8",
+        "f6d665ef313b5a3c",
+        "f7f232ee26ec35fb",
+        "fa269172bd08695b"
+      ]
+    },
+    {
+      "kit": "d59566d5",
+      "archive": "b4603645991ffd36",
+      "type": 0,
+      "name": null,
+      "shared_units": [
+        "01144a44b65471bd",
+        "0387a158d04848f4",
+        "18902007139a6060",
+        "23a244c877843da3",
+        "293d8135eb95873b",
+        "29b877b122acc704",
+        "2d9ce590011788ac",
+        "2f66b9373cb58485",
+        "30204ad0fe720352",
+        "34bebf638031371a",
+        "3b2875408869343e",
+        "41cce3f64f2eaf3a",
+        "49c3b6a9e0367370",
+        "620f7dcb7f6cd8f2",
+        "79740c9dbb23a2d8",
+        "9ef5adcfb96fdc57",
+        "9f40a6bdb5e4707f",
+        "ca672d99456b3ffe",
+        "e57627fe6214bdd8",
+        "f6d665ef313b5a3c",
+        "f7f232ee26ec35fb",
+        "fa269172bd08695b"
+      ]
+    },
+    {
+      "kit": "1369b95b",
+      "archive": "6e4c490cf89b5a3c",
+      "type": 0,
+      "name": null,
+      "shared_units": [
+        "01144a44b65471bd",
+        "0387a158d04848f4",
+        "18902007139a6060",
+        "23a244c877843da3",
+        "293d8135eb95873b",
+        "29b877b122acc704",
+        "2d9ce590011788ac",
+        "2f66b9373cb58485",
+        "30204ad0fe720352",
+        "34bebf638031371a",
+        "3b2875408869343e",
+        "41cce3f64f2eaf3a",
+        "49c3b6a9e0367370",
+        "620f7dcb7f6cd8f2",
+        "79740c9dbb23a2d8",
+        "9ef5adcfb96fdc57",
+        "9f40a6bdb5e4707f",
+        "ca672d99456b3ffe",
+        "e57627fe6214bdd8",
+        "f6d665ef313b5a3c",
+        "f7f232ee26ec35fb",
+        "fa269172bd08695b"
+      ]
+    },
+    {
+      "kit": "1c089a28",
+      "archive": "4574fd34bddba5c4",
+      "type": 0,
+      "name": "TR-40 Gold Eagle",
+      "shared_units": [
+        "01144a44b65471bd",
+        "0387a158d04848f4",
+        "18902007139a6060",
+        "23a244c877843da3",
+        "293d8135eb95873b",
+        "29b877b122acc704",
+        "2d9ce590011788ac",
+        "2f66b9373cb58485",
+        "30204ad0fe720352",
+        "34bebf638031371a",
+        "3b2875408869343e",
+        "41cce3f64f2eaf3a",
+        "49c3b6a9e0367370",
+        "620f7dcb7f6cd8f2",
+        "79740c9dbb23a2d8",
+        "9ef5adcfb96fdc57",
+        "9f40a6bdb5e4707f",
+        "ca672d99456b3ffe",
+        "e57627fe6214bdd8",
+        "f6d665ef313b5a3c",
+        "f7f232ee26ec35fb",
+        "fa269172bd08695b"
+      ]
+    },
+    {
+      "kit": "2180eb8d",
+      "archive": "bbaf861ceb582ef6",
+      "type": 1,
+      "name": null,
+      "shared_units": [
+        "bc20d0b4efff128c"
+      ]
+    },
+    {
+      "kit": "35e8934f",
+      "archive": "a0ce7d80e81fc62e",
+      "type": 1,
+      "name": "TR-7 Ambassador of the Brand",
+      "shared_units": [
+        "bc20d0b4efff128c"
+      ]
+    },
+    {
+      "kit": "4f6ccd6c",
+      "archive": "8978807640a47498",
+      "type": 1,
+      "name": null,
+      "shared_units": [
+        "bc20d0b4efff128c"
+      ]
+    },
+    {
+      "kit": "40a7d694",
+      "archive": "e0491eb4fb357d2a",
+      "type": 1,
+      "name": null,
+      "shared_units": [
+        "bc20d0b4efff128c"
+      ]
+    },
+    {
+      "kit": "8ce73dae",
+      "archive": "202af54b4fe5dd85",
+      "type": 1,
+      "name": null,
+      "shared_units": [
+        "bc20d0b4efff128c"
+      ]
+    },
+    {
+      "kit": "69b2ec39",
+      "archive": "e5fe990d7d56cd2e",
+      "type": 1,
+      "name": null,
+      "shared_units": [
+        "bc20d0b4efff128c"
+      ]
+    },
+    {
+      "kit": "ee7019ed",
+      "archive": "27d27e14b4e66f50",
+      "type": 1,
+      "name": null,
+      "shared_units": [
+        "bc20d0b4efff128c"
+      ]
+    },
+    {
+      "kit": "e207c84a",
+      "archive": "3cd03a1159968eb5",
+      "type": 1,
+      "name": null,
+      "shared_units": [
+        "bc20d0b4efff128c"
+      ]
+    },
+    {
+      "kit": "10707d29",
+      "archive": "3ee85c0f44ad92cc",
+      "type": 1,
+      "name": null,
+      "shared_units": [
+        "bc20d0b4efff128c"
+      ]
+    },
+    {
+      "kit": "fdbf4741",
+      "archive": "32a6a7761c70c19b",
+      "type": 1,
+      "name": null,
+      "shared_units": [
+        "bc20d0b4efff128c"
+      ]
+    },
+    {
+      "kit": "b638f3c4",
+      "archive": "cd08c722235e75cc",
+      "type": 1,
+      "name": null,
+      "shared_units": [
+        "bc20d0b4efff128c"
+      ]
+    },
+    {
+      "kit": "843df174",
+      "archive": "9a37b0e0df207c60",
+      "type": 1,
+      "name": null,
+      "shared_units": [
+        "bc20d0b4efff128c"
+      ]
+    },
+    {
+      "kit": "f9d912a7",
+      "archive": "c19663a7f34f88fc",
+      "type": 1,
+      "name": "TR-40 Gold Eagle",
+      "shared_units": [
+        "bc20d0b4efff128c"
+      ]
+    },
+    {
+      "kit": "100a5dcd",
+      "archive": "62c6fbc5cd90448d",
+      "type": 0,
+      "name": "AF-91 Field Chemist",
+      "shared_units": [
+        "0364ca45cf3fb606",
+        "2a18613ccca0dab0",
+        "330d846c1a93fa1e",
+        "3e615e0fb6334cc6",
+        "484592a195e25e29",
+        "49c3b6a9e0367370",
+        "620f7dcb7f6cd8f2",
+        "698da2bd78a2ea3a",
+        "8388f68ab43053ab",
+        "8d902f288e8baec4",
+        "934a8a7f3b5ab7c0",
+        "9f40a6bdb5e4707f",
+        "b2af14e5ce8ee207",
+        "b47e3deac9a7ad6a",
+        "c6368c3df2e97da9",
+        "ca672d99456b3ffe",
+        "d502e2e7ca7136b7",
+        "e7b26be779bdd9e5",
+        "f1567f92bbed4b06",
+        "f2fc9b59863f63e4",
+        "f3593e14d20087bc",
+        "f85fa4f5dcc275b8"
+      ]
+    },
+    {
+      "kit": "df5f7ccb",
+      "archive": "21a24072a79aeba8",
+      "type": 1,
+      "name": "AF-91 Field Chemist",
+      "shared_units": [
+        "9a51b6707da0927c"
+      ]
+    },
+    {
+      "kit": "5096bce9",
+      "archive": "b186eae3f2b61509",
+      "type": 0,
+      "name": "SR-64 Cinderblock",
+      "shared_units": [
+        "23a244c877843da3",
+        "30204ad0fe720352",
+        "3b2875408869343e",
+        "f6d665ef313b5a3c"
+      ]
+    },
+    {
+      "kit": "c9d2ad39",
+      "archive": "5def9553433fceda",
+      "type": 0,
+      "name": "SA-04 Combat Technician",
+      "shared_units": [
+        "01144a44b65471bd",
+        "0387a158d04848f4",
+        "18902007139a6060",
+        "2d9ce590011788ac",
+        "2f66b9373cb58485",
+        "6612fc2ac51c20d1",
+        "79740c9dbb23a2d8",
+        "9ef5adcfb96fdc57",
+        "c7e47f2d8d5f8b40",
+        "f7f232ee26ec35fb"
+      ]
+    },
+    {
+      "kit": "40c6635c",
+      "archive": "e4e41c5f9c3848f0",
+      "type": 0,
+      "name": "BP-20 Correct Officer",
+      "shared_units": [
+        "23a244c877843da3",
+        "30204ad0fe720352",
+        "3b2875408869343e",
+        "f6d665ef313b5a3c"
+      ]
+    },
+    {
+      "kit": "09b08ec4",
+      "archive": "1bb362e77179996f",
+      "type": 0,
+      "name": "BP-32 Jackboot",
+      "shared_units": [
+        "23a244c877843da3",
+        "30204ad0fe720352",
+        "3b2875408869343e",
+        "f6d665ef313b5a3c"
+      ]
+    },
+    {
+      "kit": "2d1dd830",
+      "archive": "b6f3029666a39fe8",
+      "type": 0,
+      "name": "I-09 Heatseeker",
+      "shared_units": [
+        "01144a44b65471bd",
+        "79740c9dbb23a2d8",
+        "9ef5adcfb96fdc57",
+        "f7f232ee26ec35fb"
+      ]
+    }
+  ],
+  "external_material_check": {
+    "checked": [
+      {
+        "id": "a781f50f508ed81b",
+        "archive": "58e4bd4b2278d15c",
+        "base_materials": [
+          "5a4597ed9ab5f84f"
+        ],
+        "textures": [
+          "f37a4e756300ab32",
+          "f001498ea40718fb",
+          "4656ac419388a0d4",
+          "68acd4177fa5f4db",
+          "8e42f23230ab525e",
+          "4656ac419388a0d4",
+          "7fc8b2e634181f66",
+          "82ba9a2d6997cc4b",
+          "f37a4e756300ab32",
+          "bf281073a422022c",
+          "9e0595f7f9d158d1",
+          "486c27ee43065178"
+        ],
+        "modified_texture_overlap": [],
+        "main_sha256": "60f4786fbe8d029012f5a774caf077f06e83da04fdf1f39cce0d9879625f8c68"
+      },
+      {
+        "id": "5cb1104f3f35d75f",
+        "archive": "519cc1ec2eb56e1d",
+        "base_materials": [
+          "f5ebd93181fdf00c"
+        ],
+        "textures": [
+          "f8b2508e99fb9f28",
+          "7db10f0a89343dc7",
+          "f18dfbb5346732c1",
+          "737a3fdbfb6cce00",
+          "e21128ca48e27a13",
+          "17c4075f57e4211a",
+          "08ecb98c448064d5",
+          "cedf76797cdc43d0",
+          "e21128ca48e27a13",
+          "cf56f70bd0ae1fd1",
+          "7b8293c071bde8b9",
+          "bfefc8b1b381a00f"
+        ],
+        "modified_texture_overlap": [],
+        "main_sha256": "997ef980f4d9d1c00148dd0e5a7c4db1cab8b420ff441587fb04171b125da058"
+      },
+      {
+        "id": "58b1670a61bfbdf6",
+        "archive": "58e4bd4b2278d15c",
+        "base_materials": [
+          "9e0a4db5c90ed6d3"
+        ],
+        "textures": [
+          "f8b2508e99fb9f28",
+          "7db10f0a89343dc7",
+          "f18dfbb5346732c1",
+          "f18f3a72ef7a10dd",
+          "e21128ca48e27a13",
+          "17c4075f57e4211a",
+          "b6bcd3893d64ce56",
+          "6811cefdcee385f5",
+          "e21128ca48e27a13",
+          "c9bd4e13150f36da",
+          "bfefc8b1b381a00f"
+        ],
+        "modified_texture_overlap": [],
+        "main_sha256": "1045f014f4570a955aaaa4084fd371ed5f2accb3ac45571415e23627a00b0425"
+      },
+      {
+        "id": "6135204a71fd3f47",
+        "archive": "18235e0c9ec0e636",
+        "base_materials": [
+          "87da288c087e87e2"
+        ],
+        "textures": [
+          "0ba19c09019d891e",
+          "0ba19c09019d891e",
+          "de89f01fc88b8287",
+          "46481e37faf3d2b6"
+        ],
+        "modified_texture_overlap": [],
+        "main_sha256": "1107d15e296089e959db3594b0d68181aee8ce10c659453e71fcc4855593c731"
+      },
+      {
+        "id": "381664fca5dd928a",
+        "archive": "562a45e9bc984eb9",
+        "base_materials": [
+          "9e0a4db5c90ed6d3"
+        ],
+        "textures": [
+          "f8b2508e99fb9f28",
+          "7db10f0a89343dc7",
+          "f18dfbb5346732c1",
+          "6a5be59128addb2f",
+          "e21128ca48e27a13",
+          "17c4075f57e4211a",
+          "5c5e764ed79965c8",
+          "d88de02d144a3c70",
+          "e21128ca48e27a13",
+          "c7bb2c83d13561fd",
+          "bfefc8b1b381a00f"
+        ],
+        "modified_texture_overlap": [],
+        "main_sha256": "d66e9e62194cfa8fa3167b6a8131d04b7e754f15567f365d8f276df9f1be3b20"
+      },
+      {
+        "id": "6f8e3d096b015b0a",
+        "archive": "58e4bd4b2278d15c",
+        "base_materials": [
+          "f5ebd93181fdf00c"
+        ],
+        "textures": [
+          "f8b2508e99fb9f28",
+          "7db10f0a89343dc7",
+          "f18dfbb5346732c1",
+          "1b79fb0ad0caa3ec",
+          "e21128ca48e27a13",
+          "17c4075f57e4211a",
+          "c882ecb83adbf574",
+          "dd7aaf4bcbd0c21b",
+          "e21128ca48e27a13",
+          "cf56f70bd0ae1fd1",
+          "bf3ad583c16f25db",
+          "bfefc8b1b381a00f"
+        ],
+        "modified_texture_overlap": [],
+        "main_sha256": "a6ea093de86102a2d746eec4133eaf8d1c61910e564208bb7983a5f8d73819ec"
+      },
+      {
+        "id": "5a4597ed9ab5f84f",
+        "archive": "18235e0c9ec0e636",
+        "base_materials": [],
+        "textures": [
+          "f37a4e756300ab32",
+          "f001498ea40718fb",
+          "4656ac419388a0d4",
+          "9b9a74778790433f",
+          "f8f3488ccd349bf1",
+          "4656ac419388a0d4",
+          "7fc8b2e634181f66",
+          "82ba9a2d6997cc4b",
+          "f37a4e756300ab32",
+          "bf281073a422022c",
+          "dc1813d1ee9b1ca0",
+          "486c27ee43065178"
+        ],
+        "modified_texture_overlap": [],
+        "main_sha256": "824e4358411591cda5b608f0911f162ccb4e934dee0bd2434d7eff8a7ce24180"
+      },
+      {
+        "id": "8f669f365f24594e",
+        "archive": "18235e0c9ec0e636",
+        "base_materials": [],
+        "textures": [
+          "f4ef9bef746c4944",
+          "f37a4e756300ab32",
+          "e21128ca48e27a13",
+          "12d4692531c1fd35",
+          "f4ef9bef746c4944",
+          "f4ef9bef746c4944",
+          "17c4075f57e4211a",
+          "f4ef9bef746c4944",
+          "f4ef9bef746c4944",
+          "f4ef9bef746c4944",
+          "589685dc5b965948",
+          "4781cf99e180006d",
+          "ad18941c16d97448"
+        ],
+        "modified_texture_overlap": [],
+        "main_sha256": "4106d41e14e21b3f85a9d8603277cf041f66fc8550222e9c7a2745e933563133"
+      },
+      {
+        "id": "f5ebd93181fdf00c",
+        "archive": "18235e0c9ec0e636",
+        "base_materials": [],
+        "textures": [
+          "f8b2508e99fb9f28",
+          "7db10f0a89343dc7",
+          "cf0cc31b981786c9",
+          "f4ef9bef746c4944",
+          "e21128ca48e27a13",
+          "17c4075f57e4211a",
+          "f37a4e756300ab32",
+          "f37a4e756300ab32",
+          "e21128ca48e27a13",
+          "f37a4e756300ab32",
+          "a82e6cf51fa31c88",
+          "bfefc8b1b381a00f"
+        ],
+        "modified_texture_overlap": [],
+        "main_sha256": "c87ce9d527f147c90668e7196829e5199734e93b6e00cbb0ac65f10fc6f6cfe7"
+      },
+      {
+        "id": "5e535aabee2a3fd5",
+        "archive": "6cd3d55c05d4eac1",
+        "base_materials": [
+          "9e0a4db5c90ed6d3"
+        ],
+        "textures": [
+          "f8b2508e99fb9f28",
+          "7db10f0a89343dc7",
+          "f18dfbb5346732c1",
+          "f18f3a72ef7a10dd",
+          "e21128ca48e27a13",
+          "17c4075f57e4211a",
+          "9589260dbe885b21",
+          "6811cefdcee385f5",
+          "e21128ca48e27a13",
+          "de2269aaefc65aa2",
+          "bfefc8b1b381a00f"
+        ],
+        "modified_texture_overlap": [],
+        "main_sha256": "7fc33c6d0c74b7a0c07b01b8b0326a5e9bdd46ea9a3338c2e3782a0aeb5d8f34"
+      },
+      {
+        "id": "9e0a4db5c90ed6d3",
+        "archive": "18235e0c9ec0e636",
+        "base_materials": [],
+        "textures": [
+          "f8b2508e99fb9f28",
+          "7db10f0a89343dc7",
+          "cf0cc31b981786c9",
+          "f4ef9bef746c4944",
+          "e21128ca48e27a13",
+          "17c4075f57e4211a",
+          "f37a4e756300ab32",
+          "f37a4e756300ab32",
+          "e21128ca48e27a13",
+          "a82e6cf51fa31c88",
+          "bfefc8b1b381a00f"
+        ],
+        "modified_texture_overlap": [],
+        "main_sha256": "b2664dde2c397c1f1972ed24c74243964350a8fbd938fbd5e626d88234e80cfd"
+      },
+      {
+        "id": "12fcc0157b3f155d",
+        "archive": "58e4bd4b2278d15c",
+        "base_materials": [
+          "9e0a4db5c90ed6d3"
+        ],
+        "textures": [
+          "f8b2508e99fb9f28",
+          "7db10f0a89343dc7",
+          "cf0cc31b981786c9",
+          "6a5be59128addb2f",
+          "e21128ca48e27a13",
+          "17c4075f57e4211a",
+          "7d46d86e9fb41a2c",
+          "d88de02d144a3c70",
+          "e21128ca48e27a13",
+          "dcdb8c7b5e005bf2",
+          "bfefc8b1b381a00f"
+        ],
+        "modified_texture_overlap": [],
+        "main_sha256": "5ed70582ab04a3d7327f239fdfa2669d22f3a3b74bba0efd55059548039064d3"
+      },
+      {
+        "id": "8976c25f87752fdb",
+        "archive": "519cc1ec2eb56e1d",
+        "base_materials": [
+          "f5ebd93181fdf00c"
+        ],
+        "textures": [
+          "f8b2508e99fb9f28",
+          "7db10f0a89343dc7",
+          "f18dfbb5346732c1",
+          "1b79fb0ad0caa3ec",
+          "e21128ca48e27a13",
+          "17c4075f57e4211a",
+          "c31fa0957c3522f3",
+          "dd7aaf4bcbd0c21b",
+          "e21128ca48e27a13",
+          "cf56f70bd0ae1fd1",
+          "bf3ad583c16f25db",
+          "bfefc8b1b381a00f"
+        ],
+        "modified_texture_overlap": [],
+        "main_sha256": "2c0a6e0d4065db36ba8fc31657ab72fada858b477583590c5150119883eff6a2"
+      },
+      {
+        "id": "297b41b6069b01a4",
+        "archive": "519cc1ec2eb56e1d",
+        "base_materials": [
+          "9e0a4db5c90ed6d3"
+        ],
+        "textures": [
+          "f8b2508e99fb9f28",
+          "7db10f0a89343dc7",
+          "f18dfbb5346732c1",
+          "6a5be59128addb2f",
+          "e21128ca48e27a13",
+          "17c4075f57e4211a",
+          "287a685b1defe579",
+          "d88de02d144a3c70",
+          "e21128ca48e27a13",
+          "c7bb2c83d13561fd",
+          "bfefc8b1b381a00f"
+        ],
+        "modified_texture_overlap": [],
+        "main_sha256": "91e4d7c7f501535f4ed151e59964d552bf068c3d62e5b751bfd7897a979d6e96"
+      },
+      {
+        "id": "87da288c087e87e2",
+        "archive": "18235e0c9ec0e636",
+        "base_materials": [],
+        "textures": [
+          "f37a4e756300ab32",
+          "9c5191fb9eea4bf7",
+          "01e3747d9c4356fe",
+          "9c5191fb9eea4bf7"
+        ],
+        "modified_texture_overlap": [],
+        "main_sha256": "5d285c59c1ad4ce2591fd68be05f50007254539e53d74e2910b2d3e656fa9aad"
+      },
+      {
+        "id": "ed4b7f613324b6e2",
+        "archive": "6cd3d55c05d4eac1",
+        "base_materials": [
+          "9e0a4db5c90ed6d3"
+        ],
+        "textures": [
+          "f8b2508e99fb9f28",
+          "7db10f0a89343dc7",
+          "f18dfbb5346732c1",
+          "6a5be59128addb2f",
+          "e21128ca48e27a13",
+          "17c4075f57e4211a",
+          "e6739011a148d843",
+          "d88de02d144a3c70",
+          "e21128ca48e27a13",
+          "c7bb2c83d13561fd",
+          "bfefc8b1b381a00f"
+        ],
+        "modified_texture_overlap": [],
+        "main_sha256": "3043416ae509bb6e6786ae0e89532e615ccbec4bf57d898b6090b305926c8f50"
+      },
+      {
+        "id": "f666d70b1d7698e7",
+        "archive": "6cd3d55c05d4eac1",
+        "base_materials": [
+          "f5ebd93181fdf00c"
+        ],
+        "textures": [
+          "f8b2508e99fb9f28",
+          "7db10f0a89343dc7",
+          "f18dfbb5346732c1",
+          "737a3fdbfb6cce00",
+          "e21128ca48e27a13",
+          "17c4075f57e4211a",
+          "bd2480a41edebbb0",
+          "cedf76797cdc43d0",
+          "e21128ca48e27a13",
+          "cf56f70bd0ae1fd1",
+          "7b8293c071bde8b9",
+          "bfefc8b1b381a00f"
+        ],
+        "modified_texture_overlap": [],
+        "main_sha256": "f555e69ec6eb728490dba462449278b487a10a5dc4eabd4e12a292f355454c58"
+      },
+      {
+        "id": "303277bd96c92ab2",
+        "archive": "6cd3d55c05d4eac1",
+        "base_materials": [
+          "f5ebd93181fdf00c"
+        ],
+        "textures": [
+          "f8b2508e99fb9f28",
+          "7db10f0a89343dc7",
+          "f18dfbb5346732c1",
+          "1b79fb0ad0caa3ec",
+          "e21128ca48e27a13",
+          "17c4075f57e4211a",
+          "73c8c0027649609b",
+          "dd7aaf4bcbd0c21b",
+          "e21128ca48e27a13",
+          "cf56f70bd0ae1fd1",
+          "bf3ad583c16f25db",
+          "bfefc8b1b381a00f"
+        ],
+        "modified_texture_overlap": [],
+        "main_sha256": "00e4000def9de8d73f381dcae7a7e0ee7a1cc9728e60a88df8442be7c4adb528"
+      },
+      {
+        "id": "b54472208cd3e371",
+        "archive": "519cc1ec2eb56e1d",
+        "base_materials": [
+          "9e0a4db5c90ed6d3"
+        ],
+        "textures": [
+          "f8b2508e99fb9f28",
+          "7db10f0a89343dc7",
+          "f18dfbb5346732c1",
+          "f18f3a72ef7a10dd",
+          "e21128ca48e27a13",
+          "17c4075f57e4211a",
+          "acaf01d48ad16b1d",
+          "6811cefdcee385f5",
+          "e21128ca48e27a13",
+          "de2269aaefc65aa2",
+          "bfefc8b1b381a00f"
+        ],
+        "modified_texture_overlap": [],
+        "main_sha256": "bacfaa4fe84c65d06c7a86f784f041c6c108ed48091354352e40bf56ba5476d9"
+      },
+      {
+        "id": "c271c993f92665b2",
+        "archive": "562a45e9bc984eb9",
+        "base_materials": [
+          "f5ebd93181fdf00c"
+        ],
+        "textures": [
+          "f8b2508e99fb9f28",
+          "7db10f0a89343dc7",
+          "f18dfbb5346732c1",
+          "1b79fb0ad0caa3ec",
+          "e21128ca48e27a13",
+          "17c4075f57e4211a",
+          "1ecd85d2c424f8ef",
+          "dd7aaf4bcbd0c21b",
+          "e21128ca48e27a13",
+          "cf56f70bd0ae1fd1",
+          "bf3ad583c16f25db",
+          "bfefc8b1b381a00f"
+        ],
+        "modified_texture_overlap": [],
+        "main_sha256": "e3269a3e06ec9de4c28fea3e3c305de83f59f8fe916f38c23950594a669ddb91"
+      },
+      {
+        "id": "2474bb049073fff8",
+        "archive": "58e4bd4b2278d15c",
+        "base_materials": [
+          "f5ebd93181fdf00c"
+        ],
+        "textures": [
+          "f8b2508e99fb9f28",
+          "7db10f0a89343dc7",
+          "f18dfbb5346732c1",
+          "737a3fdbfb6cce00",
+          "e21128ca48e27a13",
+          "17c4075f57e4211a",
+          "431678a80d1c70d0",
+          "cedf76797cdc43d0",
+          "e21128ca48e27a13",
+          "cf56f70bd0ae1fd1",
+          "7b8293c071bde8b9",
+          "bfefc8b1b381a00f"
+        ],
+        "modified_texture_overlap": [],
+        "main_sha256": "b3d3db6962fa8a34a0e226073ceed14d9c44188a72d437dab5c3d6369bee27c9"
+      }
+    ],
+    "unresolved_materials": [],
+    "searched_archives": [
+      "58e4bd4b2278d15c",
+      "562a45e9bc984eb9",
+      "6cd3d55c05d4eac1",
+      "519cc1ec2eb56e1d",
+      "fd109bfeeed36726",
+      "3b143cc283b7f707",
+      "f4880623d32bafa9",
+      "8313c9a556b8ee85",
+      "9ba626afa44a3aa3",
+      "18235e0c9ec0e636"
+    ],
+    "complete": true
+  },
+  "external_base_material_source_overlap": [],
+  "additional_vanilla_unit_or_material_cloning_required": false,
+  "scope": "Eight B-01 armor/helmet Kits; default cape excluded. Overlap is potential impact, not visual proof.",
+  "external_references": [
+    "https://github.com/xypwn/filediver",
+    "https://github.com/crosire/reshade/tree/v6.5.1/include"
+  ]
+}

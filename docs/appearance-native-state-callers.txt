@@ -1,0 +1,3 @@
+{"module": "game.dll", "pid": 24496, "base": "0x7ffb3d320000", "timestamp": "0x6a86132e", "image_size": "0x3a6b000", "function_entries": 152914}
+CALL_CANDIDATE 0x813663 -> 0x86db90 unwind_range (8466272, 8468368)
+CALL_CANDIDATE 0x86ae1a -> 0x86db90 unwind_range (8824989, 8826768)

@@ -1,0 +1,2441 @@
+{
+  "source": "G:\\Temp\\HD2ModManager\\Mods\\Mods\\VRC_\u590f\u83f2 \u66ff\u6362 B-01\u7cfb\u5217_6cb08803\\\u84dd\u5149\\9ba626afa44a3aa3.patch_6",
+  "source_main_sha256": "474189e13921676549cc65b400359ac7766e76a5951ef2d0226625e097d374ea",
+  "method": "Match vanilla selected MeshInfo GroupBoneHash/MeshID to unique source MeshInfo index",
+  "native_lod_execution_verified": false,
+  "game_visual_fix_verified": false,
+  "caution": "Candidate repair, not a proven native LOD execution trace. Do not rename Bones or replace alternate helmets with first helmet.",
+  "helmets": [
+    {
+      "kit": "261c4a52",
+      "archive": "fd109bfeeed36726",
+      "unit": "bc20d0b4efff128c",
+      "source_sizes": [
+        6776,
+        0,
+        6640456
+      ],
+      "vanilla_sizes": [
+        5744,
+        0,
+        423096
+      ],
+      "source": {
+        "main_size": 6776,
+        "main_sha256": "185b0a87ac324f320a3c68b91bb3685f31c9d9e74905945f480eebbb11ac7a10",
+        "bones_resource": "bc20d0b4efff128c",
+        "geometry_group": "0000000000000000",
+        "state_machine": "0000000000000000",
+        "joint_count": 18,
+        "joints_sha256": "9fab263d90a0fbf719d1f47888e6135b62a4035b383b4f9a35a6fb1b109b2a0f",
+        "materials": [
+          {
+            "slot": "98fc2bd9",
+            "resource": "ad686c7fb5d3db1c"
+          },
+          {
+            "slot": "98fc2bd9",
+            "resource": "ad686c7fb5d3db1c"
+          },
+          {
+            "slot": "98fc2bd9",
+            "resource": "ad686c7fb5d3db1c"
+          },
+          {
+            "slot": "98fc2bd9",
+            "resource": "ad686c7fb5d3db1c"
+          }
+        ],
+        "mesh_count": 5,
+        "meshes": [
+          {
+            "index": 0,
+            "offset": 5932,
+            "mesh_id": "800b8ea2",
+            "type": 0,
+            "transform": 11,
+            "skeleton_map": 4,
+            "layout": 1,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                0,
+                24,
+                0,
+                36,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 1,
+              "joint_index": 9,
+              "joint_name_hash": "e9ecca21",
+              "matrix_sha256": "f25f92af22d78d02f7ff4735ed558cb3be5fd83585f6a604f4b7b070d7cd0cfb"
+            }
+          },
+          {
+            "index": 1,
+            "offset": 6088,
+            "mesh_id": "547c28dd",
+            "type": 2,
+            "transform": 14,
+            "skeleton_map": 3,
+            "layout": 0,
+            "material_slots": [
+              "98fc2bd9"
+            ],
+            "groups": [
+              [
+                0,
+                106545,
+                35515,
+                358920,
+                119640,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 5,
+              "joint_index": 10,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "97405424452fd85d2c4ed56cd40f69a5f53b511d1ee220b2ba0b9f1259ec3292"
+            }
+          },
+          {
+            "index": 2,
+            "offset": 6244,
+            "mesh_id": "e3001fda",
+            "type": 265,
+            "transform": 15,
+            "skeleton_map": 2,
+            "layout": 0,
+            "material_slots": [
+              "98fc2bd9"
+            ],
+            "groups": [
+              [
+                0,
+                71030,
+                35515,
+                239280,
+                119640,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 5,
+              "joint_index": 10,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "97405424452fd85d2c4ed56cd40f69a5f53b511d1ee220b2ba0b9f1259ec3292"
+            }
+          },
+          {
+            "index": 3,
+            "offset": 6400,
+            "mesh_id": "7682a507",
+            "type": 265,
+            "transform": 16,
+            "skeleton_map": 1,
+            "layout": 0,
+            "material_slots": [
+              "98fc2bd9"
+            ],
+            "groups": [
+              [
+                0,
+                35515,
+                35515,
+                119640,
+                119640,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 5,
+              "joint_index": 10,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "97405424452fd85d2c4ed56cd40f69a5f53b511d1ee220b2ba0b9f1259ec3292"
+            }
+          },
+          {
+            "index": 4,
+            "offset": 6556,
+            "mesh_id": "564da8fd",
+            "type": 265,
+            "transform": 17,
+            "skeleton_map": 0,
+            "layout": 0,
+            "material_slots": [
+              "98fc2bd9"
+            ],
+            "groups": [
+              [
+                0,
+                0,
+                35515,
+                0,
+                119640,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 5,
+              "joint_index": 10,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "97405424452fd85d2c4ed56cd40f69a5f53b511d1ee220b2ba0b9f1259ec3292"
+            }
+          }
+        ],
+        "lod_references": [
+          {
+            "group": 0,
+            "entry": 0,
+            "offset": 216,
+            "value": 4,
+            "mesh_id_if_array_index": "564da8fd",
+            "mesh_type_if_array_index": 265
+          },
+          {
+            "group": 0,
+            "entry": 1,
+            "offset": 232,
+            "value": 3,
+            "mesh_id_if_array_index": "7682a507",
+            "mesh_type_if_array_index": 265
+          },
+          {
+            "group": 0,
+            "entry": 2,
+            "offset": 248,
+            "value": 2,
+            "mesh_id_if_array_index": "e3001fda",
+            "mesh_type_if_array_index": 265
+          }
+        ]
+      },
+      "vanilla": {
+        "main_size": 5744,
+        "main_sha256": "848cef148b1332b4027c0ce572a37a84e71d3312e6157ed016b813189699206c",
+        "bones_resource": "bc20d0b4efff128c",
+        "geometry_group": "0000000000000000",
+        "state_machine": "0000000000000000",
+        "joint_count": 18,
+        "joints_sha256": "9fab263d90a0fbf719d1f47888e6135b62a4035b383b4f9a35a6fb1b109b2a0f",
+        "materials": [
+          {
+            "slot": "69adc318",
+            "resource": "75f87ad2ae08e9c2"
+          },
+          {
+            "slot": "e02f71fe",
+            "resource": "bdf90d1519864b8e"
+          }
+        ],
+        "mesh_count": 5,
+        "meshes": [
+          {
+            "index": 0,
+            "offset": 4908,
+            "mesh_id": "800b8ea2",
+            "type": 0,
+            "transform": 11,
+            "skeleton_map": 4,
+            "layout": 1,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                0,
+                24,
+                0,
+                36,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 1,
+              "joint_index": 9,
+              "joint_name_hash": "e9ecca21",
+              "matrix_sha256": "f25f92af22d78d02f7ff4735ed558cb3be5fd83585f6a604f4b7b070d7cd0cfb"
+            }
+          },
+          {
+            "index": 1,
+            "offset": 5064,
+            "mesh_id": "547c28dd",
+            "type": 2,
+            "transform": 14,
+            "skeleton_map": 3,
+            "layout": 0,
+            "material_slots": [
+              "69adc318"
+            ],
+            "groups": [
+              [
+                0,
+                7488,
+                2020,
+                32370,
+                7614,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 0,
+              "joint_index": 10,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "b065cb5dc9a14d328f0f18b772e293fa15f3d2ac1a91fbbacaa43a104d7fd2b8"
+            }
+          },
+          {
+            "index": 2,
+            "offset": 5220,
+            "mesh_id": "e3001fda",
+            "type": 9,
+            "transform": 15,
+            "skeleton_map": 2,
+            "layout": 0,
+            "material_slots": [
+              "e02f71fe"
+            ],
+            "groups": [
+              [
+                0,
+                6435,
+                1053,
+                28566,
+                3804,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 0,
+              "joint_index": 10,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "b065cb5dc9a14d328f0f18b772e293fa15f3d2ac1a91fbbacaa43a104d7fd2b8"
+            }
+          },
+          {
+            "index": 3,
+            "offset": 5376,
+            "mesh_id": "7682a507",
+            "type": 9,
+            "transform": 16,
+            "skeleton_map": 1,
+            "layout": 0,
+            "material_slots": [
+              "e02f71fe"
+            ],
+            "groups": [
+              [
+                0,
+                4066,
+                2369,
+                19044,
+                9522,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 0,
+              "joint_index": 10,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "b065cb5dc9a14d328f0f18b772e293fa15f3d2ac1a91fbbacaa43a104d7fd2b8"
+            }
+          },
+          {
+            "index": 4,
+            "offset": 5532,
+            "mesh_id": "564da8fd",
+            "type": 9,
+            "transform": 17,
+            "skeleton_map": 0,
+            "layout": 0,
+            "material_slots": [
+              "e02f71fe"
+            ],
+            "groups": [
+              [
+                0,
+                0,
+                4066,
+                0,
+                19044,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 5,
+              "joint_index": 10,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "97405424452fd85d2c4ed56cd40f69a5f53b511d1ee220b2ba0b9f1259ec3292"
+            }
+          }
+        ],
+        "lod_references": [
+          {
+            "group": 0,
+            "entry": 0,
+            "offset": 216,
+            "value": 4,
+            "mesh_id_if_array_index": "564da8fd",
+            "mesh_type_if_array_index": 9
+          },
+          {
+            "group": 0,
+            "entry": 1,
+            "offset": 232,
+            "value": 3,
+            "mesh_id_if_array_index": "7682a507",
+            "mesh_type_if_array_index": 9
+          },
+          {
+            "group": 0,
+            "entry": 2,
+            "offset": 248,
+            "value": 2,
+            "mesh_id_if_array_index": "e3001fda",
+            "mesh_type_if_array_index": 9
+          }
+        ]
+      },
+      "joints_identical": true,
+      "piece": {
+        "slot": 0,
+        "type": 0,
+        "weight": 1,
+        "tone_variations": 0,
+        "resources": {
+          "unit": "bc20d0b4efff128c",
+          "material_lut": "d3ce605892d5331b",
+          "pattern_lut": "f18dfbb5346732c1",
+          "cape_lut": "0000000000000000",
+          "cape_gradient": "0000000000000000",
+          "cape_nac": "0000000000000000",
+          "decal_scalar_fields": "0000000000000000",
+          "base_data": "0000000000000000",
+          "decal_sheet": "0000000000000000"
+        }
+      },
+      "candidate_corrections": []
+    },
+    {
+      "kit": "45d80a38",
+      "archive": "3b143cc283b7f707",
+      "unit": "7b23e3c0ab4cf618",
+      "source_sizes": [
+        31628,
+        0,
+        2967528
+      ],
+      "vanilla_sizes": [
+        17888,
+        0,
+        342232
+      ],
+      "source": {
+        "main_size": 31628,
+        "main_sha256": "bd3ba21fca4e6983bea1923b5a46c7b93e2c424047b68955c651910560628c29",
+        "bones_resource": "7b23e3c0ab4cf618",
+        "geometry_group": "0000000000000000",
+        "state_machine": "0000000000000000",
+        "joint_count": 82,
+        "joints_sha256": "b3066c75971aa14207d8a318f95560e78c7c8eff2982eed35ad3143ac5182127",
+        "materials": [
+          {
+            "slot": "0fde7f56",
+            "resource": "ad686c7fb5d3db1c"
+          },
+          {
+            "slot": "0fde7f56",
+            "resource": "ad686c7fb5d3db1c"
+          },
+          {
+            "slot": "0fde7f56",
+            "resource": "ad686c7fb5d3db1c"
+          },
+          {
+            "slot": "0fde7f56",
+            "resource": "ad686c7fb5d3db1c"
+          }
+        ],
+        "mesh_count": 15,
+        "meshes": [
+          {
+            "index": 0,
+            "offset": 29228,
+            "mesh_id": "86183b19",
+            "type": 256,
+            "transform": 7,
+            "skeleton_map": -1,
+            "layout": 2,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                1780,
+                439,
+                9156,
+                2280,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 1,
+            "offset": 29384,
+            "mesh_id": "cdc3c39a",
+            "type": 256,
+            "transform": 10,
+            "skeleton_map": -1,
+            "layout": 2,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                1341,
+                439,
+                6876,
+                2280,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 2,
+            "offset": 29540,
+            "mesh_id": "bb77952b",
+            "type": 256,
+            "transform": 16,
+            "skeleton_map": -1,
+            "layout": 2,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                902,
+                439,
+                4596,
+                2280,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 3,
+            "offset": 29696,
+            "mesh_id": "a620a54c",
+            "type": 256,
+            "transform": 23,
+            "skeleton_map": -1,
+            "layout": 2,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                878,
+                24,
+                4560,
+                36,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 4,
+            "offset": 29852,
+            "mesh_id": "e889a3e3",
+            "type": 256,
+            "transform": 26,
+            "skeleton_map": -1,
+            "layout": 2,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                439,
+                439,
+                2280,
+                2280,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 5,
+            "offset": 30008,
+            "mesh_id": "d976ff05",
+            "type": 256,
+            "transform": 29,
+            "skeleton_map": -1,
+            "layout": 2,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                0,
+                439,
+                0,
+                2280,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 6,
+            "offset": 30164,
+            "mesh_id": "3cc0f474",
+            "type": 256,
+            "transform": 49,
+            "skeleton_map": -1,
+            "layout": 0,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                511,
+                439,
+                2388,
+                2280,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 7,
+            "offset": 30320,
+            "mesh_id": "ee387c5a",
+            "type": 256,
+            "transform": 52,
+            "skeleton_map": -1,
+            "layout": 0,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                72,
+                439,
+                108,
+                2280,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 8,
+            "offset": 30476,
+            "mesh_id": "800b8ea2",
+            "type": 256,
+            "transform": 72,
+            "skeleton_map": -1,
+            "layout": 0,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                48,
+                24,
+                72,
+                36,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 9,
+            "offset": 30632,
+            "mesh_id": "178e51ef",
+            "type": 256,
+            "transform": 74,
+            "skeleton_map": -1,
+            "layout": 0,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                24,
+                24,
+                36,
+                36,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 10,
+            "offset": 30788,
+            "mesh_id": "087af67d",
+            "type": 256,
+            "transform": 75,
+            "skeleton_map": -1,
+            "layout": 0,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                0,
+                24,
+                0,
+                36,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 11,
+            "offset": 30944,
+            "mesh_id": "547c28dd",
+            "type": 10,
+            "transform": 78,
+            "skeleton_map": 3,
+            "layout": 1,
+            "material_slots": [
+              "0fde7f56"
+            ],
+            "groups": [
+              [
+                0,
+                45381,
+                15127,
+                164601,
+                54867,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 5,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          },
+          {
+            "index": 12,
+            "offset": 31100,
+            "mesh_id": "e3001fda",
+            "type": 265,
+            "transform": 79,
+            "skeleton_map": 2,
+            "layout": 1,
+            "material_slots": [
+              "0fde7f56"
+            ],
+            "groups": [
+              [
+                0,
+                30254,
+                15127,
+                109734,
+                54867,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 5,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          },
+          {
+            "index": 13,
+            "offset": 31256,
+            "mesh_id": "7682a507",
+            "type": 265,
+            "transform": 80,
+            "skeleton_map": 1,
+            "layout": 1,
+            "material_slots": [
+              "0fde7f56"
+            ],
+            "groups": [
+              [
+                0,
+                15127,
+                15127,
+                54867,
+                54867,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 5,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          },
+          {
+            "index": 14,
+            "offset": 31412,
+            "mesh_id": "564da8fd",
+            "type": 265,
+            "transform": 81,
+            "skeleton_map": 0,
+            "layout": 1,
+            "material_slots": [
+              "0fde7f56"
+            ],
+            "groups": [
+              [
+                0,
+                0,
+                15127,
+                0,
+                54867,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 5,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          }
+        ],
+        "lod_references": [
+          {
+            "group": 0,
+            "entry": 0,
+            "offset": 220,
+            "value": 4,
+            "mesh_id_if_array_index": "e889a3e3",
+            "mesh_type_if_array_index": 256
+          },
+          {
+            "group": 0,
+            "entry": 1,
+            "offset": 236,
+            "value": 3,
+            "mesh_id_if_array_index": "a620a54c",
+            "mesh_type_if_array_index": 256
+          },
+          {
+            "group": 0,
+            "entry": 2,
+            "offset": 252,
+            "value": 2,
+            "mesh_id_if_array_index": "bb77952b",
+            "mesh_type_if_array_index": 256
+          },
+          {
+            "group": 1,
+            "entry": 0,
+            "offset": 340,
+            "value": 1,
+            "mesh_id_if_array_index": "cdc3c39a",
+            "mesh_type_if_array_index": 256
+          }
+        ]
+      },
+      "vanilla": {
+        "main_size": 17888,
+        "main_sha256": "bd8c70a307318447482ce50b9f2673a7c3bca40b7c31a32e66da1454ae5a986d",
+        "bones_resource": "7b23e3c0ab4cf618",
+        "geometry_group": "0000000000000000",
+        "state_machine": "0000000000000000",
+        "joint_count": 82,
+        "joints_sha256": "b3066c75971aa14207d8a318f95560e78c7c8eff2982eed35ad3143ac5182127",
+        "materials": [
+          {
+            "slot": "e02f71fe",
+            "resource": "23e9e6316115d875"
+          }
+        ],
+        "mesh_count": 5,
+        "meshes": [
+          {
+            "index": 0,
+            "offset": 17068,
+            "mesh_id": "800b8ea2",
+            "type": 0,
+            "transform": 72,
+            "skeleton_map": -1,
+            "layout": 1,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                0,
+                24,
+                0,
+                36,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 1,
+            "offset": 17224,
+            "mesh_id": "547c28dd",
+            "type": 10,
+            "transform": 78,
+            "skeleton_map": 3,
+            "layout": 0,
+            "material_slots": [
+              "e02f71fe"
+            ],
+            "groups": [
+              [
+                0,
+                7235,
+                476,
+                30846,
+                1140,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 0,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          },
+          {
+            "index": 2,
+            "offset": 17380,
+            "mesh_id": "e3001fda",
+            "type": 9,
+            "transform": 79,
+            "skeleton_map": 2,
+            "layout": 0,
+            "material_slots": [
+              "e02f71fe"
+            ],
+            "groups": [
+              [
+                0,
+                6437,
+                798,
+                28566,
+                2280,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 0,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          },
+          {
+            "index": 3,
+            "offset": 17536,
+            "mesh_id": "7682a507",
+            "type": 9,
+            "transform": 80,
+            "skeleton_map": 1,
+            "layout": 0,
+            "material_slots": [
+              "e02f71fe"
+            ],
+            "groups": [
+              [
+                0,
+                4066,
+                2371,
+                19044,
+                9522,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 0,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          },
+          {
+            "index": 4,
+            "offset": 17692,
+            "mesh_id": "564da8fd",
+            "type": 9,
+            "transform": 81,
+            "skeleton_map": 0,
+            "layout": 0,
+            "material_slots": [
+              "e02f71fe"
+            ],
+            "groups": [
+              [
+                0,
+                0,
+                4066,
+                0,
+                19044,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 5,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          }
+        ],
+        "lod_references": [
+          {
+            "group": 0,
+            "entry": 0,
+            "offset": 220,
+            "value": 4,
+            "mesh_id_if_array_index": "564da8fd",
+            "mesh_type_if_array_index": 9
+          },
+          {
+            "group": 0,
+            "entry": 1,
+            "offset": 236,
+            "value": 3,
+            "mesh_id_if_array_index": "7682a507",
+            "mesh_type_if_array_index": 9
+          },
+          {
+            "group": 0,
+            "entry": 2,
+            "offset": 252,
+            "value": 2,
+            "mesh_id_if_array_index": "e3001fda",
+            "mesh_type_if_array_index": 9
+          },
+          {
+            "group": 1,
+            "entry": 0,
+            "offset": 340,
+            "value": 1,
+            "mesh_id_if_array_index": "547c28dd",
+            "mesh_type_if_array_index": 10
+          }
+        ]
+      },
+      "joints_identical": true,
+      "piece": {
+        "slot": 0,
+        "type": 0,
+        "weight": 1,
+        "tone_variations": 0,
+        "resources": {
+          "unit": "7b23e3c0ab4cf618",
+          "material_lut": "d3ce605892d5331b",
+          "pattern_lut": "f18dfbb5346732c1",
+          "cape_lut": "0000000000000000",
+          "cape_gradient": "0000000000000000",
+          "cape_nac": "0000000000000000",
+          "decal_scalar_fields": "0000000000000000",
+          "base_data": "0000000000000000",
+          "decal_sheet": "0000000000000000"
+        }
+      },
+      "candidate_corrections": [
+        {
+          "offset": 220,
+          "offset_hex": "0xdc",
+          "before": 4,
+          "after": 14,
+          "expected_mesh_id": "564da8fd",
+          "current_mesh_id": "e889a3e3"
+        },
+        {
+          "offset": 236,
+          "offset_hex": "0xec",
+          "before": 3,
+          "after": 13,
+          "expected_mesh_id": "7682a507",
+          "current_mesh_id": "a620a54c"
+        },
+        {
+          "offset": 252,
+          "offset_hex": "0xfc",
+          "before": 2,
+          "after": 12,
+          "expected_mesh_id": "e3001fda",
+          "current_mesh_id": "bb77952b"
+        },
+        {
+          "offset": 340,
+          "offset_hex": "0x154",
+          "before": 1,
+          "after": 11,
+          "expected_mesh_id": "547c28dd",
+          "current_mesh_id": "cdc3c39a"
+        }
+      ]
+    },
+    {
+      "kit": "b4027b70",
+      "archive": "f4880623d32bafa9",
+      "unit": "c96cb2e72d7a0525",
+      "source_sizes": [
+        31628,
+        0,
+        4324328
+      ],
+      "vanilla_sizes": [
+        17888,
+        0,
+        342232
+      ],
+      "source": {
+        "main_size": 31628,
+        "main_sha256": "047259872481d57a96495bcf1644547b8c673151a04274cb8899740fd11322f1",
+        "bones_resource": "c96cb2e72d7a0525",
+        "geometry_group": "0000000000000000",
+        "state_machine": "0000000000000000",
+        "joint_count": 82,
+        "joints_sha256": "b3066c75971aa14207d8a318f95560e78c7c8eff2982eed35ad3143ac5182127",
+        "materials": [
+          {
+            "slot": "cbd9dd0a",
+            "resource": "ad686c7fb5d3db1c"
+          },
+          {
+            "slot": "cbd9dd0a",
+            "resource": "ad686c7fb5d3db1c"
+          },
+          {
+            "slot": "cbd9dd0a",
+            "resource": "ad686c7fb5d3db1c"
+          },
+          {
+            "slot": "cbd9dd0a",
+            "resource": "ad686c7fb5d3db1c"
+          }
+        ],
+        "mesh_count": 15,
+        "meshes": [
+          {
+            "index": 0,
+            "offset": 29228,
+            "mesh_id": "86183b19",
+            "type": 256,
+            "transform": 7,
+            "skeleton_map": -1,
+            "layout": 2,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                1780,
+                439,
+                9156,
+                2280,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 1,
+            "offset": 29384,
+            "mesh_id": "cdc3c39a",
+            "type": 256,
+            "transform": 10,
+            "skeleton_map": -1,
+            "layout": 2,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                1341,
+                439,
+                6876,
+                2280,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 2,
+            "offset": 29540,
+            "mesh_id": "bb77952b",
+            "type": 256,
+            "transform": 16,
+            "skeleton_map": -1,
+            "layout": 2,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                902,
+                439,
+                4596,
+                2280,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 3,
+            "offset": 29696,
+            "mesh_id": "a620a54c",
+            "type": 256,
+            "transform": 23,
+            "skeleton_map": -1,
+            "layout": 2,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                878,
+                24,
+                4560,
+                36,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 4,
+            "offset": 29852,
+            "mesh_id": "e889a3e3",
+            "type": 256,
+            "transform": 26,
+            "skeleton_map": -1,
+            "layout": 2,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                439,
+                439,
+                2280,
+                2280,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 5,
+            "offset": 30008,
+            "mesh_id": "d976ff05",
+            "type": 256,
+            "transform": 29,
+            "skeleton_map": -1,
+            "layout": 2,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                0,
+                439,
+                0,
+                2280,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 6,
+            "offset": 30164,
+            "mesh_id": "3cc0f474",
+            "type": 256,
+            "transform": 49,
+            "skeleton_map": -1,
+            "layout": 0,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                511,
+                439,
+                2388,
+                2280,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 7,
+            "offset": 30320,
+            "mesh_id": "ee387c5a",
+            "type": 256,
+            "transform": 52,
+            "skeleton_map": -1,
+            "layout": 0,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                72,
+                439,
+                108,
+                2280,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 8,
+            "offset": 30476,
+            "mesh_id": "800b8ea2",
+            "type": 256,
+            "transform": 72,
+            "skeleton_map": -1,
+            "layout": 0,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                48,
+                24,
+                72,
+                36,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 9,
+            "offset": 30632,
+            "mesh_id": "178e51ef",
+            "type": 256,
+            "transform": 74,
+            "skeleton_map": -1,
+            "layout": 0,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                24,
+                24,
+                36,
+                36,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 10,
+            "offset": 30788,
+            "mesh_id": "087af67d",
+            "type": 256,
+            "transform": 75,
+            "skeleton_map": -1,
+            "layout": 0,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                0,
+                24,
+                0,
+                36,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 11,
+            "offset": 30944,
+            "mesh_id": "547c28dd",
+            "type": 10,
+            "transform": 78,
+            "skeleton_map": 3,
+            "layout": 1,
+            "material_slots": [
+              "cbd9dd0a"
+            ],
+            "groups": [
+              [
+                0,
+                65529,
+                21843,
+                270441,
+                90147,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 5,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          },
+          {
+            "index": 12,
+            "offset": 31100,
+            "mesh_id": "e3001fda",
+            "type": 265,
+            "transform": 79,
+            "skeleton_map": 2,
+            "layout": 1,
+            "material_slots": [
+              "cbd9dd0a"
+            ],
+            "groups": [
+              [
+                0,
+                43686,
+                21843,
+                180294,
+                90147,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 5,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          },
+          {
+            "index": 13,
+            "offset": 31256,
+            "mesh_id": "7682a507",
+            "type": 265,
+            "transform": 80,
+            "skeleton_map": 1,
+            "layout": 1,
+            "material_slots": [
+              "cbd9dd0a"
+            ],
+            "groups": [
+              [
+                0,
+                21843,
+                21843,
+                90147,
+                90147,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 5,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          },
+          {
+            "index": 14,
+            "offset": 31412,
+            "mesh_id": "564da8fd",
+            "type": 265,
+            "transform": 81,
+            "skeleton_map": 0,
+            "layout": 1,
+            "material_slots": [
+              "cbd9dd0a"
+            ],
+            "groups": [
+              [
+                0,
+                0,
+                21843,
+                0,
+                90147,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 5,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          }
+        ],
+        "lod_references": [
+          {
+            "group": 0,
+            "entry": 0,
+            "offset": 220,
+            "value": 4,
+            "mesh_id_if_array_index": "e889a3e3",
+            "mesh_type_if_array_index": 256
+          },
+          {
+            "group": 0,
+            "entry": 1,
+            "offset": 236,
+            "value": 3,
+            "mesh_id_if_array_index": "a620a54c",
+            "mesh_type_if_array_index": 256
+          },
+          {
+            "group": 0,
+            "entry": 2,
+            "offset": 252,
+            "value": 2,
+            "mesh_id_if_array_index": "bb77952b",
+            "mesh_type_if_array_index": 256
+          },
+          {
+            "group": 1,
+            "entry": 0,
+            "offset": 340,
+            "value": 1,
+            "mesh_id_if_array_index": "cdc3c39a",
+            "mesh_type_if_array_index": 256
+          }
+        ]
+      },
+      "vanilla": {
+        "main_size": 17888,
+        "main_sha256": "a329ce660e48dc62e327046da5dafdb66e10dc88f8de0111de9d7ca2a7e12c8a",
+        "bones_resource": "c96cb2e72d7a0525",
+        "geometry_group": "0000000000000000",
+        "state_machine": "0000000000000000",
+        "joint_count": 82,
+        "joints_sha256": "b3066c75971aa14207d8a318f95560e78c7c8eff2982eed35ad3143ac5182127",
+        "materials": [
+          {
+            "slot": "e02f71fe",
+            "resource": "3cd876dca77b7433"
+          }
+        ],
+        "mesh_count": 5,
+        "meshes": [
+          {
+            "index": 0,
+            "offset": 17068,
+            "mesh_id": "800b8ea2",
+            "type": 0,
+            "transform": 72,
+            "skeleton_map": -1,
+            "layout": 1,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                0,
+                24,
+                0,
+                36,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 1,
+            "offset": 17224,
+            "mesh_id": "547c28dd",
+            "type": 10,
+            "transform": 78,
+            "skeleton_map": 3,
+            "layout": 0,
+            "material_slots": [
+              "e02f71fe"
+            ],
+            "groups": [
+              [
+                0,
+                7235,
+                476,
+                30846,
+                1140,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 0,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          },
+          {
+            "index": 2,
+            "offset": 17380,
+            "mesh_id": "e3001fda",
+            "type": 9,
+            "transform": 79,
+            "skeleton_map": 2,
+            "layout": 0,
+            "material_slots": [
+              "e02f71fe"
+            ],
+            "groups": [
+              [
+                0,
+                6437,
+                798,
+                28566,
+                2280,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 0,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          },
+          {
+            "index": 3,
+            "offset": 17536,
+            "mesh_id": "7682a507",
+            "type": 9,
+            "transform": 80,
+            "skeleton_map": 1,
+            "layout": 0,
+            "material_slots": [
+              "e02f71fe"
+            ],
+            "groups": [
+              [
+                0,
+                4066,
+                2371,
+                19044,
+                9522,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 0,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          },
+          {
+            "index": 4,
+            "offset": 17692,
+            "mesh_id": "564da8fd",
+            "type": 9,
+            "transform": 81,
+            "skeleton_map": 0,
+            "layout": 0,
+            "material_slots": [
+              "e02f71fe"
+            ],
+            "groups": [
+              [
+                0,
+                0,
+                4066,
+                0,
+                19044,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 5,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          }
+        ],
+        "lod_references": [
+          {
+            "group": 0,
+            "entry": 0,
+            "offset": 220,
+            "value": 4,
+            "mesh_id_if_array_index": "564da8fd",
+            "mesh_type_if_array_index": 9
+          },
+          {
+            "group": 0,
+            "entry": 1,
+            "offset": 236,
+            "value": 3,
+            "mesh_id_if_array_index": "7682a507",
+            "mesh_type_if_array_index": 9
+          },
+          {
+            "group": 0,
+            "entry": 2,
+            "offset": 252,
+            "value": 2,
+            "mesh_id_if_array_index": "e3001fda",
+            "mesh_type_if_array_index": 9
+          },
+          {
+            "group": 1,
+            "entry": 0,
+            "offset": 340,
+            "value": 1,
+            "mesh_id_if_array_index": "547c28dd",
+            "mesh_type_if_array_index": 10
+          }
+        ]
+      },
+      "joints_identical": true,
+      "piece": {
+        "slot": 0,
+        "type": 0,
+        "weight": 1,
+        "tone_variations": 0,
+        "resources": {
+          "unit": "c96cb2e72d7a0525",
+          "material_lut": "d3ce605892d5331b",
+          "pattern_lut": "f18dfbb5346732c1",
+          "cape_lut": "0000000000000000",
+          "cape_gradient": "0000000000000000",
+          "cape_nac": "0000000000000000",
+          "decal_scalar_fields": "0000000000000000",
+          "base_data": "0000000000000000",
+          "decal_sheet": "0000000000000000"
+        }
+      },
+      "candidate_corrections": [
+        {
+          "offset": 220,
+          "offset_hex": "0xdc",
+          "before": 4,
+          "after": 14,
+          "expected_mesh_id": "564da8fd",
+          "current_mesh_id": "e889a3e3"
+        },
+        {
+          "offset": 236,
+          "offset_hex": "0xec",
+          "before": 3,
+          "after": 13,
+          "expected_mesh_id": "7682a507",
+          "current_mesh_id": "a620a54c"
+        },
+        {
+          "offset": 252,
+          "offset_hex": "0xfc",
+          "before": 2,
+          "after": 12,
+          "expected_mesh_id": "e3001fda",
+          "current_mesh_id": "bb77952b"
+        },
+        {
+          "offset": 340,
+          "offset_hex": "0x154",
+          "before": 1,
+          "after": 11,
+          "expected_mesh_id": "547c28dd",
+          "current_mesh_id": "cdc3c39a"
+        }
+      ]
+    },
+    {
+      "kit": "df8e4ada",
+      "archive": "8313c9a556b8ee85",
+      "unit": "781134771dd69fbe",
+      "source_sizes": [
+        31628,
+        0,
+        2967528
+      ],
+      "vanilla_sizes": [
+        17888,
+        0,
+        342232
+      ],
+      "source": {
+        "main_size": 31628,
+        "main_sha256": "27299f6360bc4391ceeb65308ebae7156fe5ecc7e18097ea74a02d5da6d882b0",
+        "bones_resource": "781134771dd69fbe",
+        "geometry_group": "0000000000000000",
+        "state_machine": "0000000000000000",
+        "joint_count": 82,
+        "joints_sha256": "b3066c75971aa14207d8a318f95560e78c7c8eff2982eed35ad3143ac5182127",
+        "materials": [
+          {
+            "slot": "5504598d",
+            "resource": "ad686c7fb5d3db1c"
+          },
+          {
+            "slot": "5504598d",
+            "resource": "ad686c7fb5d3db1c"
+          },
+          {
+            "slot": "5504598d",
+            "resource": "ad686c7fb5d3db1c"
+          },
+          {
+            "slot": "5504598d",
+            "resource": "ad686c7fb5d3db1c"
+          }
+        ],
+        "mesh_count": 15,
+        "meshes": [
+          {
+            "index": 0,
+            "offset": 29228,
+            "mesh_id": "86183b19",
+            "type": 256,
+            "transform": 7,
+            "skeleton_map": -1,
+            "layout": 2,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                1780,
+                439,
+                9156,
+                2280,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 1,
+            "offset": 29384,
+            "mesh_id": "cdc3c39a",
+            "type": 256,
+            "transform": 10,
+            "skeleton_map": -1,
+            "layout": 2,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                1341,
+                439,
+                6876,
+                2280,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 2,
+            "offset": 29540,
+            "mesh_id": "bb77952b",
+            "type": 256,
+            "transform": 16,
+            "skeleton_map": -1,
+            "layout": 2,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                902,
+                439,
+                4596,
+                2280,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 3,
+            "offset": 29696,
+            "mesh_id": "a620a54c",
+            "type": 256,
+            "transform": 23,
+            "skeleton_map": -1,
+            "layout": 2,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                878,
+                24,
+                4560,
+                36,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 4,
+            "offset": 29852,
+            "mesh_id": "e889a3e3",
+            "type": 256,
+            "transform": 26,
+            "skeleton_map": -1,
+            "layout": 2,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                439,
+                439,
+                2280,
+                2280,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 5,
+            "offset": 30008,
+            "mesh_id": "d976ff05",
+            "type": 256,
+            "transform": 29,
+            "skeleton_map": -1,
+            "layout": 2,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                0,
+                439,
+                0,
+                2280,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 6,
+            "offset": 30164,
+            "mesh_id": "3cc0f474",
+            "type": 256,
+            "transform": 49,
+            "skeleton_map": -1,
+            "layout": 0,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                511,
+                439,
+                2388,
+                2280,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 7,
+            "offset": 30320,
+            "mesh_id": "ee387c5a",
+            "type": 256,
+            "transform": 52,
+            "skeleton_map": -1,
+            "layout": 0,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                72,
+                439,
+                108,
+                2280,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 8,
+            "offset": 30476,
+            "mesh_id": "800b8ea2",
+            "type": 256,
+            "transform": 72,
+            "skeleton_map": -1,
+            "layout": 0,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                48,
+                24,
+                72,
+                36,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 9,
+            "offset": 30632,
+            "mesh_id": "178e51ef",
+            "type": 256,
+            "transform": 74,
+            "skeleton_map": -1,
+            "layout": 0,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                24,
+                24,
+                36,
+                36,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 10,
+            "offset": 30788,
+            "mesh_id": "087af67d",
+            "type": 256,
+            "transform": 75,
+            "skeleton_map": -1,
+            "layout": 0,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                0,
+                24,
+                0,
+                36,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 11,
+            "offset": 30944,
+            "mesh_id": "547c28dd",
+            "type": 10,
+            "transform": 78,
+            "skeleton_map": 3,
+            "layout": 1,
+            "material_slots": [
+              "5504598d"
+            ],
+            "groups": [
+              [
+                0,
+                45381,
+                15127,
+                164601,
+                54867,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 5,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          },
+          {
+            "index": 12,
+            "offset": 31100,
+            "mesh_id": "e3001fda",
+            "type": 265,
+            "transform": 79,
+            "skeleton_map": 2,
+            "layout": 1,
+            "material_slots": [
+              "5504598d"
+            ],
+            "groups": [
+              [
+                0,
+                30254,
+                15127,
+                109734,
+                54867,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 5,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          },
+          {
+            "index": 13,
+            "offset": 31256,
+            "mesh_id": "7682a507",
+            "type": 265,
+            "transform": 80,
+            "skeleton_map": 1,
+            "layout": 1,
+            "material_slots": [
+              "5504598d"
+            ],
+            "groups": [
+              [
+                0,
+                15127,
+                15127,
+                54867,
+                54867,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 5,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          },
+          {
+            "index": 14,
+            "offset": 31412,
+            "mesh_id": "564da8fd",
+            "type": 265,
+            "transform": 81,
+            "skeleton_map": 0,
+            "layout": 1,
+            "material_slots": [
+              "5504598d"
+            ],
+            "groups": [
+              [
+                0,
+                0,
+                15127,
+                0,
+                54867,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 5,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          }
+        ],
+        "lod_references": [
+          {
+            "group": 0,
+            "entry": 0,
+            "offset": 220,
+            "value": 4,
+            "mesh_id_if_array_index": "e889a3e3",
+            "mesh_type_if_array_index": 256
+          },
+          {
+            "group": 0,
+            "entry": 1,
+            "offset": 236,
+            "value": 3,
+            "mesh_id_if_array_index": "a620a54c",
+            "mesh_type_if_array_index": 256
+          },
+          {
+            "group": 0,
+            "entry": 2,
+            "offset": 252,
+            "value": 2,
+            "mesh_id_if_array_index": "bb77952b",
+            "mesh_type_if_array_index": 256
+          },
+          {
+            "group": 1,
+            "entry": 0,
+            "offset": 340,
+            "value": 1,
+            "mesh_id_if_array_index": "cdc3c39a",
+            "mesh_type_if_array_index": 256
+          }
+        ]
+      },
+      "vanilla": {
+        "main_size": 17888,
+        "main_sha256": "e62c5b5955a5f4f41dbe402b53487d8b0a7f4b70aa52b522ffbd7b4b89e18caf",
+        "bones_resource": "781134771dd69fbe",
+        "geometry_group": "0000000000000000",
+        "state_machine": "0000000000000000",
+        "joint_count": 82,
+        "joints_sha256": "b3066c75971aa14207d8a318f95560e78c7c8eff2982eed35ad3143ac5182127",
+        "materials": [
+          {
+            "slot": "e02f71fe",
+            "resource": "491b3f3b97f13d61"
+          }
+        ],
+        "mesh_count": 5,
+        "meshes": [
+          {
+            "index": 0,
+            "offset": 17068,
+            "mesh_id": "800b8ea2",
+            "type": 0,
+            "transform": 72,
+            "skeleton_map": -1,
+            "layout": 1,
+            "material_slots": [
+              "093fc934"
+            ],
+            "groups": [
+              [
+                0,
+                0,
+                24,
+                0,
+                36,
+                0
+              ]
+            ]
+          },
+          {
+            "index": 1,
+            "offset": 17224,
+            "mesh_id": "547c28dd",
+            "type": 10,
+            "transform": 78,
+            "skeleton_map": 3,
+            "layout": 0,
+            "material_slots": [
+              "e02f71fe"
+            ],
+            "groups": [
+              [
+                0,
+                7235,
+                476,
+                30846,
+                1140,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 0,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          },
+          {
+            "index": 2,
+            "offset": 17380,
+            "mesh_id": "e3001fda",
+            "type": 9,
+            "transform": 79,
+            "skeleton_map": 2,
+            "layout": 0,
+            "material_slots": [
+              "e02f71fe"
+            ],
+            "groups": [
+              [
+                0,
+                6437,
+                798,
+                28566,
+                2280,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 0,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          },
+          {
+            "index": 3,
+            "offset": 17536,
+            "mesh_id": "7682a507",
+            "type": 9,
+            "transform": 80,
+            "skeleton_map": 1,
+            "layout": 0,
+            "material_slots": [
+              "e02f71fe"
+            ],
+            "groups": [
+              [
+                0,
+                4066,
+                2371,
+                19044,
+                9522,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 0,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          },
+          {
+            "index": 4,
+            "offset": 17692,
+            "mesh_id": "564da8fd",
+            "type": 9,
+            "transform": 81,
+            "skeleton_map": 0,
+            "layout": 0,
+            "material_slots": [
+              "e02f71fe"
+            ],
+            "groups": [
+              [
+                0,
+                0,
+                4066,
+                0,
+                19044,
+                0
+              ]
+            ],
+            "skin_vertex_index_zero": {
+              "remap": 5,
+              "joint_index": 71,
+              "joint_name_hash": "8c5570c9",
+              "matrix_sha256": "1a4b2862520241f8bf1c5270507f9d845fc910ee7f2446e4eb43c97ce58375a5"
+            }
+          }
+        ],
+        "lod_references": [
+          {
+            "group": 0,
+            "entry": 0,
+            "offset": 220,
+            "value": 4,
+            "mesh_id_if_array_index": "564da8fd",
+            "mesh_type_if_array_index": 9
+          },
+          {
+            "group": 0,
+            "entry": 1,
+            "offset": 236,
+            "value": 3,
+            "mesh_id_if_array_index": "7682a507",
+            "mesh_type_if_array_index": 9
+          },
+          {
+            "group": 0,
+            "entry": 2,
+            "offset": 252,
+            "value": 2,
+            "mesh_id_if_array_index": "e3001fda",
+            "mesh_type_if_array_index": 9
+          },
+          {
+            "group": 1,
+            "entry": 0,
+            "offset": 340,
+            "value": 1,
+            "mesh_id_if_array_index": "547c28dd",
+            "mesh_type_if_array_index": 10
+          }
+        ]
+      },
+      "joints_identical": true,
+      "piece": {
+        "slot": 0,
+        "type": 0,
+        "weight": 1,
+        "tone_variations": 0,
+        "resources": {
+          "unit": "781134771dd69fbe",
+          "material_lut": "d3ce605892d5331b",
+          "pattern_lut": "f18dfbb5346732c1",
+          "cape_lut": "0000000000000000",
+          "cape_gradient": "0000000000000000",
+          "cape_nac": "0000000000000000",
+          "decal_scalar_fields": "0000000000000000",
+          "base_data": "0000000000000000",
+          "decal_sheet": "0000000000000000"
+        }
+      },
+      "candidate_corrections": [
+        {
+          "offset": 220,
+          "offset_hex": "0xdc",
+          "before": 4,
+          "after": 14,
+          "expected_mesh_id": "564da8fd",
+          "current_mesh_id": "e889a3e3"
+        },
+        {
+          "offset": 236,
+          "offset_hex": "0xec",
+          "before": 3,
+          "after": 13,
+          "expected_mesh_id": "7682a507",
+          "current_mesh_id": "a620a54c"
+        },
+        {
+          "offset": 252,
+          "offset_hex": "0xfc",
+          "before": 2,
+          "after": 12,
+          "expected_mesh_id": "e3001fda",
+          "current_mesh_id": "bb77952b"
+        },
+        {
+          "offset": 340,
+          "offset_hex": "0x154",
+          "before": 1,
+          "after": 11,
+          "expected_mesh_id": "547c28dd",
+          "current_mesh_id": "cdc3c39a"
+        }
+      ]
+    }
+  ]
+}

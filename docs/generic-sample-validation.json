@@ -1,0 +1,66 @@
+{
+  "game_runtime_verified": false,
+  "temporary_packages_removed": true,
+  "samples": [
+    {
+      "sample": "cm14-isolated",
+      "package_id": "0e2fc5fd3c8616c98f0c0907",
+      "targets": [
+        "38aa207d",
+        "203f720c"
+      ],
+      "source_sha256": {
+        "9ba626afa44a3aa3.patch_200": "c31a0983d6779df0891dab1766a2ebb04063117cdfbf9bf94d47d7fd781d4450",
+        "9ba626afa44a3aa3.patch_200.stream": "c648b4ff94de30c87ce6ff19919dac4cd42cad68e35b5b9c36ad3ee422cfdcbb",
+        "9ba626afa44a3aa3.patch_200.gpu_resources": "56038037465d9e165312dacdccd314290803df23ed14847df14a469ffb3fc179"
+      },
+      "candidate_count": 26,
+      "resource_counts": {
+        "texture": 11,
+        "material": 1,
+        "unit": 27
+      },
+      "shared_resource_count": 12,
+      "gpu_bytes": 215239360,
+      "lod_adjustments": 0,
+      "payloads_verified": true,
+      "package_files_verified": true,
+      "compiled_addon_transaction_test": "passed",
+      "unit_owners_equal_accepted_sample": true
+    },
+    {
+      "sample": "b01-isolated",
+      "package_id": "489097bf40ea56f78a7efb03",
+      "targets": [
+        "61b31723",
+        "4f7fb2bd",
+        "6351a9aa",
+        "6d30f386",
+        "261c4a52",
+        "45d80a38",
+        "b4027b70",
+        "df8e4ada"
+      ],
+      "source_sha256": {
+        "9ba626afa44a3aa3.patch_6": "474189e13921676549cc65b400359ac7766e76a5951ef2d0226625e097d374ea",
+        "9ba626afa44a3aa3.patch_6.stream": "976d4e6515045c29b03869cf2fb1d1d0c855e99495dd71d0993392e619318620",
+        "9ba626afa44a3aa3.patch_6.gpu_resources": "a21a17fbab30d8d50f0c4e141370c3e903b425cee065ab446d903d6b001b5489"
+      },
+      "candidate_count": 64,
+      "resource_counts": {
+        "texture": 13,
+        "material": 1,
+        "unit": 92
+      },
+      "shared_resource_count": 14,
+      "gpu_bytes": 353952896,
+      "lod_adjustments": 3,
+      "payloads_verified": true,
+      "package_files_verified": true,
+      "compiled_addon_transaction_test": "passed",
+      "unit_owners_equal_accepted_sample": true
+    }
+  ],
+  "accepted_sample_artifacts_unchanged": true,
+  "cross_package_ids_disjoint": true
+}
