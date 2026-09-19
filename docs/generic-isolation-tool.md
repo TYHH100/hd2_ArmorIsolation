@@ -2,84 +2,58 @@
 
 ## 当前交付
 
-第一版本机工具将“选择源模组和目标 -> 依赖分析 -> 私有重打包 -> 插件生成与编译 -> 本地检查 -> 输出完整包”串起来。用户已确认 CM-14 和 B-01 revision 4 专用包游戏测试正常；通用生成包采用新的命名空间和依赖表，不能直接沿用这两份固定包的视觉验收结论。
+流程为“选择源模组和目标 -> 依赖分析 -> 私有重打包 -> 生成运行时 JSON -> 固定插件校验 -> 输出完整包”。所有模组使用同一份 `ArmorIsolation.addon64`，生成时不再逐包编译插件。上一版按包生成 C++ 头文件并编译专用 DLL 的入口保留为开发历史，不再用于图形工具的正常生成流程。
 
-本版先支持完整模型替换这一已验证路径。游戏 DLL 仍限定为 `1.0.0.18930`，SHA-256 为 `cc75948d90fdfde259dcb519e9933db7ffa3ccb281ce4fb89e6b1b011557470c`；不是跨版本通用，也不修改游戏 DLL。
+用户已确认 CM-14 和 B-01 revision 4 专用包游戏测试正常；新的通用插件仍须游戏验收。当前游戏 DLL 限定为 `1.0.0.18930`、SHA-256 `cc75948d90fdfde259dcb519e9933db7ffa3ccb281ce4fb89e6b1b011557470c`，不会修改 DLL 本身。
 
 ## 使用入口
 
-1. 双击项目根目录 `Start-ArmorIsolation.cmd`。也可在 PowerShell 执行 `Start-ArmorIsolation.ps1`，用 `-Python` 指定解释器，用 `-Source` 预填源模组路径。
-2. 选择一个主 `.patch_N` 文件，或只含一个主补丁的目录。配套 stream/GPU 从同名文件读取；输入始终只读。
-3. 核对游戏目录和输出目录。附加设置可调整资源读取工具、Kit 数据、名称目录及并存包的 `manifest.json`。
-4. 点击“分析候选”。候选表按名称、Kit ID、部位和 Unit 覆盖数量展示；选择体甲时不会自动选中同名头盔，也不会默认选中所有共享资源命中的套装。
-5. 勾选实际目标后点击“生成隔离包”。依赖检查、补丁打包、插件编译和测试在后台执行，完成后可打开输出文件夹。
+1. 双击项目根目录 `Start-ArmorIsolation.cmd`。也可在 PowerShell 执行 `Start-ArmorIsolation.ps1`，用 `-Python` 指定解释器，用 `-Source` 预填源模组。
+2. 选择一个主 `.patch_N` 文件，或只含一个主补丁的目录。stream/GPU 从同名文件读取，输入只读。
+3. 核对游戏和输出目录。附加设置可调整资源读取器、Kit 数据、名称目录以及准备并存的隔离包 `manifest.json`。
+4. 点击“分析候选”，按名称、Kit ID、部位和 Unit 覆盖数量选择实际目标。体甲和头盔分别选择，共享资源命中的装备不会自动全选。
+5. 点击“生成隔离包”。完整输出在 `dist/generated/armor-<24位包ID>`，已有同名结果不覆盖；失败清理本次临时目录。
 
-默认结果位于 `dist/generated/armor-<24位包ID>`。已有同名结果不会被覆盖；需要重建时选择新的输出目录。处理失败清理本次临时目录，保留原模组和已有输出。
+普通生成需要 Python 3.11+、tkinter、lz4 和原版数据读取器。启动器优先寻找项目或相邻 `hd2-lua_mods_test` 的虚拟环境，再寻找系统 Python。读取器默认相邻 `hd2-lua_mods_test/tools/archive.py`，Kit 使用绑定版本的本地快照。
 
-自动发现的是本机现有依赖：
-
-- Python：优先项目或相邻 `hd2-lua_mods_test` 的虚拟环境，再寻找系统 Python；必须支持 Python 3.11+、tkinter、lz4。
-- 原版数据读取器：默认相邻 `hd2-lua_mods_test/tools/archive.py`。本版依赖该读取器，不声称复制单个启动器即可在另一台机器运行。
-- C++：用 vswhere 或本机 Visual Studio 路径发现 MSVC x64，再寻找 CMake/Ninja。每次按包生成并编译插件。
-- 游戏内运行：ReShade 6.5.1、SDK API17，启用 add-on。生成不需要游戏正在运行。
+固定插件、INI、校验器及发布哈希清单位于 `dist/armor-isolation-runtime/`。生成前核对其版本与文件哈希，生成后复用同一 DLL；普通用户不再需要 MSVC、CMake、Ninja。这些 C++ 工具仅用于开发者更新插件。
 
 ## 适用范围
 
 | 输入情况 | 本版行为 |
 | --- | --- |
-| 单个主补丁及其三路数据，Unit/Material/Texture 类型 | 解析并校验 |
-| 源包覆盖所选体甲或头盔全部非披风 Unit | 可以继续依赖检查和生成 |
-| 同一模组内多个目标共用材质/纹理 | 使用一套模组私有 ID，共用资源数据 |
-| 不同模组修改同一原资源 ID，但目标 Kit 不重叠 | 按包分配不同命名空间，可提供并存清单检查 |
-| 多个包控制同一 Kit | 提供清单时明确拒绝；不能用不同 DLL 名解决 |
-| 只改部分 Unit、纯纹理/材质模组 | 本版不支持，拒绝生成 |
-| 外部原版材质又指向本模组修改的纹理/基材质 | 需要额外克隆，本版明确拒绝 |
-| 多个主补丁、未知资源类型、披风替换 | 本版不合并、不推断，报告不支持 |
+| 单补丁三路数据，类型为 Unit/Material/Texture | 解析并校验 |
+| 输入覆盖所选体甲或头盔全部非披风 Unit | 继续依赖检查和生成 |
+| 模组内多个目标共用材质/纹理 | 共用一组模组私有资源 |
+| 不同模组改同一原资源 ID，目标 Kit 不同 | 按包分配私有 ID，允许并存 |
+| 多个包控制同一 Kit | 生成时与启动时均可检测；通用插件拒绝冲突组 |
+| 部分 Unit、纯材质/纹理、多主补丁、披风或未知类型 | 本版不支持，明确拒绝 |
+| 外部原版材质再指向模组修改的纹理/基材质 | 需要额外依赖克隆，本版拒绝 |
 | 游戏 DLL 或 Kit 快照不同 | 拒绝沿用旧布局 |
 
-“候选”只说明存在原资源交集；即使 Unit 全覆盖，也不能推定该套装是作者意图。分析阶段先检查直接结构，选择目标之后才核对外部材质依赖，因此候选可选择不等于生成已通过。
+“候选”说明有原资源交集，不代表作者的替换意图。分析阶段检查直接结构，选择目标后才验证外部依赖，因此候选可选择不等于生成已经通过。
 
-## 处理过程
+## 生成过程
 
-```mermaid
-flowchart LR
-    A[源补丁三路数据] --> B[版本与范围校验]
-    B --> C[用户明确选择 Kit]
-    C --> D[类型化依赖闭包]
-    D --> E[私有 Unit 与共享私有材质纹理]
-    E --> F[重打包及生成映射]
-    F --> G[编译插件与事务测试]
-    G --> H[发布完整输出包]
-```
+1. 核对游戏和快照 SHA，读取 TOC，验证三路边界与重叠。副文件缺失仅在该路所有资源长度为零时允许，输出仍有三件套。
+2. 从所选非披风 Piece.Unit 和动态纹理追踪 `Unit -> Material -> BaseMaterial/Texture`，只保留实际闭包；外部原版材质须检查纹理及基材质是否返回模组修改资源。
+3. 输入三路 SHA、目标集合、schema、已知修正规则及并存清单哈希决定包 ID。Unit 按 `(包, Kit, 类型, 原ID)` 隔离，材质/纹理按 `(包, 类型, 原ID)` 共享。检查已知完整 ID 与高 32 位冲突。
+4. 仅重写解析出的 64 位引用，保留槽哈希、骨骼索引与 Piece 标量。B-01 LOD 修正规则仅在源 Unit 主数据 SHA 精确匹配时应用。
+5. 重算磁盘偏移、主/GPU 缓冲偏移和 256 字节对齐大小。回读 TOC，验证每条资源数据、源文件未变和输出不含旧 ID 覆盖。
+6. 从清单导出 `runtime/ArmorIsolation/<包ID>.json`。绑定目标元数据、typed 映射、允许修改的 Piece 字段和各 Kit 实际依赖；JSON 不提供任意地址、RVA 或可执行脚本。
+7. 使用与插件相同加载器的原生校验器检查配置；提供并存清单时一起转换并整组检查。成功后附带同一个预编译 DLL、INI、校验器和说明，再发布最终输出目录。
 
-1. 对游戏 DLL 与 402 Kit 原始快照绑定版本，读取 TOC 并校验资源类型、三路边界及重叠。缺失的副文件仅在该路所有资源长度为零时允许；输出仍提供三个文件。
-2. 从显式目标的非披风 Piece.Unit 和 Piece 动态纹理追踪 `Unit -> Material -> BaseMaterial/Texture`。只保留目标真正使用的源资源，记录被排除资源。
-3. 检查外部原版材质的纹理、基材质链。不能让仍保留原 ID 的外部材质成为绕过私有映射的依赖；遇到尚需克隆的情况终止并报原因。
-4. 输入三路 SHA、排序后的目标集合、schema、已知修正规则及并存清单哈希共同决定包 ID。Unit 使用 `(包, Kit, 类型, 原ID)`，材质/纹理使用 `(包, 类型, 原ID)`。对已检查原版资源及并存清单保留 ID，检查完整 64 位与高 32 位冲突。
-5. 重写解析出的 64 位引用，保留材料槽/用途哈希、骨骼索引和 Piece 标量。B-01 的三个头盔只在源 Unit 主数据 SHA 精确匹配修正规则时改 LOD；同 ID 的其他内容不改。
-6. 重算三路磁盘偏移、主/GPU 缓冲偏移和按资源 256 字节对齐的缓冲总量。输出 TOC 回读，逐资源对照主数据改动与 GPU/stream 原始段哈希，并核对源三文件未变。
-7. 生成 `generic_resource_map.hpp`。每个 Kit 的 `required_resources` 只列出实际依赖；一个目标不会因同包另一目标专用纹理未加载而等待。
-8. 编译独立命名的 `ArmorIsolation_<包ID>.addon64`。运行时沿用 PE/代码前缀/Kit 布局守卫、资源就绪检查、复制配置和单个 Kit 指针原子发布；不是运行时解析任意 JSON，也不是全局绘制替换。
-9. 本地原生测试检查生成映射归属、字段守卫、披风与标量保留、独立发布。通过后才将自有临时目录中的包移到最终路径；中途失败不留下可误用的半包。
+`generated/generic_resource_map.hpp` 仍作为离线映射导出保留，不参与通用插件编译。每个生成包的 `addon.mode` 为 `universal_runtime`，对应 JSON 路径与 DLL SHA 记入 manifest；`package_files` 记录所有输出文件的大小和哈希。
 
-## 输出与部署边界
+## 部署与迁移
 
-输出包包含 `patch/` 三件套、`addon/` 插件和同名 INI、`tools/probe_resources.exe`、`generated/` 映射、`manifest.json`、`build.log` 和安装说明。
+生成工具不写游戏目录。退出游戏后通过管理器安装 `patch/` 三件套并分配连续编号，将 `runtime/` 内容按目录结构放入游戏 `bin/`。固定 DLL 只需一份，多个包各放自己的 JSON。
 
-生成按钮不会修改游戏目录。安装时先正常退出游戏，停用旧 ID 覆盖模组，由管理器分配连续补丁编号，再部署本包对应插件和配置；同一目标的旧实验插件不能同时启用。通用工具不自动判断当前手动安装文件归属，不提供无收据删除。
+旧 `CM14Isolation.addon64`、`B01Isolation.addon64` 和 `ArmorIsolation_<包ID>.addon64` 不能与通用插件同时使用。现有隔离补丁可以从对应 manifest 导出 JSON，无需重打包或更改私有 ID；详见[通用插件与旧包迁移](universal-reshade-runtime.md)。
 
-新版日志按 DLL 文件名区分，INI 节统一为 `[ArmorIsolation]`。所有检查与原子发布成功仍只代表引用配置已生效，需要切换装备并验收预览、两种体型、头盔混搭、舰桥/任务及非目标外观。关闭 INI 开关不做热恢复，停用和回退需要完整退出游戏。
+配置在启动时整组加载，损坏或冲突配置会阻止整组发布；变更配置须重启，不热更新已发布的指针。日志成功仍不等于外观验收，需要验证体型、头盔、混搭、非目标装备及实际场景。
 
-## 开发验证
-
-2026-09-19 本机结果：31 项 Python 测试通过，启动器通过界面检查；CM-14/B-01 经通用流程完成真实资源生成、插件编译与事务测试。原专用插件的两项回归也在全新构建目录重编通过。
-
-| 通用流程样本 | 目标 | Unit | 共用材质/纹理 | GPU 文件 |
-| --- | --- | --- | --- | --- |
-| CM-14 | 体甲和头盔 2 项 | 27 | 1 + 11 | 215,239,360 字节，约 205.3 MiB |
-| B-01 | 体甲和头盔 8 项 | 92 | 1 + 13 | 353,952,896 字节，约 337.6 MiB |
-
-两包的目标 Unit 归属与专用样本一致，私有 ID 及高 32 位互不冲突，B-01 精确应用三项头盔修正规则。临时大包已删除，只保留[验证记录](generic-sample-validation.json)。本轮没有部署新插件或声称通用包已经通过游戏实测。
+## 验证命令
 
 ```powershell
 & 'G:\Temp\Githud\hd2-lua_mods_test\.venv\Scripts\python.exe' -X utf8 -B -m unittest discover -s tests -p 'test_*.py' -v
@@ -87,12 +61,10 @@ flowchart LR
 & 'G:\Temp\Githud\hd2-lua_mods_test\.venv\Scripts\python.exe' -X utf8 -B tools/validate_generic_samples.py
 ```
 
-第三条以固定实验包的 manifest 找到原始模组和显式目标，经通用流程重新打包、编译和测试，检查目标 Unit 归属与已验收样本一致、命名空间分离、输出哈希完整。生成的测试补丁和构建目录在结束时删除，只留下 `docs/generic-sample-validation.json` 的小型结果记录。
+真实样本回归会生成 CM-14/B-01 测试包，比较目标 Unit 归属、数据哈希、互不冲突的私有 ID，以及两个包附带 DLL 的字节一致性；整个过程不逐包调用编译器。测试大包结束后删除，仅保留 [验证结果](generic-sample-validation.json)。
 
-测试只读取游戏磁盘数据，不调用游戏进程写入，不代替通用插件本身的游戏实测。原始 CM-14/B-01 专用补丁和插件保持不变。
+开发者重编固定插件使用 `tools/build_universal_addon.ps1`；脚本新建自有构建目录，运行原生配置/事务测试，生成发布哈希清单后清理临时构建目录。没有新 DLL 的游戏验收记录时，不能因自动测试通过而将生成包标成已实测。
 
-## 后续扩展顺序
+后续扩展仍按部分模型/纯纹理的依赖克隆、多补丁优先级、安装事务逐项推进。
 
-先让这版生成结果通过用户游戏验收，再增加部分 Unit/纯纹理模组的原版依赖克隆，之后处理多补丁优先级和多包安装事务。免编译的固定插件加声明式配置可以作为后续方向；它需要独立配置校验、包归属和冲突处理，不能仅把 JSON 加载到当前 DLL 就视为完成。
-
-外部格式依据：[Filediver Unit](https://github.com/xypwn/filediver/blob/70f3447cd415c964e0bd29ff0770b97a4d0f160d/stingray/unit/unit.go)、[Filediver Material](https://github.com/xypwn/filediver/blob/70f3447cd415c964e0bd29ff0770b97a4d0f160d/stingray/unit/material/material.go)、[ReShade 6.5.1 SDK](https://github.com/crosire/reshade/tree/v6.5.1/include)。本机具体 Kit、哈希、偏移及修复证据见 CM-14/B-01 实验记录；未把社区结构声明成动态调用跟踪结论。
+格式参考：[Filediver Unit](https://github.com/xypwn/filediver/blob/70f3447cd415c964e0bd29ff0770b97a4d0f160d/stingray/unit/unit.go)、[Material](https://github.com/xypwn/filediver/blob/70f3447cd415c964e0bd29ff0770b97a4d0f160d/stingray/unit/material/material.go)、[ReShade 6.5.1 SDK](https://github.com/crosire/reshade/tree/v6.5.1/include)。本机 Kit 与修复证据见固定实验记录。

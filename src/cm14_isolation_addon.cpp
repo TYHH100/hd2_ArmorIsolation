@@ -1,6 +1,12 @@
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <Windows.h>
+#if defined(UNIVERSAL_ISOLATION)
+#include <TlHelp32.h>
+#include <algorithm>
+#include <cwctype>
+#include <filesystem>
+#endif
 #include <reshade.hpp>
 #include <array>
 #include <atomic>
@@ -12,7 +18,10 @@
 #include <utility>
 #include <vector>
 
-#if defined(GENERIC_ISOLATION)
+#if defined(UNIVERSAL_ISOLATION)
+#include "armor_runtime_profile.hpp"
+namespace isolation_profile = universal_isolation;
+#elif defined(GENERIC_ISOLATION)
 #include "generic_resource_map.hpp"
 namespace isolation_profile = generic_isolation;
 #elif defined(B01_ISOLATION)
@@ -25,7 +34,12 @@ namespace isolation_profile = cm14_isolation;
 #include "cm14_resource_probe.hpp"
 
 namespace {
-#if defined(GENERIC_ISOLATION)
+#if defined(UNIVERSAL_ISOLATION)
+constexpr wchar_t config_section[] = L"ArmorIsolation";
+constexpr char profile_label[] = "Armor";
+constexpr char profile_name[] = "Armor Resource Isolation";
+constexpr char profile_description[] = "Version-guarded armor isolation using validated package configuration files.";
+#elif defined(GENERIC_ISOLATION)
 constexpr wchar_t config_section[] = L"ArmorIsolation";
 constexpr char profile_label[] = "Armor";
 constexpr char profile_name[] = "Armor Resource Isolation " ISOLATION_PACKAGE_ID;
@@ -69,11 +83,40 @@ struct TargetState {
 
 HMODULE module_handle = nullptr;
 std::atomic_flag callback_active = ATOMIC_FLAG_INIT;
+#if defined(UNIVERSAL_ISOLATION)
+isolation_profile::Profile active_profile;
+std::vector<TargetState> target_states;
+bool profiles_initialized = false;
+std::filesystem::path profiles_directory;
+#else
 std::array<TargetState, std::size(isolation_profile::targets)> target_states{};
+#endif
 uint64_t last_poll = 0;
 std::wstring log_path, config_path;
 std::string last_status;
 bool fatal_error = false;
+
+const auto &profile_targets() noexcept {
+#if defined(UNIVERSAL_ISOLATION)
+    return active_profile.targets;
+#else
+    return isolation_profile::targets;
+#endif
+}
+const auto &profile_resources() noexcept {
+#if defined(UNIVERSAL_ISOLATION)
+    return active_profile.resources;
+#else
+    return isolation_profile::resources;
+#endif
+}
+const auto &profile_fields() noexcept {
+#if defined(UNIVERSAL_ISOLATION)
+    return active_profile.piece_fields;
+#else
+    return isolation_profile::piece_fields;
+#endif
+}
 
 bool read_bytes(uintptr_t address, void *output, size_t size) noexcept {
     if (address < 0x10000 || size == 0 || address + size < address)
@@ -102,12 +145,19 @@ void initialize_paths() {
     if (!length || length >= path.size())
         return;
     std::wstring stem(path.data(), length);
+#if defined(UNIVERSAL_ISOLATION)
+    const auto parent = std::filesystem::path(stem).parent_path();
+    log_path = (parent / L"ArmorIsolation.log").wstring();
+    config_path = (parent / L"ArmorIsolation.ini").wstring();
+    profiles_directory = parent / L"ArmorIsolation";
+#else
     const auto extension = stem.find_last_of(L'.');
     const auto separator = stem.find_last_of(L"\\/");
     if (extension != std::wstring::npos && (separator == std::wstring::npos || extension > separator))
         stem.resize(extension);
     log_path = stem + L".log";
     config_path = stem + L".ini";
+#endif
 }
 
 void status(const char *state, const std::string &detail, std::string &previous = last_status) {
@@ -130,8 +180,97 @@ void target_status(const TargetKit &target, TargetState &runtime,
                    const char *state, const std::string &detail) {
     char prefix[32]{};
     std::snprintf(prefix, sizeof(prefix), "kit=%08x ", target.id);
+#if defined(UNIVERSAL_ISOLATION)
+    const auto owner = active_profile.target_packages.find(target.id);
+    const std::string package = owner == active_profile.target_packages.end() ? "unknown" : owner->second;
+    status(state, "package=" + package + " " + prefix + detail, runtime.last_status);
+#else
     status(state, prefix + detail, runtime.last_status);
+#endif
 }
+
+#if defined(UNIVERSAL_ISOLATION)
+bool legacy_addon_name(std::wstring name) {
+    std::transform(name.begin(), name.end(), name.begin(), [](wchar_t value) {
+        return static_cast<wchar_t>(std::towlower(value));
+    });
+    constexpr wchar_t suffix[] = L".addon64";
+    return name == L"cm14isolation.addon64" || name == L"b01isolation.addon64" ||
+        (name.compare(0, 15, L"armorisolation_") == 0 && name.size() > 23 &&
+         name.compare(name.size() - 8, 8, suffix) == 0);
+}
+
+bool no_legacy_addons(std::string &error) {
+    const HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, GetCurrentProcessId());
+    if (snapshot == INVALID_HANDLE_VALUE) {
+        error = "cannot enumerate loaded add-ons; no config write";
+        return false;
+    }
+    MODULEENTRY32W entry{};
+    entry.dwSize = sizeof(entry);
+    if (!Module32FirstW(snapshot, &entry)) {
+        CloseHandle(snapshot);
+        error = "cannot inspect loaded add-ons; no config write";
+        return false;
+    }
+    do {
+        if (entry.hModule != module_handle && legacy_addon_name(entry.szModule)) {
+            const std::wstring name(entry.szModule);
+            CloseHandle(snapshot);
+            error = "legacy add-on " + std::string(name.begin(), name.end()) +
+                " is loaded; migrate its package to ArmorIsolation JSON and remove the old add-on "
+                "after exiting the game; RESTART_REQUIRED; no further config writes";
+            return false;
+        }
+    } while (Module32NextW(snapshot, &entry));
+    const DWORD enumeration_error = GetLastError();
+    CloseHandle(snapshot);
+    if (enumeration_error != ERROR_NO_MORE_FILES) {
+        error = "loaded add-on enumeration changed or failed; no config write";
+        return false;
+    }
+    return true;
+}
+
+bool initialize_profiles() {
+    if (profiles_initialized)
+        return !fatal_error;
+    profiles_initialized = true;
+    std::error_code filesystem_error;
+    if (profiles_directory.empty()) {
+        fatal_error = true;
+        status("FAILED", "cannot locate the add-on configuration directory; RESTART_REQUIRED; no config write");
+        return false;
+    }
+    const bool directory_exists = std::filesystem::exists(profiles_directory, filesystem_error);
+    if (filesystem_error) {
+        fatal_error = true;
+        status("FAILED", "cannot inspect ArmorIsolation directory; RESTART_REQUIRED; no config write");
+        return false;
+    }
+    if (!directory_exists) {
+        status("EMPTY", "ArmorIsolation directory is absent; add package JSON files and restart the game; no config write");
+        return true;
+    }
+    std::string error;
+    if (!isolation_profile::load_directory(profiles_directory, active_profile, error)) {
+        fatal_error = true;
+        status("FAILED", "package configuration group rejected: " + error +
+            "; RESTART_REQUIRED; no config write");
+        return false;
+    }
+    target_states.resize(active_profile.targets.size());
+    if (target_states.empty()) {
+        status("EMPTY", "no package JSON files in ArmorIsolation; restart after adding configuration; no config write");
+    } else {
+        status("CONFIG", "validated packages=" + std::to_string(active_profile.package_ids.size()) +
+            " targets=" + std::to_string(active_profile.targets.size()) +
+            " resources=" + std::to_string(active_profile.resources.size()) +
+            "; configuration is fixed until process restart");
+    }
+    return true;
+}
+#endif
 
 bool module_matches(uintptr_t base, uint32_t timestamp, uint32_t image_size) noexcept {
     IMAGE_DOS_HEADER dos{};
@@ -260,10 +399,17 @@ bool is_shared_resource(const isolation_profile::ResourceMapping &resource) noex
 
 bool resource_belongs_to_target(const isolation_profile::ResourceMapping &resource,
                                const TargetKit &target) noexcept {
-#ifdef GENERIC_ISOLATION
+#if defined(UNIVERSAL_ISOLATION)
     if (resource.kit_id != target.id && !is_shared_resource(resource))
         return false;
-    for (const auto &required : isolation_profile::required_resources) {
+    const auto required = active_profile.requirements_by_kit.find(target.id);
+    return required != active_profile.requirements_by_kit.end() &&
+        required->second.count({resource.type, resource.target}) != 0;
+#elif defined(GENERIC_ISOLATION)
+    if (resource.kit_id != target.id && !is_shared_resource(resource))
+        return false;
+    const auto &required_resources = isolation_profile::required_resources;
+    for (const auto &required : required_resources) {
         if (required.kit_id == target.id && required.type == resource.type && required.target == resource.target)
             return true;
     }
@@ -278,6 +424,15 @@ bool build_candidate(const TargetKit &target, const Snapshot &snapshot, std::vec
     changed = 0;
     if (!layout_matches(target, snapshot, error))
         return false;
+#if defined(UNIVERSAL_ISOLATION)
+    const isolation_profile::TargetStorage *declared = nullptr;
+    for (size_t index = 0; index < active_profile.targets.size(); ++index)
+        if (active_profile.targets[index].id == target.id) declared = active_profile.storage[index].get();
+    if (!declared || declared->references.size() != target.piece_count) {
+        error = "target has no validated source resource metadata";
+        return false;
+    }
+#endif
     candidate = snapshot.data;
     size_t changed_units = 0;
     for (size_t index = 0; index < target.piece_count; ++index) {
@@ -296,7 +451,7 @@ bool build_candidate(const TargetKit &target, const Snapshot &snapshot, std::vec
             continue;
         size_t unit_changes = 0;
         std::array<bool, piece_size / sizeof(uint64_t)> mapped_offsets{};
-        for (const auto &field : isolation_profile::piece_fields) {
+        for (const auto &field : profile_fields()) {
             if (field.kit_id != target.id)
                 continue;
             if (field.field_offset != 0 && (field.field_offset < 0x18 ||
@@ -304,8 +459,18 @@ bool build_candidate(const TargetKit &target, const Snapshot &snapshot, std::vec
                 error = "generated map contains a non-resource piece offset";
                 return false;
             }
+#if defined(UNIVERSAL_ISOLATION)
+            const size_t resource_index = field.field_offset == 0 ? 0 : 1 + (field.field_offset - 0x18) / 8;
+            if (declared->references[index][resource_index] != field.source)
+                continue;
+            if (get<uint64_t>(original_piece, field.field_offset) != field.source) {
+                error = "planned source resource field differs from the validated profile at piece " + std::to_string(index);
+                return false;
+            }
+#else
             if (get<uint64_t>(original_piece, field.field_offset) != field.source)
                 continue;
+#endif
             if (!field.source || !field.target || field.target == field.source ||
                 mapped_offsets[field.field_offset / sizeof(uint64_t)]) {
                 error = "generated map contains an empty, unchanged or ambiguous resource ID";
@@ -314,7 +479,7 @@ bool build_candidate(const TargetKit &target, const Snapshot &snapshot, std::vec
             const uint64_t expected_type = field.field_offset == 0 ?
                 0xe0a48d0be9a7453fULL : 0xcd4238c6a0c69e32ULL;
             bool own_resource = false;
-            for (const auto &resource : isolation_profile::resources) {
+            for (const auto &resource : profile_resources()) {
                 if (resource_belongs_to_target(resource, target) && resource.type == expected_type &&
                     resource.source == field.source && resource.target == field.target) {
                     own_resource = true;
@@ -347,23 +512,36 @@ bool private_resources_ready(uintptr_t exe, const TargetKit &target, std::string
     size_t ready = 0, total = 0;
     uint64_t first_type = 0, first_target = 0;
     const char *first_state = "ready";
-    for (const auto &resource : isolation_profile::resources) {
+    const auto inspect_resource = [&](uint64_t type, uint64_t target_id) {
+        ++total;
+        const auto state = cm14_isolation::probe_resource(exe, type, target_id);
+        if (state == cm14_isolation::resource_state::ready) {
+            ++ready;
+        } else if (!first_target) {
+            first_type = type;
+            first_target = target_id;
+            first_state = cm14_isolation::resource_state_name(state);
+        }
+    };
+#if defined(UNIVERSAL_ISOLATION)
+    const auto required = active_profile.requirements_by_kit.find(target.id);
+    if (required == active_profile.requirements_by_kit.end()) {
+        error = "target has no validated resource dependencies; no config write";
+        return false;
+    }
+    for (const auto &[type, target_id] : required->second)
+        inspect_resource(type, target_id);
+#else
+    for (const auto &resource : profile_resources()) {
         if (resource.kit_id == 0 && !is_shared_resource(resource)) {
             error = "only materials and textures may use the shared resource owner; no config write";
             return false;
         }
         if (!resource_belongs_to_target(resource, target))
             continue;
-        ++total;
-        const auto state = cm14_isolation::probe_resource(exe, resource.type, resource.target);
-        if (state == cm14_isolation::resource_state::ready) {
-            ++ready;
-        } else if (!first_target) {
-            first_type = resource.type;
-            first_target = resource.target;
-            first_state = cm14_isolation::resource_state_name(state);
-        }
+        inspect_resource(resource.type, resource.target);
     }
+#endif
     if (ready == total && ready > 0)
         return true;
     char details[256]{};
@@ -478,6 +656,16 @@ void poll() {
     initialize_paths();
     if (fatal_error)
         return;
+#if defined(UNIVERSAL_ISOLATION)
+    if (!initialize_profiles() || active_profile.targets.empty())
+        return;
+    std::string conflict;
+    if (!no_legacy_addons(conflict)) {
+        fatal_error = true;
+        status("FAILED", conflict);
+        return;
+    }
+#endif
     const int enabled = GetPrivateProfileIntW(config_section, L"Enabled", 1, config_path.c_str());
     const int diagnostic = GetPrivateProfileIntW(config_section, L"DiagnosticOnly", 0, config_path.c_str());
     if ((enabled != 0 && enabled != 1) || (diagnostic != 0 && diagnostic != 1)) {
@@ -508,8 +696,8 @@ void poll() {
         return;
     }
     // Each target has its own readiness, status and atomic pointer publication.
-    for (size_t index = 0; index < std::size(isolation_profile::targets); ++index)
-        poll_target(game, exe, isolation_profile::targets[index], target_states[index], diagnostic != 0);
+    for (size_t index = 0; index < std::size(profile_targets()); ++index)
+        poll_target(game, exe, profile_targets()[index], target_states[index], diagnostic != 0);
 }
 
 void on_present(reshade::api::command_queue *, reshade::api::swapchain *, const reshade::api::rect *,

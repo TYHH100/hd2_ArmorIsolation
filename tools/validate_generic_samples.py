@@ -1,4 +1,4 @@
-"""Rebuild the two accepted samples through the generic pipeline, then remove test packages."""
+"""Validate sample packages with the same universal DLL, then remove test packages."""
 
 from collections import Counter
 import json
@@ -11,7 +11,8 @@ import build_cm14_isolated as archive
 
 def main():
     defaults = tool.discover_defaults()
-    report = {"game_runtime_verified": False, "temporary_packages_removed": False, "samples": []}
+    report = {"game_runtime_verified": False, "temporary_packages_removed": False,
+              "runtime_mode": "universal_runtime", "per_package_compilation": False, "samples": []}
     baseline_files = [path for name in ("cm14-isolated", "b01-isolated")
                       for path in (tool.ROOT / "dist" / name).rglob("*")
                       if path.is_file() and (path.suffix == ".addon64" or ".patch_" in path.name)]
@@ -53,13 +54,16 @@ def main():
                                       "gpu_bytes": result["gpu_storage"]["physical_file_bytes"],
                                       "lod_adjustments": len(result["helmet_lod_adjustments"]),
                                       "payloads_verified": True, "package_files_verified": True,
-                                      "compiled_addon_transaction_test": "passed",
+                                      "runtime_configuration_validated": True,
+                                      "addon_sha256": result["addon"]["sha256"],
                                       "unit_owners_equal_accepted_sample": True})
             results.append(package)
         private_sets = [{int(row["target"], 16) for row in json.loads(
                         (path / "manifest.json").read_text(encoding="utf-8"))["mapping"]} for path in results]
         assert private_sets[0].isdisjoint(private_sets[1])
         assert {value >> 32 for value in private_sets[0]}.isdisjoint(value >> 32 for value in private_sets[1])
+        assert report["samples"][0]["addon_sha256"] == report["samples"][1]["addon_sha256"]
+        report["same_addon_binary"] = True
     assert all(archive.sha256_file(Path(path)) == digest for path, digest in baseline.items())
     report["accepted_sample_artifacts_unchanged"] = True
     report["temporary_packages_removed"] = not output.exists()

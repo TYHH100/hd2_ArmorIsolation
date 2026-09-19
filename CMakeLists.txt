@@ -12,6 +12,43 @@ if(NOT EXISTS "${RESHADE_SDK_INCLUDE_DIR}/reshade.hpp")
 endif()
 
 option(BUILD_GENERIC_ISOLATION "Build an isolated generated package instead of fixed experiments" OFF)
+option(BUILD_UNIVERSAL_ISOLATION "Build the fixed add-on that loads package JSON configuration" OFF)
+if(BUILD_UNIVERSAL_ISOLATION AND BUILD_GENERIC_ISOLATION)
+    message(FATAL_ERROR "Universal and generated-package build modes are mutually exclusive.")
+endif()
+if(BUILD_UNIVERSAL_ISOLATION)
+    set(ISOLATION_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/dist/armor-isolation-runtime"
+        CACHE PATH "Directory for the universal runtime")
+    set(NLOHMANN_JSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/nlohmann-json-3.12.0/include"
+        CACHE PATH "Directory containing nlohmann/json.hpp")
+    if(NOT EXISTS "${NLOHMANN_JSON_INCLUDE_DIR}/nlohmann/json.hpp" OR
+       NOT IS_ABSOLUTE "${ISOLATION_OUTPUT_DIRECTORY}")
+        message(FATAL_ERROR "The JSON parser header and an absolute runtime output directory are required.")
+    endif()
+    enable_testing()
+    add_library(UniversalResourceIsolation SHARED src/cm14_isolation_addon.cpp)
+    add_executable(validate_runtime_profile tools/validate_runtime_profile.cpp)
+    add_executable(test_universal_addon tests/test_universal_addon.cpp)
+    add_executable(test_runtime_profile tests/test_runtime_profile.cpp)
+    foreach(task_target UniversalResourceIsolation validate_runtime_profile test_universal_addon test_runtime_profile)
+        target_compile_features(${task_target} PRIVATE cxx_std_17)
+        target_compile_definitions(${task_target} PRIVATE UNIVERSAL_ISOLATION)
+        target_include_directories(${task_target} PRIVATE include "${RESHADE_SDK_INCLUDE_DIR}" "${NLOHMANN_JSON_INCLUDE_DIR}")
+        target_compile_options(${task_target} PRIVATE /W4 /permissive- /utf-8 /EHsc)
+        set_target_properties(${task_target} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endforeach()
+    set_target_properties(UniversalResourceIsolation PROPERTIES
+        PREFIX "" OUTPUT_NAME "ArmorIsolation" SUFFIX ".addon64")
+    foreach(task_target UniversalResourceIsolation validate_runtime_profile)
+        set_target_properties(${task_target} PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${ISOLATION_OUTPUT_DIRECTORY}"
+            RUNTIME_OUTPUT_DIRECTORY_RELEASE "${ISOLATION_OUTPUT_DIRECTORY}"
+            RUNTIME_OUTPUT_DIRECTORY_DEBUG "${ISOLATION_OUTPUT_DIRECTORY}")
+    endforeach()
+    add_test(NAME universal_addon_transaction COMMAND test_universal_addon)
+    add_test(NAME runtime_profile_validation COMMAND test_runtime_profile)
+    return()
+endif()
 if(NOT BUILD_GENERIC_ISOLATION)
     if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/include/cm14_resource_map.hpp")
         message(FATAL_ERROR "Build the CM14 isolated patch and generated resource map first.")

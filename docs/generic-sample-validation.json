@@ -1,6 +1,8 @@
 {
   "game_runtime_verified": false,
   "temporary_packages_removed": true,
+  "runtime_mode": "universal_runtime",
+  "per_package_compilation": false,
   "samples": [
     {
       "sample": "cm14-isolated",
@@ -25,12 +27,13 @@
       "lod_adjustments": 0,
       "payloads_verified": true,
       "package_files_verified": true,
-      "compiled_addon_transaction_test": "passed",
+      "runtime_configuration_validated": true,
+      "addon_sha256": "65525e0d7af5f088d628a84275f2e29139542fb4235a24652348cbb4f7f4fcf7",
       "unit_owners_equal_accepted_sample": true
     },
     {
       "sample": "b01-isolated",
-      "package_id": "489097bf40ea56f78a7efb03",
+      "package_id": "049300bbdcb993861bf15f77",
       "targets": [
         "61b31723",
         "4f7fb2bd",
@@ -57,10 +60,12 @@
       "lod_adjustments": 3,
       "payloads_verified": true,
       "package_files_verified": true,
-      "compiled_addon_transaction_test": "passed",
+      "runtime_configuration_validated": true,
+      "addon_sha256": "65525e0d7af5f088d628a84275f2e29139542fb4235a24652348cbb4f7f4fcf7",
       "unit_owners_equal_accepted_sample": true
     }
   ],
+  "same_addon_binary": true,
   "accepted_sample_artifacts_unchanged": true,
   "cross_package_ids_disjoint": true
 }

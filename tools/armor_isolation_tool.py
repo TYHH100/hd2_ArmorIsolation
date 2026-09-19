@@ -94,7 +94,7 @@ def staging_directory(output_root: Path):
             shutil.rmtree(staging)
 
 
-def run_build(command, log_path: Path, log):
+def run_logged(command, log_path: Path, log):
     flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
     environment = {**os.environ, "PYTHONUTF8": "1"}
     with log_path.open("w", encoding="utf-8") as recording:
@@ -104,15 +104,39 @@ def run_build(command, log_path: Path, log):
         try:
             for line in process.stdout:
                 recording.write(line)
-                if not line.startswith(("注意: 包含文件:", "Note: including file:")):
-                    log(line.rstrip())
+                log(line.rstrip())
             code = process.wait()
             if code:
-                raise RuntimeError(f"插件构建或测试失败，退出码 {code}；详情见本次输出日志。")
+                raise RuntimeError(f"运行时配置校验失败，退出码 {code}；详情见本次输出日志。")
         finally:
             if process.poll() is None:
                 process.terminate()
                 process.wait()
+
+
+def runtime_release(directory: Path | None = None):
+    import build_cm14_isolated as archive
+
+    directory = directory or ROOT / "dist/armor-isolation-runtime"
+    metadata = directory / "runtime-release.json"
+    if not metadata.is_file():
+        raise ValueError("缺少预编译通用插件。请使用包含 dist/armor-isolation-runtime 的完整工具包。")
+    release = json.loads(metadata.read_text(encoding="utf-8-sig"))
+    if (release.get("schema") != "hd2-armor-runtime-release/1" or
+            release.get("runtime_schema") != "hd2-armor-runtime/1" or
+            release.get("expected_game_dll_sha256") != archive.DLL_SHA256 or
+            release.get("sdk_api") != 17 or release.get("reshade_version") != "6.5.1"):
+        raise ValueError("预编译通用插件版本不匹配。")
+    required = {"ArmorIsolation.addon64", "ArmorIsolation.ini", "validate_runtime_profile.exe"}
+    rows = release.get("files", [])
+    if len(rows) != len(required) or {row.get("name") for row in rows} != required:
+        raise ValueError("通用插件发布清单不完整。")
+    for row in rows:
+        path = directory / row["name"]
+        if (not path.is_file() or path.stat().st_size != row["size"] or
+                archive.sha256_file(path) != row["sha256"].lower()):
+            raise ValueError(f"通用插件文件缺失或校验不符：{path}")
+    return directory, release
 
 
 def package_readme(manifest):
@@ -120,32 +144,34 @@ def package_readme(manifest):
     names = [f"`{target['kit']}` ({'体甲' if target['type'] == 0 else '头盔'})" for target in manifest["targets"]]
     return f"""# 护甲资源隔离包 {package_id}
 
-本包已完成离线生成、插件编译和本地测试，尚未单独通过游戏画面验收。工具没有写入游戏目录。
+本包已完成资源生成及通用插件配置校验，尚未单独通过游戏画面验收。工具没有写入游戏目录；生成本包不需要 C++ 编译环境。
 
 目标：{', '.join(names)}。
 
 - `patch/`：三个资源补丁，模型按 Kit 隔离，模组内相同材质和纹理共用一组私有 ID。
-- `addon/ArmorIsolation_{package_id}.addon64` 与同名 `.ini`：必须与本包补丁配套使用，配置节为 `ArmorIsolation`。
+- `runtime/ArmorIsolation.addon64`：所有模组共用的固定插件，只需安装一份。
+- `runtime/ArmorIsolation/{package_id}.json`：本包的运行时配置，必须与本包补丁配套。
+- `runtime/ArmorIsolation.ini`：通用插件开关，节名为 `ArmorIsolation`。已有配置可保留。
 - `manifest.json`：来源哈希、目标、资源依赖、已应用的已知修正及输出哈希。
-- `generated/generic_resource_map.hpp`：本包插件使用的映射与目标布局。
-- `build.log`：本次构建及测试记录。
-- `tools/probe_resources.exe`：本包专用只读资源探针，参数为游戏 PID。
+- `generated/generic_resource_map.hpp`：资源映射的离线导出，通用插件不读取或编译此头文件。
+- `runtime-check.log`：本次配置及并存检查记录。
+- `tools/validate_runtime_profile.exe`：通用配置校验器，参数为配置文件或配置目录；不读取或修改游戏进程。
 
 ## 安装与测试
 
 1. 正常退出游戏。停用源模组及其他仍覆盖相同原资源的版本；不能让原版覆盖包与隔离包同时生效。
 2. 通过模组管理器安装 `patch/` 中的三个文件，保持同一补丁编号。不要按文件名直接覆盖游戏中已有 patch_0。
-3. 将 `addon/` 中的 `.addon64` 和 `.ini` 配套部署到游戏 `bin/`。需要已启用 add-on 的 ReShade 6.5.1 / API17。更换相同目标时移除确认归属的旧实验插件，不能同时运行两份目标重叠的隔离插件。
-4. 启动后在军械库加载目标，查看同名 `.log` 中各 Kit 的 `APPLIED`，切换装备触发重建；检查体甲两种体型、头盔、混搭以及原本共用资源的其他装备。
+3. 将 `runtime/` 内容按目录结构部署到游戏 `bin/`。需要已启用 add-on 的 ReShade 6.5.1 / API17。通用 DLL 只装一份，每个模组新增自己的 JSON。迁移时停用确认属于旧实验版的 `CM14Isolation`、`B01Isolation` 或 `ArmorIsolation_<包ID>` 插件。
+4. 启动后在军械库加载目标，查看 `bin/ArmorIsolation.log` 中包 ID 和各 Kit 的 `APPLIED`，切换装备触发重建；检查体甲两种体型、头盔、混搭以及原本共用资源的其他装备。
 5. 预览通过后再检查舰桥和任务场景。`APPLIED` 仅代表配置发布，不能替代外观验收。
 
-回退：完整退出游戏，通过原部署方式卸载本包补丁和对应插件/INI，再启用原模组。不要删除不确定归属的文件或造成补丁编号断层；关闭 INI 开关不能在运行中恢复已发布的配置。
+回退：完整退出游戏，通过原部署方式卸载本包补丁和本包 JSON，再启用原模组。其他隔离包仍在使用时保留通用 DLL/INI。不要删除不确定归属的文件或造成补丁编号断层；配置只在启动时读取，关闭 INI 开关不能在运行中恢复已发布的配置。
 
 ## 当前适用范围
 
 游戏 DLL 必须匹配 manifest 中的版本与 SHA-256。本版支持单个补丁三件套、体甲和头盔，且输入覆盖所选目标全部非披风 Unit。多补丁合并、仅纹理/材质替换、部分 Unit 替换、披风及未知外部依赖尚未支持。
 
-不同模组可以使用相同原资源 ID，输出按内容与目标生成独立命名空间；同一 Kit 同时由多个隔离包控制仍属于冲突。生成时可提供并存包的 manifest 检查目标交集与资源 ID。未提供的外部包不在该检查范围内。
+不同模组可以使用相同原资源 ID，输出按内容与目标生成独立命名空间；同一 Kit 同时由多个隔离包控制仍属于冲突。生成时可提供并存包的 manifest 检查，游戏启动时通用插件再验证整个 JSON 目录；若存在冲突或损坏配置，则整组停止发布。
 
 已知 LOD 修正仅在源资源内容精确匹配时使用，不把 B-01 的索引改动推广到其他模型。
 """
@@ -155,6 +181,7 @@ def generate_package(source: Path, game: Path, reader_tools: Path, kits: Path,
                      targets: list[str], output_root: Path,
                      coexist_manifests: list[Path] | None = None, log=print):
     import build_generic_isolated as builder
+    import runtime_profile
 
     source = resolve_source(source)
     game, reader_tools, kits = Path(game).resolve(), Path(reader_tools).resolve(), Path(kits).resolve()
@@ -167,9 +194,7 @@ def generate_package(source: Path, game: Path, reader_tools: Path, kits: Path,
         import lz4.block  # noqa: F401
     except ImportError as error:
         raise ValueError("当前 Python 缺少 lz4，请使用已配置资源读取器的 Python 环境。") from error
-    powershell = shutil.which("pwsh") or shutil.which("powershell")
-    if not powershell:
-        raise ValueError("未找到 PowerShell，无法构建配套插件。")
+    runtime_dir, release = runtime_release()
     log("正在分析依赖、分配私有 ID 并重打包资源……")
     with staging_directory(output_root) as staging:
         package = staging / "package"
@@ -178,34 +203,41 @@ def generate_package(source: Path, game: Path, reader_tools: Path, kits: Path,
                                coexist_manifest=[Path(path) for path in (coexist_manifests or [])])
         manifest = builder.build(args)
         package_id = manifest["package_id"]
-        if not re.fullmatch(r"[0-9a-f]{16,64}", package_id):
+        if not re.fullmatch(r"[0-9a-f]{24}", package_id):
             raise ValueError("Invalid generated package ID")
         destination = output_root / f"armor-{package_id}"
         if destination.exists():
             raise FileExistsError(f"该输入与目标已有输出，未覆盖：{destination}。如需重建，请选择新的输出目录。")
-        log(f"资源包已生成：{len(manifest['mapping'])} 个资源。正在编译和测试配套插件……")
-        addon_dir = package / "addon"
-        addon_dir.mkdir(exist_ok=True)
-        run_build([powershell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
-                   str(ROOT / "tools/build_generic_addon.ps1"),
-                   "-HeaderDirectory", str(package / "generated"),
-                   "-OutputDirectory", str(addon_dir),
-                   "-BuildDirectory", str(staging / "build"), "-PackageId", package_id],
-                  package / "build.log", log)
-        addon = addon_dir / f"ArmorIsolation_{package_id}.addon64"
-        if not addon.is_file() or not addon.stat().st_size:
-            raise RuntimeError("编译没有产生预期插件，未发布输出包。")
-        probe = staging / "build/probe_generic_resources.exe"
-        if not probe.is_file():
-            raise RuntimeError("编译没有产生本包资源探针，未发布输出包。")
+        log(f"资源包已生成：{len(manifest['mapping'])} 个资源。正在校验通用插件配置……")
+        profile = runtime_profile.make_runtime_profile(manifest, kits)
+        configs = package / "runtime/ArmorIsolation"
+        configs.mkdir(parents=True)
+        profile_path = configs / f"{package_id}.json"
+        runtime_profile.write_profile(profile, profile_path)
+        validation = staging / "validation-inputs"
+        validation.mkdir()
+        runtime_profile.write_profile(profile, validation / profile_path.name)
+        for path in coexist_manifests or []:
+            document = json.loads(Path(path).read_text(encoding="utf-8"))
+            existing = runtime_profile.make_runtime_profile(document, kits)
+            runtime_profile.write_profile(existing, validation / f"{existing['package_id']}.json")
+        run_logged([str(runtime_dir / "validate_runtime_profile.exe"), str(validation)],
+                   package / "runtime-check.log", log)
         (package / "tools").mkdir()
-        shutil.copy2(probe, package / "tools/probe_resources.exe")
-        ini = addon.with_suffix(".ini")
-        ini.write_text("[ArmorIsolation]\nEnabled=1\nDiagnosticOnly=0\n", encoding="ascii")
-        manifest["package_status"] = "built_and_locally_tested"
+        for row in release["files"]:
+            subdirectory = "tools" if row["name"].endswith(".exe") else "runtime"
+            shutil.copy2(runtime_dir / row["name"], package / subdirectory / row["name"])
+        (package / "licenses").mkdir()
+        for name in ("nlohmann-json.LICENSE.MIT", "ReShade.LICENSE.md"):
+            shutil.copy2(runtime_dir / "licenses" / name, package / "licenses" / name)
+        shutil.copy2(runtime_dir / "runtime-release.json", package / "runtime-release.json")
+        addon = package / "runtime/ArmorIsolation.addon64"
+        manifest["package_status"] = "built_and_runtime_configuration_validated"
         manifest["game_runtime_verified"] = False
         manifest["addon"] = {"name": addon.name, "config_section": "ArmorIsolation",
-                             "reshade_version": "6.5.1", "sdk_api": 17}
+                             "reshade_version": "6.5.1", "sdk_api": 17, "mode": "universal_runtime",
+                             "runtime_profile": profile_path.relative_to(package).as_posix(),
+                             "sha256": next(row["sha256"] for row in release["files"] if row["name"] == addon.name)}
         readme = package / "README.md"
         readme.write_text(package_readme(manifest), encoding="utf-8")
         records = []
