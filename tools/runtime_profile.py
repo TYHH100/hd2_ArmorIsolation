@@ -11,11 +11,12 @@ import re
 import sys
 
 import build_cm14_isolated as archive
+from isolation_paths import resource_root
 
 SCHEMA = "hd2-armor-runtime/1"
 GAME_VERSION = "1.0.0.18930"
 KITS_SHA256 = "e68b82eb7dacde3219f7d049b692dfb418f7f2a35516d98c3dab7515eb0409c1"
-DEFAULT_KITS = Path(__file__).resolve().parents[1] / "docs/armor-isolation-live-kits.json"
+DEFAULT_KITS = resource_root() / "docs/armor-isolation-live-kits.json"
 MAX_RESOURCES = 16384
 MAX_FIELDS = 32768
 MAX_REQUIREMENTS = 131072

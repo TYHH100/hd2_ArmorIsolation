@@ -8,13 +8,13 @@
 
 ## 使用入口
 
-1. 双击项目根目录 `Start-ArmorIsolation.cmd`。也可在 PowerShell 执行 `Start-ArmorIsolation.ps1`，用 `-Python` 指定解释器，用 `-Source` 预填源模组。
+1. 单文件版双击 `ArmorIsolation.exe`；默认输出在 EXE 旁 `ArmorIsolation-output`。源码版双击项目根目录 `Start-ArmorIsolation.cmd`，或执行 `Start-ArmorIsolation.ps1`，用 `-Python` 指定解释器，用 `-Source` 预填源模组。
 2. 选择旧版或 V1 模组根目录或其中的 `manifest.json`，保留整套选项目录；也可继续选择单个主 `.patch_N` 文件或只含一个主补丁的目录。stream/GPU 从同名文件读取，输入只读。
 3. 核对游戏和输出目录。附加设置可调整资源读取器、Kit 数据、名称目录以及准备并存的隔离包 `manifest.json`。
 4. 点击“分析候选”，按名称、Kit ID、部位和 Unit 覆盖数量选择实际目标。体甲和头盔分别选择，共享资源命中的装备不会自动全选。
 5. 点击“生成隔离包”。完整输出在 `dist/generated/armor-<24位包ID>`，已有同名结果不覆盖；失败清理本次临时目录。
 
-普通生成需要 Python 3.11+、tkinter、lz4 和原版数据读取器。启动器优先寻找项目或相邻 `hd2-lua_mods_test` 的虚拟环境，再寻找系统 Python。读取器默认相邻 `hd2-lua_mods_test/tools/archive.py`，Kit 使用绑定版本的本地快照。
+单文件版已内置运行依赖，只需分发一个 EXE，见[单文件版说明](portable-exe.md)。源码运行需要 Python 3.11+、tkinter、lz4；启动器优先寻找项目或相邻 `hd2-lua_mods_test` 的虚拟环境，再寻找系统 Python。读取器已纳入 `tools/game_data/archive.py`，Kit 使用绑定版本的本地快照，名称表位于 `assets/names`。游戏目录从 Steam 注册表与库目录识别，未找到时手动选择。
 
 固定插件、INI、校验器及发布哈希清单位于 `dist/armor-isolation-runtime/`。生成前核对其版本与文件哈希，生成后复用同一 DLL；普通用户不再需要 MSVC、CMake、Ninja。这些 C++ 工具仅用于开发者更新插件。
 

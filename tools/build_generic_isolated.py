@@ -15,8 +15,9 @@ import struct
 
 import build_b01_isolated as b01
 import build_cm14_isolated as archive
+from isolation_paths import resource_root
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = resource_root()
 SCHEMA = "hd2-armor-isolation/1"
 KITS_SHA256 = "e68b82eb7dacde3219f7d049b692dfb418f7f2a35516d98c3dab7515eb0409c1"
 EMPTY_SHA256 = hashlib.sha256(b"").hexdigest()

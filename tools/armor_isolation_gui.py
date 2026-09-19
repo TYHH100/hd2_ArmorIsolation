@@ -101,6 +101,7 @@ class ArmorIsolationApp:
         self._path_row(paths, 2, "output", "输出目录")
         self.advanced_button = self._button(paths, "展开附加设置", self._toggle_advanced)
         self.advanced_button.grid(row=3, column=0, columnspan=2, sticky="w", pady=(4, 0))
+        self._button(paths, "使用说明", self._show_help).grid(row=3, column=2, columnspan=2, sticky="e")
 
         self.advanced_view = ttk.Frame(outer)
         self.advanced_view.columnconfigure(0, weight=1)
@@ -203,6 +204,26 @@ class ArmorIsolationApp:
         log_scroll = ttk.Scrollbar(log_frame, orient="vertical", command=self.log.yview)
         log_scroll.grid(row=0, column=1, sticky="ns")
         self.log.configure(yscrollcommand=log_scroll.set)
+
+    def _show_help(self) -> None:
+        from isolation_paths import resource_root
+
+        window = tk.Toplevel(self.root)
+        window.title("使用说明与组件来源")
+        window.geometry("800x650")
+        view = tk.Text(window, wrap="word", padx=12, pady=12)
+        scroll = ttk.Scrollbar(window, orient="vertical", command=view.yview)
+        scroll.pack(side="right", fill="y")
+        view.configure(yscrollcommand=scroll.set)
+        view.pack(fill="both", expand=True)
+        assets = resource_root()
+        files = [assets / "docs/portable-exe.md", assets / "assets/THIRD_PARTY.md"]
+        files.extend(sorted((assets / "assets/licenses").glob("*")))
+        files.extend(sorted((assets / "dist/armor-isolation-runtime/licenses").glob("*")))
+        for path in files:
+            if path.is_file():
+                view.insert("end", f"{path.name}\n{'=' * 50}\n{path.read_text(encoding='utf-8-sig')}\n\n")
+        view.configure(state="disabled")
 
     def _browse_path(self, key: str, *, file: bool = False) -> None:
         if self.busy:

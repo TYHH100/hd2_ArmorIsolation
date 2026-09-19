@@ -1,0 +1,74 @@
+{
+  "schema": "hd2-portable-exe-validation/1",
+  "status": "passed",
+  "exe": "G:\\Temp\\Githud\\hd2_mods-test\\dist\\portable\\ArmorIsolation.exe",
+  "exe_sha256": "392b98014a6f22a6af0ae4cf2526d81457b1baa400e28ddb82236682f067b490",
+  "source": "G:\\Temp\\HD2ModManager\\Mods\\Mods\\夏安原皮外骨骼替换B27+CE101_f9cf75bf",
+  "game": "G:\\AppData\\SteamLibrary\\steamapps\\common\\Helldivers 2",
+  "targets": [
+    "d2c578e1",
+    "d11da85b",
+    "dee800a8",
+    "89b1b9e3"
+  ],
+  "game_runtime_verified": false,
+  "temporary_files_removed": true,
+  "stages": [
+    {
+      "action": "gui_smoke",
+      "exit_code": 0,
+      "seconds": 3.969
+    },
+    {
+      "action": "analyze",
+      "exit_code": 0,
+      "seconds": 5.375
+    },
+    {
+      "action": "build",
+      "exit_code": 0,
+      "seconds": 14.078
+    }
+  ],
+  "gui_smoke_ok": true,
+  "only_exe_copied": true,
+  "python_environment_removed": true,
+  "path_system_directories_only": true,
+  "independent_empty_cwd": true,
+  "candidates": [
+    {
+      "id": "d2c578e1",
+      "name": "B-27 Fortified Commando",
+      "type": 0,
+      "supported": true
+    },
+    {
+      "id": "d11da85b",
+      "name": "B-27 Fortified Commando",
+      "type": 1,
+      "supported": true
+    },
+    {
+      "id": "dee800a8",
+      "name": "CE-101 Guerilla Gorilla",
+      "type": 0,
+      "supported": true
+    },
+    {
+      "id": "89b1b9e3",
+      "name": "CE-101 Guerilla Gorilla",
+      "type": 1,
+      "supported": true
+    }
+  ],
+  "package_id": "16cc253e66060c32fe282296",
+  "resource_count": 65,
+  "source_file_count": 5,
+  "source_directory_count": 0,
+  "all_relative_paths_preserved": true,
+  "all_non_patch_bytes_preserved": true,
+  "original_manifest_bytes_preserved": true,
+  "source_unchanged": true,
+  "addon_sha256": "1bd484fb5ea14ea3380e1d0db2cd752a25209c17316ae014172333d03342b300",
+  "runtime_configuration_result": "PROFILE_OK packages=1 targets=4 resources=65 fields=49 required=97"
+}

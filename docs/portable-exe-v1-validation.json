@@ -1,0 +1,74 @@
+{
+  "schema": "hd2-portable-exe-validation/1",
+  "status": "passed",
+  "exe": "G:\\Temp\\Githud\\hd2_mods-test\\dist\\portable\\ArmorIsolation.exe",
+  "exe_sha256": "392b98014a6f22a6af0ae4cf2526d81457b1baa400e28ddb82236682f067b490",
+  "source": "G:\\Temp\\HD2ModManager\\Mods\\Mods\\shinano Chromium替换CM-21战壕护理员 CE-07拆除专家_5dc4aef9",
+  "game": "G:\\AppData\\SteamLibrary\\steamapps\\common\\Helldivers 2",
+  "targets": [
+    "d52bb413",
+    "bd1e5e84",
+    "5a17d6d6",
+    "65c07df2"
+  ],
+  "game_runtime_verified": false,
+  "temporary_files_removed": true,
+  "stages": [
+    {
+      "action": "gui_smoke",
+      "exit_code": 0,
+      "seconds": 4.094
+    },
+    {
+      "action": "analyze",
+      "exit_code": 0,
+      "seconds": 5.0
+    },
+    {
+      "action": "build",
+      "exit_code": 0,
+      "seconds": 12.656
+    }
+  ],
+  "gui_smoke_ok": true,
+  "only_exe_copied": true,
+  "python_environment_removed": true,
+  "path_system_directories_only": true,
+  "independent_empty_cwd": true,
+  "candidates": [
+    {
+      "id": "d52bb413",
+      "name": "CM-21 Trench Paramedic",
+      "type": 0,
+      "supported": true
+    },
+    {
+      "id": "bd1e5e84",
+      "name": "CM-21 Trench Paramedic",
+      "type": 1,
+      "supported": true
+    },
+    {
+      "id": "5a17d6d6",
+      "name": "CE-07 Demolition Specialist",
+      "type": 0,
+      "supported": true
+    },
+    {
+      "id": "65c07df2",
+      "name": "CE-07 Demolition Specialist",
+      "type": 1,
+      "supported": true
+    }
+  ],
+  "package_id": "ee6ca9254c520f6e36dc704d",
+  "resource_count": 58,
+  "source_file_count": 14,
+  "source_directory_count": 4,
+  "all_relative_paths_preserved": true,
+  "all_non_patch_bytes_preserved": true,
+  "original_manifest_bytes_preserved": true,
+  "source_unchanged": true,
+  "addon_sha256": "1bd484fb5ea14ea3380e1d0db2cd752a25209c17316ae014172333d03342b300",
+  "runtime_configuration_result": "PROFILE_OK packages=1 targets=4 resources=58 fields=54 required=70"
+}

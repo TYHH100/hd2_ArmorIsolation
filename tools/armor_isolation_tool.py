@@ -15,8 +15,9 @@ import subprocess
 import sys
 import tempfile
 from types import SimpleNamespace
+from isolation_paths import resource_root, default_output, discover_game_path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = resource_root()
 PATCH_NAME = re.compile(r"^[0-9a-fA-F]{16}\.patch_[0-9]+$")
 
 
@@ -25,11 +26,11 @@ def discover_defaults():
         return str(next((path for path in candidates if path.exists()), candidates[0]))
 
     return {
-        "game": first_existing([Path("G:/AppData/SteamLibrary/steamapps/common/Helldivers 2")]),
-        "reader_tools": first_existing([ROOT.parent / "hd2-lua_mods_test/tools"]),
-        "output": str(ROOT / "dist/generated"),
+        "game": discover_game_path(),
+        "reader_tools": first_existing([ROOT / "tools/game_data", ROOT.parent / "hd2-lua_mods_test/tools"]),
+        "output": str(default_output()),
         "kits": str(ROOT / "docs/armor-isolation-live-kits.json"),
-        "names": first_existing([Path("D:/TYHH10-git/Helldivers2ModManager/src/Helldivers2ModManager/Resources/Data")]),
+        "names": str(ROOT / "assets/names"),
     }
 
 

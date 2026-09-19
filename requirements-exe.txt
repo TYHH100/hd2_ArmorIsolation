@@ -1,0 +1,4 @@
+# Build environment only; users of ArmorIsolation.exe need no Python installation.
+pyinstaller==6.22.3
+pyinstaller-hooks-contrib==2026.7
+lz4==4.4.5
