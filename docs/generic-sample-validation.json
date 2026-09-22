@@ -28,12 +28,12 @@
       "payloads_verified": true,
       "package_files_verified": true,
       "runtime_configuration_validated": true,
-      "addon_sha256": "65525e0d7af5f088d628a84275f2e29139542fb4235a24652348cbb4f7f4fcf7",
+      "addon_sha256": "2bb53d9cd6ec8468af3ef553383db8066f26362e91f0b3ca3532dd857fc38682",
       "unit_owners_equal_accepted_sample": true
     },
     {
       "sample": "b01-isolated",
-      "package_id": "049300bbdcb993861bf15f77",
+      "package_id": "ae4997a663ea8ba42ccb933a",
       "targets": [
         "61b31723",
         "4f7fb2bd",
@@ -61,7 +61,7 @@
       "payloads_verified": true,
       "package_files_verified": true,
       "runtime_configuration_validated": true,
-      "addon_sha256": "65525e0d7af5f088d628a84275f2e29139542fb4235a24652348cbb4f7f4fcf7",
+      "addon_sha256": "2bb53d9cd6ec8468af3ef553383db8066f26362e91f0b3ca3532dd857fc38682",
       "unit_owners_equal_accepted_sample": true
     }
   ],

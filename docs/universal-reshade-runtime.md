@@ -2,32 +2,30 @@
 
 ## 一个插件加载多个包
 
-`ArmorIsolation.addon64` 不再内置某个模组的资源 ID。固定 DLL 启动时读取同目录的 `ArmorIsolation/*.json`，通过校验后按目标 Kit 独立检查资源和发布配置。增加模组只增加补丁及 JSON，DLL 文件保持相同。
+`ArmorIsolation.addon64` 不再内置某个模组的资源 ID。新版固定 DLL 启动时读取游戏 `data` 顶层主补丁的内嵌配置，并兼容同目录的旧 `ArmorIsolation/*.json`。校验后按目标 Kit 独立检查资源和发布配置。新版生成包只需增减补丁，DLL 共用。
 
 游戏目录布局：
 
 ```text
 Helldivers 2/
+  ArmorIsolation.local-game.json
   bin/
     ArmorIsolation.addon64
     ArmorIsolation.ini
     ArmorIsolation.log
-    ArmorIsolation/
-      <第一个包的24位ID>.json
-      <第二个包的24位ID>.json
   data/
-    <管理器分配编号的补丁三件套>
+    <管理器分配编号的补丁三件套，主补丁内嵌配置>
 ```
 
-运行条件仍为当前验证的 `game.dll 1.0.0.18930` 与 ReShade 6.5.1 / API17。固定的是模组通用性，不是任意游戏版本兼容。
+运行环境为 ReShade 6.5.1 / API17；已验证基准为 `game.dll 1.0.0.18930`，另支持关键原生特征与既有数据布局仍匹配的更新，不保证任意游戏版本兼容。
 
 ## 加载与发布流程
 
-1. 首次 present 回调中读取配置目录，不在 DllMain 中访问配置文件。只加载目录顶层 `.json`，读取一次后保持不变。
+1. 首次 present 回调读取游戏 data 顶层主补丁的固定尾部与配置，不在 DllMain 中访问文件，不递归备份目录。同包组件配置一致则去重，不同则整组拒绝；旧 JSON 可兼容读取。读取一次后保持不变。
 2. 用 nlohmann/json 解析并严格验证 schema、重复键、数据类型、数量与大小。单文件上限 8 MiB、总计 32 MiB、最多 64 包和 402 目标。
 3. 整组验证包 ID、Kit 归属、完整及高 32 位资源 ID 冲突、私有 ID 返回原资源的别名、允许的 Piece 偏移及实际依赖。重复 Kit 或任一损坏配置让整组停止，不先发布一部分。
 4. 配置只声明资源和布局，不接受地址或函数调用。目标体甲/头盔、Body/Piece 及源 Unit 必须与实际游戏配置相符；计划修改的纹理字段也逐 Piece 核对原值。材质到纹理的传递依赖由离线生成器解析，插件核对显式依赖表，不能仅靠 JSON 再解析游戏资源。
-5. 检查实际游戏 PE 时间戳、映像大小、代码前缀和 Kit 结构；每个目标只等待自身依赖。依赖按 Kit 建索引，多个模组不会因全局共享标记而互相等待无关纹理。
+5. 已知版本检查 PE 标识及代码；未知版本和 v2 适配包通过完整掩码特征重新发现 Kit 全局、关键函数和资源管理器，核对交叉引用与三类资源表。v2 包另绑定 DLL/EXE SHA-256；不使用配置指定的地址。所有目标仍核对源结构与原值，只等待自身依赖。
 6. 沿用已验证的配置克隆和指针原子发布。Body/Piece 存储由独立分配持有，Profile 移动不会留下悬空指针。发布后的游戏引用不做热释放，移除需退出游戏。
 
 INI 内容：
@@ -38,9 +36,35 @@ Enabled=1
 DiagnosticOnly=0
 ```
 
+### 大量目标与日志（2026-09-21）
+
+每秒轮询共用一次完整 Kit 表索引；每个目标仍核对当前表、指针及原始数据。字段与资源映射预索引，源数据相同时复用候选配置；发生变化立即重新校验。等待资源时先检查上次未就绪项，遇到未就绪项提前结束，发布前仍重新检查全部依赖及完整源快照，不缓存跨轮询的“已就绪”结论。`checked_ready` 仅表示本次已检查的部分，不能当成总加载进度。
+
+`ArmorIsolation.log` 每次插件启动的首次成功写入清空旧内容，之后追加本次状态变化；相同状态不会重复写入。首次打开失败会在后续日志调用重试。
+
+启动后、该插件首次发布前，提取稳定 Kit 和原生布局证据，成功后原子覆盖 **游戏根目录** 的 `ArmorIsolation.local-game.json`。文件包含 DLL/EXE SHA-256、Kit 内容摘要及来源阶段。失败保留旧完整文件并记录日志，10 秒间隔最多尝试 6 次；不每秒扫描、不累积历史转储。未知版本检测在代码段中要求唯一完整特征，跨模块引用和资源表也需符合既有布局。
+
+生成器现在可以消费匹配当前文件哈希的导出，无需保持游戏运行。缺失、损坏或过期则尝试重新提取，失败提示先启动游戏。未知版本外部提取若发现已加载隔离插件，不提升为原始快照；改用新插件在自身发布前导出的文件。生成操作独立绑定游戏身份和快照，发布包前再次检查，输出 v2 配置和 `compatibility/kits.json`。
+
+自动适配支持地址重定位及仍符合已识别原生特征/数据布局的更新；不是任意未来实现的自动逆向。掩码特征允许外部相对地址变化，不证明整个游戏语义不变。关键函数、资源格式或字段变化会停止，可能仍需工具更新；源字段变化则须重建模组包。旧 v1 包跨版本也必须通过原生检查及源值守卫；不同身份或 v1/v2 配置不能混装。真实未知版本的运行效果尚未验收。
+
+可在不部署插件的情况下只读验证正在运行的游戏：
+
+```powershell
+dist/armor-isolation-runtime/validate_runtime_profile.exe --capture-local <PID> <报告路径.json>
+# 自动按安装目录查找进程；存在多个匹配进程则拒绝
+dist/armor-isolation-runtime/validate_runtime_profile.exe --capture-game <游戏目录> <报告路径.json>
+```
+
+桌面工具的“读取本机游戏数据”比较内置基准并报告新增、缺失和变化，保存单份 `local-game-analysis.json`；检查通过也导出游戏根目录的复用文件。当前本机 402 条记录中 2 条不同于原始快照，因此已知版本导出明确使用内置原始 Kit 配合本机布局证据，标记 `verified_baseline`，不会把这两条变化纳入原始数据。
+
+外部接口依据：[ReadProcessMemory](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-readprocessmemory)、[PE 格式](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format)、[fopen 写入模式](https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/fopen-wfopen)。这些文档不证明游戏内部结构兼容。
+
 `DiagnosticOnly=1` 只检查、不发布新配置；`Enabled=0` 停止继续发布。若已经发布，两个选项都不能恢复旧配置，仍须重启。
 
 日志 `CONFIG` 给出包、目标和资源总数；各目标的 `WAIT`、`READY`、`APPLIED`、`FAILED` 携带包 ID 和 Kit ID。配置组校验通过不代表资源已加载，`APPLIED` 也不代表场景外观已验收。
+
+格式与新版安装方式见[补丁内嵌配置](embedded-patch-profile.md)。旧包的独立 JSON 仍支持，但卸载时需自行一并移除；重新生成新版后移除对应旧 JSON。
 
 ## 旧包迁移
 

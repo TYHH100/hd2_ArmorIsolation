@@ -1,0 +1,78 @@
+{
+  "schema": "hd2-native-portable-validation/1",
+  "exe": "G:\\Temp\\Githud\\hd2_mods-test\\dist\\portable-compatible\\ArmorIsolation.exe",
+  "exe_sha256": "423fcfeb7c0c096d08cb1509db3055abf4b0f7bc94ce761c273754615b31ca9f",
+  "game_runtime_verified": false,
+  "stages": [
+    {
+      "action": "inspect-local",
+      "exit_code": 0,
+      "seconds": 3.563
+    },
+    {
+      "action": "build",
+      "exit_code": 1,
+      "seconds": 4.391
+    }
+  ],
+  "only_exe_copied": true,
+  "python_environment_removed": true,
+  "path_system_directories_only": true,
+  "independent_empty_cwd": true,
+  "status": "read_only_checks_passed",
+  "snapshot_stage": "observed_only",
+  "native_compatibility": {
+    "application_rva": "01a101c8",
+    "exe_sha256": "d8e23968d1412b07e06785321727d63edf74e711214d6f6adeb3bfca95ca6827",
+    "functions": {
+      "armor_assembly": 8516720,
+      "material_texture": 3207600,
+      "resource_lookup": 6234768,
+      "resource_online": 6238736,
+      "resource_redirect": 6237824,
+      "type_find": 6283728
+    },
+    "kit_store_rva": "033264f8",
+    "mode": "signature-validated-v1"
+  },
+  "native_diagnostics": {
+    "functions": {
+      "armor_assembly": {
+        "rva": 8516720,
+        "status": "matched",
+        "variant": "assembly-family-19099"
+      },
+      "material_texture": {
+        "rva": 3207600,
+        "status": "matched"
+      },
+      "resource_lookup": {
+        "rva": 6234768,
+        "status": "matched"
+      },
+      "resource_online": {
+        "rva": 6238736,
+        "status": "matched"
+      },
+      "resource_redirect": {
+        "rva": 6237824,
+        "status": "matched"
+      },
+      "type_find": {
+        "rva": 6283728,
+        "status": "matched"
+      }
+    },
+    "matched": 6,
+    "required": 6,
+    "status": "passed"
+  },
+  "count": 411,
+  "export_refused_as_expected": true,
+  "generation": {
+    "status": "correctly_refused_observed_only_snapshot",
+    "exit_code": 1,
+    "generated_packages": 0
+  },
+  "temporary_files_removed": true
+}

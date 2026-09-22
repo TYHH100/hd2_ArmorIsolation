@@ -102,6 +102,7 @@ class ArmorIsolationApp:
         self.advanced_button = self._button(paths, "展开附加设置", self._toggle_advanced)
         self.advanced_button.grid(row=3, column=0, columnspan=2, sticky="w", pady=(4, 0))
         self._button(paths, "使用说明", self._show_help).grid(row=3, column=2, columnspan=2, sticky="e")
+        self._button(paths, "读取本机游戏数据", self.inspect_local).grid(row=3, column=1, sticky="e", padx=8)
 
         self.advanced_view = ttk.Frame(outer)
         self.advanced_view.columnconfigure(0, weight=1)
@@ -375,6 +376,23 @@ class ArmorIsolationApp:
         self.log.see("end")
         self.log.configure(state="disabled")
 
+    def inspect_local(self) -> None:
+        if self.busy:
+            return
+        game, output = self.values["game"].get().strip(), self.values["output"].get().strip()
+        if not game or not output:
+            messagebox.showerror("参数错误", "请选择游戏目录与输出目录；游戏需已启动。", parent=self.root)
+            return
+        self._set_busy(True, "正在只读提取和比较本机游戏数据…")
+
+        def work() -> None:
+            try:
+                self.events.put(("inspected", self.backend.inspect_local_game(Path(game), Path(output))))
+            except Exception as error:
+                self.events.put(("error", ("本机提取失败", str(error), traceback.format_exc())))
+
+        threading.Thread(target=work, name="local-game-inspection", daemon=False).start()
+
     def analyze(self) -> None:
         if self.busy:
             return
@@ -428,6 +446,30 @@ class ArmorIsolationApp:
                 kind, value = self.events.get_nowait()
                 if kind == "log":
                     self._append_log(value)
+                elif kind == "inspected":
+                    path, report = value
+                    ready = report.get("export_ready", False)
+                    self._set_busy(False, "本机检查完成，适配文件可用" if ready else "本机检查完成，适配文件不可用")
+                    self._append_log(report["reason"])
+                    native = {"compatible": "通过", "incompatible": "未通过", "unavailable": "未取得完整证据"}
+                    snapshots = {"observed_only": "插件加载后读取，仅用于诊断", "before_isolation": "插件发布前读取",
+                                 "without_isolation": "未加载隔离插件时读取", "verified_baseline": "已验证原始基准"}
+                    self._append_log(f"原生布局：{native.get(report.get('native_layout_status'), '未取得完整证据')}；"
+                                     f"本次快照：{snapshots.get(report.get('snapshot_status'), '来源阶段未知')}。")
+                    diagnostics = report.get("native_diagnostics")
+                    if diagnostics:
+                        failures = "、".join(sorted(diagnostics["failed_functions"]))
+                        self._append_log(f"函数匹配 {diagnostics['matched']}/{diagnostics['required']}"
+                                         + (f"；未通过：{failures}。" if failures else "。"))
+                    if "count" in report:
+                        self._append_log(f"共 {report['count']} 条；新增 {len(report['added'])}，"
+                                         f"缺失 {len(report['removed'])}，变化 {len(report['changed'])}。")
+                    self._append_log(f"报告：{path}")
+                    if report.get("export_path"):
+                        action = "复用已校验的适配文件" if report.get("export_source") == "existing" else "已导出供本软件自动读取"
+                        self._append_log(f"{action}：{report['export_path']}")
+                    if report.get("export_error"):
+                        self._append_log(f"适配数据未导出：{report['export_error']}")
                 elif kind == "analyzed":
                     self.candidates = {kit_id(item["id"]): item for item in value.get("candidates", [])}
                     self.selected.clear()

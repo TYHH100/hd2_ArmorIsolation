@@ -16,6 +16,7 @@ class ToolTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             release = {"schema": "hd2-armor-runtime-release/1", "runtime_schema": "hd2-armor-runtime/1",
+                       "patch_transport": "hd2-armor-patch-footer/1",
                        "expected_game_dll_sha256": archive.DLL_SHA256, "sdk_api": 17,
                        "reshade_version": "6.5.1", "files": []}
             for name in ("ArmorIsolation.addon64", "ArmorIsolation.ini", "validate_runtime_profile.exe"):
@@ -169,17 +170,24 @@ class ToolTests(unittest.TestCase):
                     (original / "component").mkdir(parents=True)
                     (original / "manifest.json").write_bytes(source.read_bytes())
                     (original / "0.png").write_bytes(b"preserved preview")
-                    (original / "component/0123456789abcdef.patch_0").write_bytes(b"isolated patch")
+                    patch_path = original / "component/0123456789abcdef.patch_0"
                     manifest.update(source_kind="modular", modular={"mod_directory": "mod/original",
                                     "required_options": [{"id": "0", "name": "Base"},
                                                          {"id": "1", "name": "Materials"}]})
+                else:
+                    (args.output / "patch").mkdir()
+                    patch_path = args.output / "patch/0123456789abcdef.patch_0"
+                patch_path.write_bytes(bytes.fromhex("110000f0") + bytes(252))
+                manifest["output"] = [{"path": patch_path.relative_to(args.output).as_posix()}]
                 (args.output / "manifest.json").write_text(json.dumps(manifest), encoding="ascii")
                 return manifest
 
             def fake_validator(command, log_path, log):
                 self.assertIsInstance(command, list)
                 self.assertEqual(Path(command[0]).name, "validate_runtime_profile.exe")
-                self.assertEqual(len(list(Path(command[1]).glob("*.json"))), 1)
+                self.assertEqual(command[1], "--inputs")
+                import embedded_profile
+                self.assertEqual(json.loads(embedded_profile.read_payload(command[2]))["package_id"], package_id)
                 if fail:
                     raise RuntimeError("validation failure")
                 log_path.write_text("profile passed", encoding="ascii")
@@ -208,7 +216,11 @@ class ToolTests(unittest.TestCase):
                     self.assertEqual(manifest["addon"]["mode"], "universal_runtime")
                     self.assertEqual((package / "runtime/ArmorIsolation.addon64").read_bytes(),
                                      (runtime / "ArmorIsolation.addon64").read_bytes())
-                    self.assertEqual(len(manifest["package_files"]), 13 if modular else 10)
+                    self.assertEqual(len(manifest["package_files"]), 12 if modular else 10)
+                    self.assertEqual(manifest["addon"]["profile_storage"], "hd2-armor-patch-footer/1")
+                    self.assertFalse((package / "runtime/ArmorIsolation").exists())
+                    for row in manifest["output"]:
+                        self.assertEqual(row["sha256"], archive.sha256_file(package / row["path"]))
                     self.assertTrue(all(len(item["sha256"]) == 64 for item in manifest["package_files"]))
                     if modular:
                         preserved = package / "mod/original/manifest.json"
@@ -221,7 +233,7 @@ class ToolTests(unittest.TestCase):
                         self.assertIn("Guid 保持不变", readme)
                         self.assertIn("启用基础选项 `Base`、`Materials`", readme)
                         self.assertIn("材质分辨率仍按原清单单选", readme)
-                        self.assertEqual(len(list((package / "runtime/ArmorIsolation").glob("*.json"))), 1)
+                        self.assertEqual(len(manifest["addon"]["embedded_profiles"]), 1)
                     self.assertEqual(list(output.iterdir()), [package])
                     with self.assertRaises(FileExistsError):
                         call()

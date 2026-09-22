@@ -2,7 +2,7 @@
 
 ## 当前交付
 
-流程为“选择源模组和目标 -> 依赖分析 -> 私有重打包 -> 生成运行时 JSON -> 固定插件校验 -> 输出完整包”。所有模组使用同一份 `ArmorIsolation.addon64`，生成时不再逐包编译插件。上一版按包生成 C++ 头文件并编译专用 DLL 的入口保留为开发历史，不再用于图形工具的正常生成流程。
+流程为“选择源模组和目标 -> 依赖分析 -> 私有重打包 -> 配置嵌入主补丁 -> 固定插件校验 -> 输出完整包”。所有模组使用同一份 `ArmorIsolation.addon64`，生成时不再逐包编译插件。上一版按包生成 C++ 头文件并编译专用 DLL 的入口保留为开发历史，不再用于图形工具的正常生成流程。
 
 用户已确认 CM-14 和 B-01 revision 4 专用包游戏测试正常；新的通用插件仍须游戏验收。当前游戏 DLL 限定为 `1.0.0.18930`、SHA-256 `cc75948d90fdfde259dcb519e9933db7ffa3ccb281ce4fb89e6b1b011557470c`，不会修改 DLL 本身。
 
@@ -43,14 +43,14 @@
 3. 输入三路 SHA、目标集合、schema、已知修正规则及并存清单哈希决定包 ID。Unit 按 `(包, Kit, 类型, 原ID)` 隔离，材质/纹理按 `(包, 类型, 原ID)` 共享。检查已知完整 ID 与高 32 位冲突。
 4. 仅重写解析出的 64 位引用，保留槽哈希、骨骼索引与 Piece 标量。B-01 LOD 修正规则仅在源 Unit 主数据 SHA 精确匹配时应用。
 5. 重算磁盘偏移、主/GPU 缓冲偏移和 256 字节对齐大小。回读 TOC，验证每条资源数据、源文件未变和输出不含旧 ID 覆盖。
-6. 从清单导出 `runtime/ArmorIsolation/<包ID>.json`。绑定目标元数据、typed 映射、允许修改的 Piece 字段和各 Kit 实际依赖；JSON 不提供任意地址、RVA 或可执行脚本。
-7. 使用与插件相同加载器的原生校验器检查配置；提供并存清单时一起转换并整组检查。成功后附带同一个预编译 DLL、INI、校验器和说明，再发布最终输出目录。
+6. 从清单导出配置并附加到每个主补丁尾部，重算补丁大小和哈希；不生成待安装的独立 JSON。绑定目标元数据、typed 映射、允许修改的 Piece 字段和各 Kit 实际依赖；JSON 不提供任意地址、RVA 或可执行脚本。
+7. 使用与插件相同加载器的原生校验器直接检查内嵌配置的补丁；提供并存清单时一起转换并整组检查。成功后附带同一个预编译 DLL、INI、校验器和说明，再发布最终输出目录。
 
-单补丁模式仍生成 `generated/generic_resource_map.hpp` 离线映射，不参与通用插件编译。模块化模式的逐补丁映射直接记录在外层 manifest；完整处理流程见[保留选项目录的隔离生成](modular-isolation-tool.md)。每个生成包的 `addon.mode` 为 `universal_runtime`，对应 JSON 路径与 DLL SHA 记入 manifest；`package_files` 记录所有输出文件的大小和哈希。
+单补丁模式仍生成 `generated/generic_resource_map.hpp` 离线映射，不参与通用插件编译。模块化模式的逐补丁映射直接记录在外层 manifest；完整处理流程见[保留选项目录的隔离生成](modular-isolation-tool.md)。每个生成包的 `addon.mode` 为 `universal_runtime`，内嵌配置所在补丁列表、格式版本与 DLL SHA 记入 manifest；`package_files` 记录所有输出文件的大小和哈希。
 
 ## 部署与迁移
 
-生成工具不写游戏目录。单补丁模式退出游戏后通过管理器安装 `patch/` 三件套；选项模组导入输出的 `mod/<原目录名>/`，仍在管理器中勾选配件，每个 SubOptions 组单选。不要把所有子目录补丁同时启用，也不要导入外层隔离报告。将 `runtime/` 内容按目录结构放入游戏 `bin/`，固定 DLL 只需一份，多个包各放自己的 JSON。
+生成工具不写游戏目录。单补丁模式退出游戏后通过管理器安装 `patch/` 三件套；选项模组导入输出的 `mod/<原目录名>/`，仍在管理器中勾选配件，每个 SubOptions 组单选。不要把所有子目录补丁同时启用，也不要导入外层隔离报告。将 `runtime/` 内容按目录结构放入游戏 `bin/`，新版固定 DLL 只需安装一次；各包配置随补丁安装、编号调整及卸载，不再额外复制 JSON。手动安装只需把所选补丁三件套按同一空闲连续编号放入 data 顶层。
 
 旧 `CM14Isolation.addon64`、`B01Isolation.addon64` 和 `ArmorIsolation_<包ID>.addon64` 不能与通用插件同时使用。现有隔离补丁可以从对应 manifest 导出 JSON，无需重打包或更改私有 ID；详见[通用插件与旧包迁移](universal-reshade-runtime.md)。
 
@@ -70,6 +70,8 @@
 
 后续扩展仍按部分模型/纯纹理的依赖克隆、更多可选依赖结构、安装事务逐项推进。
 
-模块化输入的原始参考见 [TG-122 配件与外挂材质分析](modular-tg122-reference.md)，现已实现保留结构的多补丁生成。原清单和非补丁文件字节保留；未选择目标的资源也另用私有 ID 保存，不留下旧资源覆盖。每个模组一份有效运行时 JSON，模型配件与分辨率切换不需要重新生成 JSON，仍需完整退出游戏后部署并重启。
+模块化输入的原始参考见 [TG-122 配件与外挂材质分析](modular-tg122-reference.md)，现已实现保留结构的多补丁生成。原清单和非补丁文件字节保留；未选择目标的资源也另用私有 ID 保存，不留下旧资源覆盖。每个模组的各主补丁内嵌同一份配置并由插件去重，模型配件与分辨率切换不需要重新生成配置，仍需完整退出游戏后部署并重启。
 
 格式参考：[Filediver Unit](https://github.com/xypwn/filediver/blob/70f3447cd415c964e0bd29ff0770b97a4d0f160d/stingray/unit/unit.go)、[Material](https://github.com/xypwn/filediver/blob/70f3447cd415c964e0bd29ff0770b97a4d0f160d/stingray/unit/material/material.go)、[ReShade 6.5.1 SDK](https://github.com/crosire/reshade/tree/v6.5.1/include)。本机 Kit 与修复证据见固定实验记录。
+
+内嵌二进制格式、旧包迁移与验证边界见[补丁内嵌配置](embedded-patch-profile.md)。

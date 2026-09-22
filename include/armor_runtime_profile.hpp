@@ -22,6 +22,7 @@ namespace universal_isolation {
 inline constexpr char expected_game_dll_sha256[] = "cc75948d90fdfde259dcb519e9933db7ffa3ccb281ce4fb89e6b1b011557470c";
 inline constexpr char expected_game_version[] = "1.0.0.18930";
 inline constexpr char runtime_schema[] = "hd2-armor-runtime/1";
+inline constexpr char adaptive_runtime_schema[] = "hd2-armor-runtime/2";
 inline constexpr std::uint64_t unit_type = 0xe0a48d0be9a7453fULL;
 inline constexpr std::uint64_t texture_type = 0xcd4238c6a0c69e32ULL;
 inline constexpr std::uint64_t material_type = 0xeac0b497876adedfULL;
@@ -64,6 +65,10 @@ struct Profile {
     std::map<std::uint32_t, std::set<std::pair<std::uint64_t, std::uint64_t>>> requirements_by_kit;
     // Separate allocations keep TargetKit pointers stable across profile moves.
     std::vector<std::unique_ptr<TargetStorage>> storage;
+    std::string expected_game_dll_sha256{::universal_isolation::expected_game_dll_sha256};
+    std::string expected_game_version{::universal_isolation::expected_game_version};
+    bool adaptive = false;
+    nlohmann::json compatibility;
 
     Profile() = default;
     Profile(const Profile &) = delete;
@@ -219,12 +224,39 @@ inline void parse_target(const json &input, const std::string &package_id, Profi
 inline void parse_document(const std::string &filename, const std::string &text, Profile &output)
 {
     const auto root = parse(text);
-    keys(root, {"schema", "package_id", "expected_game_dll_sha256", "expected_game_version",
-                "selected_kit_metadata", "mapping", "piece_fields", "required_resources"});
-    if (string(root.at("schema")) != runtime_schema ||
-        string(root.at("expected_game_version")) != expected_game_version ||
-        hex_string(root.at("expected_game_dll_sha256"), 64) != expected_game_dll_sha256)
+    const auto schema = string(root.at("schema"));
+    const bool adaptive = schema == adaptive_runtime_schema;
+    if (adaptive)
+        keys(root, {"schema", "package_id", "expected_game_dll_sha256", "expected_game_version",
+            "selected_kit_metadata", "mapping", "piece_fields", "required_resources", "compatibility"});
+    else
+        keys(root, {"schema", "package_id", "expected_game_dll_sha256", "expected_game_version",
+            "selected_kit_metadata", "mapping", "piece_fields", "required_resources"});
+    if ((!adaptive && schema != runtime_schema) || (adaptive && !root.contains("compatibility")) ||
+        (!adaptive && root.contains("compatibility")))
         reject("unsupported runtime schema or game version");
+    const auto profile_hash = hex_string(root.at("expected_game_dll_sha256"), 64);
+    const auto profile_version = string(root.at("expected_game_version"));
+    if (!adaptive && (profile_version != expected_game_version || profile_hash != expected_game_dll_sha256))
+        reject("unsupported runtime schema or game version");
+    if (adaptive) {
+        const auto &compatibility = root.at("compatibility");
+        keys(compatibility, {"mode", "exe_sha256", "kits_sha256"});
+        if (string(compatibility.at("mode")) != "signature-validated-v1" ||
+            hex_string(compatibility.at("exe_sha256"), 64).empty() ||
+            hex_string(compatibility.at("kits_sha256"), 64).empty())
+            reject("adaptive compatibility evidence is incomplete");
+    }
+    if (output.package_ids.empty()) {
+        output.expected_game_dll_sha256 = profile_hash;
+        output.expected_game_version = profile_version;
+        output.adaptive = adaptive;
+        if (adaptive) output.compatibility = root.at("compatibility");
+    } else if (output.expected_game_dll_sha256 != profile_hash || output.expected_game_version != profile_version ||
+               output.adaptive != adaptive)
+        reject("runtime profiles target different game identities or compatibility modes");
+    if (adaptive && output.compatibility != root.at("compatibility"))
+        reject("runtime profiles have different compatibility contexts");
     const auto package_id = hex_string(root.at("package_id"), 24);
     if (filename != package_id + ".json") reject("profile filename must equal package_id.json");
     if (std::find(output.package_ids.begin(), output.package_ids.end(), package_id) != output.package_ids.end())

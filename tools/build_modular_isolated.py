@@ -171,7 +171,7 @@ def analyze(args):
     kits = generic.validate_version(args.game, args.kits)
     catalog, sources, variants, aliases, alias_evidence = load_family(args.source, kits)
     return {"schema": generic.SCHEMA, "source_kind": "modular", "source": str(catalog.root),
-            "expected_game_version": "1.0.0.18930", "auto_selected": [],
+            **generic.game_compatibility.identity(), "auto_selected": [],
             "source_counts": dict(Counter(archive.KINDS[key[0]] for key in variants)),
             "candidates": candidates(kits, variants, aliases),
             "modular": {"manifest_format": "v1" if "Version" in catalog.manifest else "legacy",
@@ -294,8 +294,8 @@ def build(args):
         catalog.verify_unchanged()
         manifest = {
             "schema": generic.SCHEMA, "revision": 1, "package_id": identity, "source_kind": "modular",
-            "expected_game_version": "1.0.0.18930", "expected_game_dll_sha256": archive.DLL_SHA256,
-            "source": str(catalog.root), "source_unchanged": True, "source_kits_sha256": generic.KITS_SHA256,
+            **generic.game_compatibility.identity(),
+            "source": str(catalog.root), "source_unchanged": True,
             "source_inventory": catalog.serializable_inventory(),
             "targets": [{"kit": target["id"], "archive": target["archive"], "type": target["type"],
                          "unit_references": len(b01.target_pieces(target)), "resource_count": len(selected)}

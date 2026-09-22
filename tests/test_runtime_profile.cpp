@@ -1,4 +1,4 @@
-#include "armor_runtime_profile.hpp"
+#include "armor_embedded_profile.hpp"
 
 #include <chrono>
 #include <cstdio>
@@ -103,7 +103,83 @@ void run()
     Profile output;
     std::string error;
     const auto first = valid_profile();
+    {
+        TemporaryDirectory temporary;
+        const auto data = temporary.path / "data", legacy = temporary.path / "ArmorIsolation";
+        std::filesystem::create_directory(data);
+        std::filesystem::create_directory(legacy);
+        auto write_patch = [&](const std::filesystem::path &path, const json &root, bool corrupt = false) {
+            const auto text = root.dump();
+            std::array<unsigned char, 64> footer{};
+            std::copy_n(embedded_detail::magic, 16, footer.begin());
+            auto number = [&](std::size_t offset, std::uint64_t value, std::size_t width) {
+                for (std::size_t i = 0; i < width; ++i) footer[offset + i] = static_cast<unsigned char>(value >> (8 * i));
+            };
+            number(16, 1, 4); number(20, 64, 4); number(24, 72, 8); number(32, text.size(), 8);
+            number(40, embedded_detail::crc32(text) ^ (corrupt ? 1 : 0), 4);
+            std::string archive(72, '\0');
+            archive[0] = '\x11'; archive[3] = '\xf0';
+            std::ofstream file(path, std::ios::binary);
+            file.write(archive.data(), archive.size()); file << text;
+            file.write(reinterpret_cast<const char *>(footer.data()), footer.size());
+        };
+        const auto patch = data / "0123456789abcdef.patch_0";
+        const auto component = data / "0123456789abcdef.patch_1";
+        write_patch(patch, first);
+        write_patch(component, first);
+        write_document(legacy, first);
+        std::filesystem::create_directory(data / "backup");
+        write_patch(data / "backup/0123456789abcdef.patch_0", valid_profile(2), true);
+        write_patch(data / "0123456789abcdef.patch_3.disabled", valid_profile(2), true);
+        write_patch(data / "0123456789abcdef.patch_0.gpu_resources", valid_profile(2), true);
+        check(load_installed_packages(data, legacy, output, error) && output.package_ids.size() == 1,
+              "component copies/legacy JSON must deduplicate and backups must be ignored");
+        std::filesystem::rename(patch, data / "fedcba9876543210.patch_42");
+        check(load_installed_packages(data, {}, output, error) && output.package_ids.size() == 1,
+              "manager renumbering must preserve embedded profile identity");
+        auto changed = first;
+        changed["selected_kit_metadata"][0]["passive"] = 1;
+        write_patch(component, changed);
+        Profile empty;
+        check(!load_installed_packages(data, {}, empty, error) && empty.targets.empty(),
+              "different copies of the same package must reject the group");
+        write_patch(component, valid_profile(2), true);
+        check(!load_installed_packages(data, {}, empty, error) && empty.targets.empty(),
+              "checksum failure must not publish partial profiles");
+        write_patch(component, valid_profile(2));
+        check(load_installed_packages(data, {}, output, error) && output.package_ids.size() == 2,
+              "independent embedded packages should coexist");
+        auto conflicting = first;
+        conflicting["package_id"] = std::string(24, 'f');
+        write_patch(component, conflicting);
+        check(!load_installed_packages(data, {}, empty, error), "embedded Kit conflicts must reject group");
+        std::filesystem::remove(component);
+        std::filesystem::remove(data / "fedcba9876543210.patch_42");
+        std::ofstream(data / "0123456789abcdef.patch_0", std::ios::binary) << std::string(100, 'x');
+        check(load_installed_packages(data, {}, output, error) && output.targets.empty(),
+              "uninstall must remove the profile and ordinary patches must be ignored");
+        write_patch(component, first);
+        std::filesystem::resize_file(component, std::filesystem::file_size(component) + 1);
+        // An absent/unrecognizable marker is indistinguishable from an ordinary mod.
+        check(load_installed_packages(data, {}, output, error) && output.targets.empty(),
+              "unrecognized footer must not be interpreted as JSON");
+    }
     auto second = valid_profile(2);
+    auto adaptive_first = first, adaptive_second = second;
+    for (auto *profile : {&adaptive_first, &adaptive_second}) {
+        (*profile)["schema"] = adaptive_runtime_schema;
+        (*profile)["expected_game_dll_sha256"] = std::string(64, 'a');
+        (*profile)["expected_game_version"] = "local-aaaaaaaaaaaaaaaa";
+        (*profile)["compatibility"] = {{"mode", "signature-validated-v1"},
+            {"exe_sha256", std::string(64, 'b')}, {"kits_sha256", std::string(64, 'c')}};
+    }
+    check(load_documents({document(adaptive_first), document(adaptive_second)}, output, error) && output.adaptive &&
+          output.expected_game_dll_sha256 == std::string(64, 'a'), "valid adaptive profiles rejected");
+    check(!load_documents({document(first), document(adaptive_second)}, output, error), "mixed compatibility modes accepted");
+    adaptive_second["compatibility"]["exe_sha256"] = std::string(64, 'd');
+    check(!load_documents({document(adaptive_first), document(adaptive_second)}, output, error), "mixed EXE identities accepted");
+    adaptive_first["compatibility"]["address"] = "0000000012345678";
+    check(!load_documents({document(adaptive_first)}, output, error), "user supplied adaptive address accepted");
     check(load_documents({document(first), document(second)}, output, error), "valid multi-profile load failed");
     check(output.targets.size() == 2 && output.resources.size() == 6 && output.required_resources.size() == 6,
           "combined profile sizes are wrong");

@@ -1,0 +1,18 @@
+{
+  "schema": "hd2-adaptive-validation/1",
+  "actual_game_dll_sha256": "cc75948d90fdfde259dcb519e9933db7ffa3ccb281ce4fb89e6b1b011557470c",
+  "actual_exe_sha256": "a09ff52663e73b94fb0cac0dcb5ba84ffd10ecf44f74a8921ac66af923988cc3",
+  "game_runtime_verified": false,
+  "unknown_version_simulation": true,
+  "simulation_scope": "Current real game and mod through adaptive operation context; no game binary changed",
+  "game_root_export": "G:\\AppData\\SteamLibrary\\steamapps\\common\\Helldivers 2\\ArmorIsolation.local-game.json",
+  "snapshot_stage": "verified_baseline",
+  "kit_count": 402,
+  "cpp_python_digest_agree": true,
+  "status": "passed",
+  "package_id": "a88bb7a030bdf8666011c714",
+  "embedded_patch_count": 1,
+  "resources": 65,
+  "runtime_result": "PROFILE_OK packages=1 targets=4 resources=65 fields=49 required=97",
+  "temporary_files_removed": true
+}

@@ -18,19 +18,18 @@ armor-<包ID>/
   runtime/
     ArmorIsolation.addon64
     ArmorIsolation.ini
-    ArmorIsolation/<包ID>.json
   manifest.json
   README.md
   runtime-check.log
 ```
 
-内层 `mod/<原名>/manifest.json` 是原模组清单，原字节保留，包括 Guid、名称、Options、SubOptions、Include、说明及未知附加字段。外层 `manifest.json` 是隔离报告，不能作为模组导入。补丁文件名和所在目录不变，三路内容重打包；所有其他文件原字节复制，原先不存在的默认目录不会被补建。
+内层 `mod/<原名>/manifest.json` 是原模组清单，原字节保留，包括 Guid、名称、Options、SubOptions、Include、说明及未知附加字段。外层 `manifest.json` 是隔离报告，不能作为模组导入。补丁文件名和所在目录不变，三路内容重打包，运行时配置附加在每个主补丁尾部；所有其他文件原字节复制，原先不存在的默认目录不会被补建。
 
 1. 双击 `Start-ArmorIsolation.cmd`，选择整个源模组目录，或其中的 `manifest.json`。
 2. 分析后勾选实际替换的体甲和头盔，生成隔离包。
 3. 退出游戏，在管理器中导入输出的 `mod/<原模组名>/`。源清单 Guid 保留，原版与隔离版应通过替换/重新导入切换，不能作为两个相同身份的模组同时启用。
 4. 按包内 README 启用基础模型及共享材质选项，其他配件仍独立开关。每个 `SubOptions` 组仍只能选一个，4K 与 8K 不同时安装。
-5. 安装包内新版通用 DLL 和本包唯一的 JSON；其他隔离包共用这一份 DLL。以后只改本模组选项时，使用同一 JSON，完整退出游戏后重新部署并重启。
+5. 一次性安装包内新版通用 DLL；各主补丁已携带配置，不用复制 JSON。其他隔离包共用这一份 DLL。以后只改本模组选项时，完整退出游戏后重新部署并重启。
 
 工具只写新的输出目录，源模组和游戏目录不修改。源备份文件也会原样保留；它们是原版备份，不是隔离后的活动补丁。
 
@@ -98,3 +97,5 @@ TG-122 的头盔 Kit `c1611ac9` 在绑定快照中同时含 Slot1 默认披风�
 这些是离线数据与配置验证。游戏内两种体型、头盔、配件、分辨率切换、其他装备和场景仍需实测，新生成包均保留 `game_runtime_verified=false`。
 
 实现入口：[build_modular_isolated.py](../tools/build_modular_isolated.py)、[modular_source.py](../tools/modular_source.py)、[modular_texture_aliases.py](../tools/modular_texture_aliases.py)。材质槽格式参考沿用 [Filediver 固定提交的 Material 定义](https://github.com/xypwn/filediver/blob/70f3447cd415c964e0bd29ff0770b97a4d0f160d/stingray/unit/material/material.go)，别名可行性以本地样本的结构与引用检查为准。
+
+当前生成器已采用[补丁内嵌配置](embedded-patch-profile.md)。下述历史验证中的 JSON 表示配置内容，不再要求作为独立文件部署。

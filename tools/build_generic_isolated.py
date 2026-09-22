@@ -16,6 +16,7 @@ import struct
 import build_b01_isolated as b01
 import build_cm14_isolated as archive
 from isolation_paths import resource_root
+import game_compatibility
 
 ROOT = resource_root()
 SCHEMA = "hd2-armor-isolation/1"
@@ -36,6 +37,9 @@ class Source:
 
 
 def validate_version(game, kits_path):
+    current = game_compatibility.validate_current(game, kits_path)
+    if current is not None:
+        return current
     dll = Path(game) / "data/game/game.dll"
     if not dll.is_file() or archive.sha256_file(dll) != archive.DLL_SHA256:
         raise ValueError("Unsupported game.dll: this tool requires the verified 1.0.0.18930 build")
@@ -137,7 +141,7 @@ def analyze(args):
     kits = validate_version(args.game, kits_path)
     source = load_source(args.source)
     choices = candidates(kits, source)
-    return {"schema": SCHEMA, "expected_game_version": "1.0.0.18930",
+    return {"schema": SCHEMA, **game_compatibility.identity(),
             "source": str(source.path), "source_lanes": source.lanes,
             "source_counts": {archive.KINDS[kind]: count for kind, count in
                               Counter(key[0] for key in source.entries).items()},
@@ -153,7 +157,7 @@ def read_coexist(paths, targets):
     for path in paths:
         path = Path(path).resolve()
         manifest = json.loads(path.read_text(encoding="utf-8"))
-        if manifest.get("expected_game_dll_sha256") != archive.DLL_SHA256:
+        if manifest.get("expected_game_dll_sha256") != game_compatibility.identity()["expected_game_dll_sha256"]:
             raise ValueError(f"Coexisting manifest has an incompatible game version: {path}")
         existing_ids = {f"{int(row['kit'], 16):08x}" for row in manifest["targets"]}
         overlap = selected_ids & existing_ids
@@ -177,6 +181,8 @@ def package_identity(lanes, targets, coexist=()):
                "source_lanes": [{"suffix": row["suffix"], "sha256": row["sha256"]} for row in lanes],
                "targets": sorted(target["id"] for target in targets),
                "coexisting_sha256": sorted(row["sha256"] for row in coexist)}
+    if game_compatibility.CURRENT.get() is not None:
+        content["game_compatibility"] = game_compatibility.identity()
     return hashlib.sha256(json.dumps(content, sort_keys=True, separators=(",", ":")).encode("ascii")).hexdigest()[:24]
 
 
@@ -358,9 +364,9 @@ def build(args):
         affected = [row for row in candidates(kits, source) if row["id"] not in target_ids]
         manifest = {
             "schema": SCHEMA, "revision": 1, "package_id": package_id,
-            "expected_game_version": "1.0.0.18930", "expected_game_dll_sha256": archive.DLL_SHA256,
+            **game_compatibility.identity(),
             "source": str(source.path), "source_sha256": {row["name"]: row["sha256"] for row in source.lanes},
-            "source_lanes": source.lanes, "source_unchanged": True, "source_kits_sha256": KITS_SHA256,
+            "source_lanes": source.lanes, "source_unchanged": True,
             "targets": [{"kit": target["id"], "archive": target["archive"], "type": target["type"],
                          "unit_references": len(b01.target_pieces(target)), "resource_count": len(selected)}
                         for target, selected in plans],

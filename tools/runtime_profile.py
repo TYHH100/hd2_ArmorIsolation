@@ -14,6 +14,7 @@ import build_cm14_isolated as archive
 from isolation_paths import resource_root
 
 SCHEMA = "hd2-armor-runtime/1"
+ADAPTIVE_SCHEMA = "hd2-armor-runtime/2"
 GAME_VERSION = "1.0.0.18930"
 KITS_SHA256 = "e68b82eb7dacde3219f7d049b692dfb418f7f2a35516d98c3dab7515eb0409c1"
 DEFAULT_KITS = resource_root() / "docs/armor-isolation-live-kits.json"
@@ -64,11 +65,11 @@ def _canonical(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True, allow_nan=False)
 
 
-def _selected_metadata(manifest, kits_path):
-    if manifest.get("source_kits_sha256") != KITS_SHA256:
-        raise ValueError("Manifest source_kits_sha256 is not the verified snapshot")
-    if archive.sha256_file(Path(kits_path)) != KITS_SHA256:
-        raise ValueError("Kit snapshot SHA256 does not match the verified version")
+def _selected_metadata(manifest, kits_path, expected_kits_sha256=KITS_SHA256):
+    if manifest.get("source_kits_sha256") != expected_kits_sha256:
+        raise ValueError("Manifest source_kits_sha256 does not match the selected compatibility snapshot")
+    if archive.sha256_file(Path(kits_path)) != expected_kits_sha256:
+        raise ValueError("Kit snapshot SHA256 does not match the selected compatibility snapshot")
     snapshot = {kit["id"]: kit for kit in _load_json(kits_path)}
     selected, seen = [], set()
     for row in _rows(manifest.get("targets"), "targets", 402):
@@ -97,10 +98,22 @@ def _selected_metadata(manifest, kits_path):
 def make_runtime_profile(manifest: dict, kits_path: Path = DEFAULT_KITS) -> dict:
     if not isinstance(manifest, dict):
         raise ValueError("Manifest must be an object")
-    if (manifest.get("expected_game_version") != GAME_VERSION
-            or manifest.get("expected_game_dll_sha256") != archive.DLL_SHA256):
-        raise ValueError("Manifest game version or DLL SHA256 is unsupported")
-    metadata = _selected_metadata(manifest, kits_path)
+    compatibility = manifest.get("runtime_compatibility")
+    adaptive = compatibility is not None
+    if adaptive:
+        if (not isinstance(compatibility, dict) or compatibility.get("mode") != "signature-validated-v1" or
+                not re.fullmatch(r"[0-9a-f]{64}", str(manifest.get("expected_game_dll_sha256", ""))) or
+                not re.fullmatch(r"[0-9a-f]{64}", str(compatibility.get("kits_sha256", ""))) or
+                set(compatibility) != {"mode", "exe_sha256", "kits_sha256"} or
+                not re.fullmatch(r"[0-9a-f]{64}", str(compatibility.get("exe_sha256", "")))):
+            raise ValueError("Adaptive runtime compatibility evidence is incomplete")
+        expected_kits_sha256 = compatibility["kits_sha256"]
+    else:
+        if (manifest.get("expected_game_version") != GAME_VERSION
+                or manifest.get("expected_game_dll_sha256") != archive.DLL_SHA256):
+            raise ValueError("Manifest game version or DLL SHA256 is unsupported")
+        expected_kits_sha256 = KITS_SHA256
+    metadata = _selected_metadata(manifest, kits_path, expected_kits_sha256)
     owners = {kit["id"] for kit in metadata}
     mapping, by_source, by_target = [], {}, {}
     for row in _rows(manifest.get("mapping"), "mapping"):
@@ -177,10 +190,14 @@ def make_runtime_profile(manifest: dict, kits_path: Path = DEFAULT_KITS) -> dict
         identity = {"targets": sorted(metadata, key=lambda row: row["id"]),
                     "mapping": sorted(mapping, key=_canonical), "piece_fields": sorted(fields, key=_canonical)}
         package_id = hashlib.sha256(_canonical(identity).encode("ascii")).hexdigest()[:24]
-    return {"schema": SCHEMA, "package_id": package_id,
-            "expected_game_version": GAME_VERSION, "expected_game_dll_sha256": archive.DLL_SHA256,
-            "selected_kit_metadata": metadata, "mapping": mapping,
-            "piece_fields": fields, "required_resources": required}
+    profile = {"schema": ADAPTIVE_SCHEMA if adaptive else SCHEMA, "package_id": package_id,
+               "expected_game_version": manifest.get("expected_game_version", GAME_VERSION),
+               "expected_game_dll_sha256": manifest.get("expected_game_dll_sha256", archive.DLL_SHA256),
+               "selected_kit_metadata": metadata, "mapping": mapping,
+               "piece_fields": fields, "required_resources": required}
+    if adaptive:
+        profile["compatibility"] = copy.deepcopy(compatibility)
+    return profile
 
 
 def write_profile(profile: dict, output_file: Path) -> None:

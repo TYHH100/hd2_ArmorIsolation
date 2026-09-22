@@ -146,9 +146,9 @@ inline resource_state compatible_image(HANDLE process, std::uintptr_t base) noex
 }
 
 inline resource_state lookup(HANDLE process, std::uintptr_t base, std::uint64_t type_id,
-                             std::uint64_t name, snapshot &out) noexcept
+                             std::uint64_t name, snapshot &out, std::uintptr_t application_rva = 0x1a141c8) noexcept
 {
-    if (!read(process, base + 0x1a141c8, out.application))
+    if (!read(process, base + application_rva, out.application))
         return resource_state::unreadable;
     if (out.application == 0)
         return resource_state::pending;
@@ -231,6 +231,19 @@ inline bool same_snapshot(const snapshot &a, const snapshot &b) noexcept
 }
 
 } // namespace resource_probe_detail
+
+// Only callers that have independently validated native layout may use relocated globals.
+inline resource_state probe_validated_layout(std::uintptr_t exe_base, std::uintptr_t application_rva,
+                                            std::uint64_t type, std::uint64_t name,
+                                            HANDLE process = GetCurrentProcess()) noexcept {
+    using namespace resource_probe_detail;
+    if (!type || !name || !application_rva) return resource_state::missing;
+    snapshot first{}, second{};
+    const auto before = lookup(process, exe_base, type, name, first, application_rva);
+    if (before == resource_state::incompatible || before == resource_state::unreadable) return before;
+    const auto after = lookup(process, exe_base, type, name, second, application_rva);
+    return before == after && same_snapshot(first, second) ? after : resource_state::pending;
+}
 
 // Observational only: stable reads do not lock or retain engine resources.
 // A supplied read-only process handle lets a CLI test exactly the addon code.

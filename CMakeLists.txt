@@ -12,7 +12,7 @@ if(NOT EXISTS "${RESHADE_SDK_INCLUDE_DIR}/reshade.hpp")
 endif()
 
 option(BUILD_GENERIC_ISOLATION "Build an isolated generated package instead of fixed experiments" OFF)
-option(BUILD_UNIVERSAL_ISOLATION "Build the fixed add-on that loads package JSON configuration" OFF)
+option(BUILD_UNIVERSAL_ISOLATION "Build the fixed add-on that loads embedded patch profiles and legacy JSON" OFF)
 if(BUILD_UNIVERSAL_ISOLATION AND BUILD_GENERIC_ISOLATION)
     message(FATAL_ERROR "Universal and generated-package build modes are mutually exclusive.")
 endif()

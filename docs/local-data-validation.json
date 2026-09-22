@@ -1,0 +1,37 @@
+{
+  "schema": "hd2-local-game-comparison/1",
+  "write_authorized": false,
+  "game_runtime_verified": false,
+  "status": "live_data_differs",
+  "game_dll_sha256": "cc75948d90fdfde259dcb519e9933db7ffa3ccb281ce4fb89e6b1b011557470c",
+  "current_file_matches": true,
+  "known_game_file": true,
+  "count": 402,
+  "added": [],
+  "removed": [],
+  "changed": [
+    {
+      "id": "41dd184d",
+      "fields": [
+        "bodies"
+      ]
+    },
+    {
+      "id": "bc5cf836",
+      "fields": [
+        "bodies"
+      ]
+    }
+  ],
+  "reason": "运行中数据与原始快照不同，可能受插件或内容变化影响；不覆盖可信基准。",
+  "stages": [
+    {
+      "action": "inspect-local",
+      "exit_code": 0,
+      "seconds": 5.046
+    }
+  ],
+  "only_exe_copied": true,
+  "python_environment_removed": true,
+  "temporary_files_removed": true
+}

@@ -1,0 +1,24 @@
+{
+  "schema": "hd2-local-export-validation/1",
+  "game_runtime_verified": false,
+  "stages": [
+    {
+      "action": "inspect-local",
+      "exit_code": 0,
+      "seconds": 5.485
+    }
+  ],
+  "status": "passed",
+  "export_path": "G:\\AppData\\SteamLibrary\\steamapps\\common\\Helldivers 2\\ArmorIsolation.local-game.json",
+  "exe_sha256": "c5806ca650860ee534c87cbeaf8ab67471ac60476cf7ef17426d21d3ae7cefa4",
+  "export_sha256": "b0e95c0875b5db2b8ab8f9351600a20ff81ce121833d9c01ef51daad2d4746a4",
+  "export_bytes": 2335780,
+  "snapshot_stage": "verified_baseline",
+  "kit_count": 402,
+  "live_changed_kit_ids": [
+    "41dd184d",
+    "bc5cf836"
+  ],
+  "known_baseline_preserved": true,
+  "temporary_files_removed": true
+}

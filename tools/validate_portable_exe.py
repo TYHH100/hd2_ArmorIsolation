@@ -149,6 +149,15 @@ def validate(args):
             require(manifest.get("game_runtime_verified") is False, "离线验证不能宣称游戏实测")
             require(manifest.get("package_status") == "built_and_runtime_configuration_validated",
                     "生成包尚未完成运行时配置验证")
+            require(manifest["addon"].get("profile_storage") == "hd2-armor-patch-footer/1",
+                    "EXE 仍在生成旧独立配置")
+            require(not (package / "runtime/ArmorIsolation").exists(), "不应再输出待安装的独立 JSON")
+            main_patches = {row["path"] for row in manifest["output"]
+                            if re.fullmatch(r"[0-9a-fA-F]{16}\.patch_[0-9]+", Path(row["path"]).name)}
+            require(main_patches == {row["path"] for row in manifest["addon"]["embedded_profiles"]},
+                    "部分主补丁缺少内嵌配置")
+            for row in manifest["output"]:
+                require(sha256(package / row["path"]) == row["sha256"], "追加配置后补丁哈希未更新")
             preserved = (package / manifest["modular"]["mod_directory"]).resolve()
             require(preserved == (package / "mod" / source.name).resolve(), "保留模组目录位置不正确")
             output_files, output_directories = tree(preserved)
@@ -176,6 +185,8 @@ def validate(args):
                            "candidates": [{key: row.get(key) for key in ("id", "name", "type", "supported")}
                                           for row in document["candidates"]],
                            "package_id": manifest["package_id"], "resource_count": len(manifest["mapping"]),
+                           "profile_storage": manifest["addon"]["profile_storage"],
+                           "embedded_patch_count": len(main_patches), "no_sidecar_json": True,
                            "source_file_count": len(files), "source_directory_count": len(directories),
                            "all_relative_paths_preserved": True, "all_non_patch_bytes_preserved": True,
                            "original_manifest_bytes_preserved": True, "source_unchanged": True,
