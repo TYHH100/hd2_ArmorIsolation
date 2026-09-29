@@ -36,6 +36,25 @@ Enabled=1
 DiagnosticOnly=0
 ```
 
+## 游戏内选项与状态（ReShade 覆盖层）
+
+插件在 ReShade 叠加层注册独立标签页 **Armor Isolation**，把原先只能改 INI 才能看到的开关和状态搬进游戏：
+
+- `Enabled` / `Diagnostic only` 两个勾选框：点击立即写回 `ArmorIsolation.ini`、更新运行时状态并排队一次轮询，最快下一帧生效，不必等每秒轮询或重启游戏。语义与手工改 INI 完全一致：只停止后续发布，不会回滚已经发布的配置。写盘失败时不假装生效，而是提示并保留原值。
+- 状态区给出配置包数、目标数、资源数，以及每个 Kit 的 `WAIT` / `READY` / `APPLIED` / `FAILED`，连同 `checked_ready` 一类等待原因。
+- `Check now` 立即触发一次轮询，不必等下一秒。
+- 状态区只保留一份视图：按 Kit 列出目标行，`detail` 不截断，`Copy status` 一键复制这些行；完整历史仍写在 `ArmorIsolation.log`，不在页面上重复显示一遍。
+
+实现要点：
+
+- 覆盖层只读每秒发布一次的双缓冲状态快照：轮询线程写备用缓冲，写完才切换索引，渲染线程不会看到写了一半的行。
+- 选项状态用原子变量在覆盖层与轮询线程之间共享，覆盖层写入后立即排队轮询，所以状态区最快下一帧就更新，没有等待或回弹窗口。
+- 界面支持 English / 简体中文切换，选择写入 INI 的 `Language` 键并即时刷新界面；首次运行若 ReShade 字体含中文字形则默认中文，否则默认英文。
+- ReShade 不开放字体加载接口（function table 只提供 `ImFont_FindGlyph` 一类查询），中文字形取决于 ReShade 自己的字体设置：在 `ReShade.ini` 的 `[STYLE]` 里把 `Font` 指向含中文字形的字体（例如 `C:\Windows\Fonts\msyh.ttc`）。插件用 `FindGlyphNoFallback` 检测，缺字形时给出双语提示并把中文标签退回英文。
+- 状态与日志正文（`WAIT`、`checked_ready=…` 等）始终是写入 `ArmorIsolation.log` 的诊断文本，不随界面语言变化，避免日志格式与既有文档和测试断言漂移。
+- 覆盖层依赖 ReShade 内置的 ImGui。插件按 `reshade_overlay.hpp` 的要求使用 Dear ImGui 1.91.9b 头文件（`IMGUI_VERSION_NUM 19191`），只编译头、不链接 `imgui.cpp`，ImGui 上下文仍由 ReShade 持有。若 ReShade 缺少 ImGui 函数表，`register_addon` 失败，插件整体不加载；官方 6.5.1 发行版不受影响。
+- 该覆盖层只在 `BUILD_UNIVERSAL_ISOLATION` 下编译，固定实验构建（CM-14 / B-01 / 生成包）行为不变。
+
 ### 大量目标与日志（2026-09-21）
 
 每秒轮询共用一次完整 Kit 表索引；每个目标仍核对当前表、指针及原始数据。字段与资源映射预索引，源数据相同时复用候选配置；发生变化立即重新校验。等待资源时先检查上次未就绪项，遇到未就绪项提前结束，发布前仍重新检查全部依赖及完整源快照，不缓存跨轮询的“已就绪”结论。`checked_ready` 仅表示本次已检查的部分，不能当成总加载进度。

@@ -23,7 +23,8 @@ SCHEMA = "hd2-armor-isolation/1"
 KITS_SHA256 = "e68b82eb7dacde3219f7d049b692dfb418f7f2a35516d98c3dab7515eb0409c1"
 EMPTY_SHA256 = hashlib.sha256(b"").hexdigest()
 PATCH_NAME = "9ba626afa44a3aa3.patch_0"
-REPAIR_CATALOG = "b01-helmet-lod/exact-main-sha256/1"
+LOD_REPAIR_RULE = b01.LOD_REPAIR_RULE
+HELMET_LOD_BASELINE = "b01-helmet-lod/exact-main-sha256/1"
 
 
 @dataclass
@@ -174,10 +175,11 @@ def read_coexist(paths, targets):
 
 
 def package_identity(lanes, targets, coexist=()):
-    content = {"schema": SCHEMA, "repair_catalog": REPAIR_CATALOG,
-               "repair_rules": [{"unit": f"{key:016x}", "sha256": value,
-                                 "fields": b01.HELMET_LOD_FIELDS}
-                                for key, value in sorted(b01.HELMET_LOD_SOURCE_HASHES.items())],
+    content = {"schema": SCHEMA, "lod_repair_rule": LOD_REPAIR_RULE,
+               "lod_repair_baseline": HELMET_LOD_BASELINE,
+               "lod_repair_baseline_rules": [{"unit": f"{key:016x}", "sha256": value,
+                                              "fields": b01.HELMET_LOD_FIELDS}
+                                             for key, value in sorted(b01.HELMET_LOD_SOURCE_HASHES.items())],
                "source_lanes": [{"suffix": row["suffix"], "sha256": row["sha256"]} for row in lanes],
                "targets": sorted(target["id"] for target in targets),
                "coexisting_sha256": sorted(row["sha256"] for row in coexist)}
@@ -204,13 +206,6 @@ def make_resource_mappings(plans, reserved, package_id):
         required.extend({"kit": target["id"], "type": f"{kind:016x}", "target": f"{mapping[kind, value]:016x}"}
                         for kind, value in sorted(selected))
     return shared, mappings, rows, required
-
-
-def repair_known_helmet(source_id, data):
-    expected = b01.HELMET_LOD_SOURCE_HASHES.get(source_id)
-    if expected is None or hashlib.sha256(data).hexdigest() != expected:
-        return data, []
-    return b01.repair_helmet_lod(source_id, data)
 
 
 def inspect_external(reader, archives, external, source_entries):
@@ -311,19 +306,29 @@ def build(args):
     reserved.update(coexist_reserved)
     shared, mappings, rows, required = make_resource_mappings(plans, reserved, package_id)
     fields, expanded, payloads, changes, adjustments = [], [], {}, {}, []
-    for owner, selected, mapping in [("00000000", shared, shared)] + [
-            (target["id"], {key for key in selected if key[0] == archive.UNIT}, mappings[target["id"]])
+    vanilla_tables = {}
+    for owner, archive_id, selected, mapping in [("00000000", None, shared, shared)] + [
+            (target["id"], target["archive"], {key for key in selected if key[0] == archive.UNIT},
+             mappings[target["id"]])
             for target, selected in plans]:
         for key in sorted(selected):
             entry = source.entries[key]
             before = source.data[entry.offsets[0]:entry.offsets[0] + entry.sizes[0]]
             if key[0] == archive.UNIT:
-                before, adjusted = repair_known_helmet(key[1], before)
-                if adjusted:
-                    adjustments.append({"kit": owner, "source_unit": f"{key[1]:016x}",
-                                        "source_main_sha256": b01.HELMET_LOD_SOURCE_HASHES[key[1]],
-                                        "rule": REPAIR_CATALOG, "fields": adjusted,
-                                        "catalog_rule_game_verified": True, "generated_package_game_verified": False})
+                if archive_id is None:
+                    raise ValueError("A shared resource scope cannot own a private Unit")
+                if archive_id not in vanilla_tables:
+                    vanilla_tables[archive_id] = reader.entries(archive_id)
+                vanilla_entry = vanilla_tables[archive_id].get(key)
+                if vanilla_entry is not None:
+                    # A Unit the mod adds on its own has no vanilla counterpart to restore from, and
+                    # its LOD choice belongs to the author; only replacements are repaired.
+                    vanilla_data = reader.read(archive_id, vanilla_entry.offsets[0], vanilla_entry.sizes[0])
+                    before, adjusted = b01.repair_helmet_lod(key[1], before, vanilla_data)
+                    if adjusted:
+                        adjustments.append({"kit": owner, "source_unit": f"{key[1]:016x}",
+                                            "rule": LOD_REPAIR_RULE, "fields": adjusted,
+                                            "game_runtime_verified": False})
             after, rewritten, _ = archive.rewrite_references(key[0], before, mapping)
             result = archive.Entry((mapping[key], *entry.values[1:]))
             expanded.append(result)
@@ -380,7 +385,7 @@ def build(args):
             "piece_fields": [{"kit": f"{owner:08x}", "offset": offset, "source": f"{before:016x}",
                               "target": f"{after:016x}"} for owner, offset, before, after in fields],
             "rewritten_references": changes, "external_material_check": external_check,
-            "helmet_lod_adjustments": adjustments, "coexisting_manifests": coexist,
+            "unit_lod_adjustments": adjustments, "coexisting_manifests": coexist,
             "original_patch_other_kit_unit_overlaps": affected,
             "collision_scope": "Snapshot direct refs, source and selected/shared archive IDs, explicitly supplied coexisting private IDs; 64 and high32",
             "preserved": ["default cape", "Piece scalars", "32-bit material/texture slot keys",

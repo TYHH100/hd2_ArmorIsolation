@@ -227,15 +227,16 @@ def package_readme(manifest):
 
 不同模组可以使用相同原资源 ID，输出按内容与目标生成独立命名空间；同一 Kit 同时由多个隔离包控制仍属于冲突。生成时可提供并存包的 manifest 检查，游戏启动时通用插件再验证已安装补丁中的配置及兼容旧 JSON；若存在冲突或损坏配置，则整组停止发布。
 
-已知 LOD 修正仅在源资源内容精确匹配时使用，不把 B-01 的索引改动推广到其他模型。
+LOD 选择器按 MeshInfo 标识逐个还原：替换 Unit 新增辅助网格后索引会整体偏移，偏移量因 Unit 而异（头盔与体甲不同），因此不使用固定增量，也只在源选择器仍等于原版值时改写；原版没有对应资源的 Unit 保持作者原样。已登记的头盔修正同时作为回归基准，与通用规则不一致即停止生成。
 """
 
 
 def generate_package(source: Path, game: Path, reader_tools: Path, kits: Path,
                      targets: list[str], output_root: Path,
-                     coexist_manifests: list[Path] | None = None, log=print):
+                     coexist_manifests: list[Path] | None = None, log=print,
+                     builtin_identity: bool = False):
     from game_compatibility import game_context
-    with game_context(game, kits, runtime_release) as effective_kits:
+    with game_context(game, kits, runtime_release, builtin_identity) as effective_kits:
         return _generate_package(source, game, reader_tools, effective_kits, targets, output_root, coexist_manifests, log)
 
 
@@ -357,6 +358,8 @@ def main():
     parser.add_argument("--target", action="append", default=[])
     parser.add_argument("--output", type=Path, default=Path(defaults["output"]))
     parser.add_argument("--coexist-manifest", type=Path, action="append", default=[])
+    parser.add_argument("--identity", choices=("auto", "builtin"), default="auto",
+                        help="auto: 按当前游戏版本输出身份；builtin: 输出内置基准身份，可与旧包共存")
     args = parser.parse_args()
     if args.action != "inspect-local" and args.source is None:
         parser.error("分析或生成时必须指定 --source")
@@ -369,7 +372,7 @@ def main():
                              ensure_ascii=False, indent=2))
         else:
             generate_package(args.source, args.game, args.reader_tools, args.kits, args.target,
-                             args.output, args.coexist_manifest)
+                             args.output, args.coexist_manifest, builtin_identity=args.identity == "builtin")
     except (ValueError, OSError, RuntimeError) as error:
         parser.exit(1, f"处理失败：{error}\n")
 

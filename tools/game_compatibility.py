@@ -23,10 +23,13 @@ def kits_digest(kits):
 
 def identity():
     current = CURRENT.get()
-    return ({key: current[key] for key in ("expected_game_version", "expected_game_dll_sha256",
-                                         "source_kits_sha256", "runtime_compatibility")} if current else
-            {"expected_game_version": "1.0.0.18930", "expected_game_dll_sha256": archive.DLL_SHA256,
-             "source_kits_sha256": BASE_KITS_SHA256})
+    if current is None or current.get("builtin_identity"):
+        # The bundled known-version identity, used both for a matching game build and when the
+        # caller explicitly asks for a package that can coexist with the ones from that baseline.
+        return {"expected_game_version": "1.0.0.18930", "expected_game_dll_sha256": archive.DLL_SHA256,
+                "source_kits_sha256": BASE_KITS_SHA256}
+    return {key: current[key] for key in ("expected_game_version", "expected_game_dll_sha256",
+                                         "source_kits_sha256", "runtime_compatibility")}
 
 
 def validate_current(game, kits):
@@ -96,7 +99,7 @@ def load_export(game, dll_hash, exe_hash):
 
 
 @contextmanager
-def game_context(game, kits, runtime_provider):
+def game_context(game, kits, runtime_provider, builtin_identity=False):
     game, kits = Path(game).resolve(), Path(kits).resolve()
     dll = game / "data/game/game.dll"
     if not dll.is_file():
@@ -105,6 +108,25 @@ def game_context(game, kits, runtime_provider):
     dll_hash = archive.sha256_file(dll)
     exe_hash = archive.sha256_file(game / "bin/helldivers2.exe")
     report = load_export(game, dll_hash, exe_hash)
+    if builtin_identity:
+        # Built-in baseline generation. The bundled Kit snapshot stays the source of truth and the
+        # package declares that identity, so it can be installed next to packages generated from the
+        # same baseline: the add-on validates every installed profile as one group and rejects a mix
+        # of a bundled identity and a local-adaptation identity. The add-on still adapts the native
+        # layout itself, so only the Kit and Piece data have to match the baseline.
+        current = {"game": game, "kits": kits, "builtin_identity": True,
+                   "expected_game_version": "1.0.0.18930",
+                   "expected_game_dll_sha256": dll_hash,
+                   "source_kits_sha256": BASE_KITS_SHA256,
+                   "runtime_compatibility": {"mode": "signature-validated-v1", "exe_sha256": exe_hash,
+                                             "kits_sha256": BASE_KITS_SHA256}}
+        token = CURRENT.set(current)
+        try:
+            validate_current(game, kits)
+            yield kits
+        finally:
+            CURRENT.reset(token)
+        return
     if dll_hash == archive.DLL_SHA256:
         # The bundled known-version snapshot remains the source of truth.
         yield kits

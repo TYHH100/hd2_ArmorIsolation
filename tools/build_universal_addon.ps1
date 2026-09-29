@@ -69,6 +69,7 @@ try {
     New-Item -ItemType Directory -Path $taskLicenses -Force | Out-Null
     Copy-Item -LiteralPath (Join-Path $taskRoot 'third_party\nlohmann-json-3.12.0\LICENSE.MIT') -Destination (Join-Path $taskLicenses 'nlohmann-json.LICENSE.MIT') -Force
     Copy-Item -LiteralPath (Join-Path $taskRoot 'third_party\reshade-v6.5.1\LICENSE.md') -Destination (Join-Path $taskLicenses 'ReShade.LICENSE.md') -Force
+    Copy-Item -LiteralPath (Join-Path $taskRoot 'third_party\imgui\LICENSE.txt') -Destination (Join-Path $taskLicenses 'imgui.LICENSE.txt') -Force
     $taskFiles = foreach ($taskName in @('ArmorIsolation.addon64', 'ArmorIsolation.ini', 'validate_runtime_profile.exe')) {
         $taskFile = Get-Item -LiteralPath (Join-Path $taskOutput $taskName)
         @{ name = $taskName; size = $taskFile.Length; sha256 = (Get-FileHash -LiteralPath $taskFile.FullName -Algorithm SHA256).Hash.ToLowerInvariant() }

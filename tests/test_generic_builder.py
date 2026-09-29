@@ -130,7 +130,7 @@ class GenericBuilderTests(unittest.TestCase):
         other[2]["sha256"] = "1" * 64
         self.assertNotEqual(identity, builder.package_identity(other, [kit(1, 10)]))
         self.assertNotEqual(identity, builder.package_identity(lanes, [kit(2, 10)]))
-        with patch.object(builder, "REPAIR_CATALOG", "new-rule"):
+        with patch.object(builder, "LOD_REPAIR_RULE", "new-rule"):
             self.assertNotEqual(identity, builder.package_identity(lanes, [kit(1, 10)]))
         self.assertEqual(builder.package_identity(lanes, [kit(1, 10), kit(2, 10)]),
                          builder.package_identity(lanes, [kit(2, 10), kit(1, 10)]))
@@ -192,17 +192,12 @@ class GenericBuilderTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "unresolved"):
                 builder.inspect_external(None, [], set(), {})
 
-    def test_lod_repair_applies_only_to_exact_catalog_source(self):
-        source_id = 0x781134771DD69FBE
-        data = bytearray(0x160)
-        for offset, old, _ in builder.b01.HELMET_LOD_FIELDS:
-            struct.pack_into("<I", data, offset, old)
-        self.assertEqual(builder.repair_known_helmet(source_id, data), (data, []))
-        with patch.dict(builder.b01.HELMET_LOD_SOURCE_HASHES, {source_id: hashlib.sha256(data).hexdigest()}):
-            result, changes = builder.repair_known_helmet(source_id, data)
-        self.assertEqual(len(changes), 4)
-        self.assertEqual(struct.unpack_from("<I", result, 0xDC)[0], 14)
-        self.assertEqual(builder.repair_known_helmet(999, data), (data, []))
+    def test_lod_repair_rule_is_recorded_in_the_package_identity(self):
+        identity = builder.package_identity(
+            [{"suffix": suffix, "sha256": builder.EMPTY_SHA256} for suffix in archive.SUFFIXES], [kit(1, 10)])
+        with patch.object(builder, "LOD_REPAIR_RULE", "different-rule"):
+            self.assertNotEqual(identity, builder.package_identity(
+                [{"suffix": suffix, "sha256": builder.EMPTY_SHA256} for suffix in archive.SUFFIXES], [kit(1, 10)]))
 
     def test_complete_build_roundtrip_empty_lanes_and_per_kit_closure(self):
         with tempfile.TemporaryDirectory() as temporary:

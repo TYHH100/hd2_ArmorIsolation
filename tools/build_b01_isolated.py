@@ -28,6 +28,7 @@ HELMET_LOD_SOURCE_HASHES = {
     0x7B23E3C0AB4CF618: "bd3ba21fca4e6983bea1923b5a46c7b93e2c424047b68955c651910560628c29",
 }
 HELMET_LOD_FIELDS = ((0xDC, 4, 14), (0xEC, 3, 13), (0xFC, 2, 12), (0x154, 1, 11))
+LOD_REPAIR_RULE = "unit-lod/mesh-id-match/1"
 
 
 def select_targets(kits):
@@ -109,19 +110,35 @@ def make_resource_mappings(plans, reserved):
     return shared, mappings, rows
 
 
-def repair_helmet_lod(source_id, data):
-    expected_hash = HELMET_LOD_SOURCE_HASHES.get(source_id)
-    if expected_hash is None:
-        return data, []
-    if hashlib.sha256(data).hexdigest() != expected_hash:
-        raise ValueError(f"Helmet source changed; revalidate LOD layout for {source_id:016x}")
-    result, changes = bytearray(data), []
-    for offset, expected, desired in HELMET_LOD_FIELDS:
-        if offset + 4 > len(data) or struct.unpack_from("<I", data, offset)[0] != expected:
-            raise ValueError(f"Helmet LOD field differs at {source_id:016x}+{offset:x}")
-        struct.pack_into("<I", result, offset, desired)
-        changes.append({"offset": offset, "source": expected, "target": desired})
-    return bytes(result), changes
+def repair_helmet_lod(source_id, data, vanilla_data):
+    """Repair every LOD selector, and keep the recorded helmet rules as a regression guard.
+
+    HELMET_LOD_FIELDS records selectors that were validated by hand before the generic MeshInfo
+    match existed. A source may already carry them, because the mod manager repairs LOD selectors
+    on the source patch itself, so every recorded field must hold either its original or its
+    repaired value and the generic result must agree with the recorded rule whenever it changes
+    anything. Anything else means the source layout moved and the run stops.
+    """
+    repaired, adjustments = archive.repair_unit_lod(data, vanilla_data)
+    if source_id not in HELMET_LOD_SOURCE_HASHES:
+        return repaired, adjustments
+    for offset, before, desired in HELMET_LOD_FIELDS:
+        if offset + 4 > len(data):
+            raise ValueError(f"Helmet LOD field is out of range for {source_id:016x}")
+        current = struct.unpack_from("<I", data, offset)[0]
+        if current not in (before, desired):
+            raise ValueError(f"Helmet LOD field differs at {source_id:016x}+{offset:x}: {current}")
+    recorded = [{"offset": offset, "before": before, "after": after}
+                for offset, before, after in HELMET_LOD_FIELDS]
+    actual = [{"offset": row["offset"], "before": row["before"], "after": row["after"]}
+              for row in adjustments]
+    if actual != recorded:
+        already_repaired = not adjustments and all(
+            struct.unpack_from("<I", data, offset)[0] == desired
+            for offset, _, desired in HELMET_LOD_FIELDS)
+        if not already_repaired:
+            raise ValueError(f"Generic LOD repair disagrees with the verified helmet rule for {source_id:016x}")
+    return repaired, adjustments
 
 
 def verify_payloads(source, destination, source_entries, output_entries, rows, payloads):
@@ -184,6 +201,7 @@ def build(args):
                         "sha256": archive.sha256_file(args.cm14_manifest)})
     shared, mappings, rows = make_resource_mappings(plans, reserved)
     fields, expanded, payloads, changes, lod_adjustments = [], [], {}, {}, []
+    vanilla_tables = {}
     for key in sorted(shared):
         entry = source_entries[key]
         before = data[entry.offsets[0]:entry.offsets[0] + entry.sizes[0]]
@@ -195,14 +213,22 @@ def build(args):
     for target, selected in plans:
         owner = int(target["id"], 16)
         mapping = mappings[target["id"]]
+        archive_id = target["archive"]
+        if archive_id not in vanilla_tables:
+            vanilla_tables[archive_id] = reader.entries(archive_id)
         for key in sorted(key for key in selected if key[0] == archive.UNIT):
             entry = source_entries[key]
             before = data[entry.offsets[0]:entry.offsets[0] + entry.sizes[0]]
-            before, adjusted_lods = repair_helmet_lod(key[1], before)
-            if adjusted_lods:
-                lod_adjustments.append({"kit": target["id"], "source_unit": f"{key[1]:016x}",
-                                        "source_main_sha256": HELMET_LOD_SOURCE_HASHES[key[1]],
-                                        "fields": adjusted_lods, "game_runtime_verified": False})
+            vanilla_entry = vanilla_tables[archive_id].get(key)
+            if vanilla_entry is not None:
+                # Only a Unit that replaces a vanilla resource has selectors to restore. A Unit the
+                # mod adds on its own carries the author's own LOD choice, so it is left untouched.
+                vanilla_data = reader.read(archive_id, vanilla_entry.offsets[0], vanilla_entry.sizes[0])
+                before, adjusted_lods = repair_helmet_lod(key[1], before, vanilla_data)
+                if adjusted_lods:
+                    lod_adjustments.append({"kit": target["id"], "source_unit": f"{key[1]:016x}",
+                                            "rule": LOD_REPAIR_RULE, "fields": adjusted_lods,
+                                            "game_runtime_verified": False})
             after, rewritten, _ = archive.rewrite_references(key[0], before, mapping)
             new_entry = archive.Entry((mapping[key], *entry.values[1:]))
             expanded.append(new_entry)
@@ -256,7 +282,7 @@ def build(args):
                                             "source": f"{before:016x}", "target": f"{after:016x}"}
                                            for owner, offset, before, after in fields],
         "rewritten_references": changes, "external_material_check": dependency_check,
-        "helmet_lod_adjustments": lod_adjustments,
+        "unit_lod_adjustments": lod_adjustments,
         "original_patch_other_kit_unit_overlaps": affected,
         "coexisting_manifests": coexist,
         "collision_scope": "Snapshot direct refs, source and inspected archive IDs, CM14 private IDs; 64 and high32",
@@ -275,7 +301,7 @@ def build(args):
     print(json.dumps({"targets": len(targets), "private_resources": len(rows), "piece_fields": len(fields),
                       "excluded_source_resources": len(entries) - len(retained), "output_bytes": sum(sizes),
                       "gpu_storage": manifest["gpu_storage"],
-                      "helmet_lod_adjustments": len(lod_adjustments),
+                      "unit_lod_adjustments": len(lod_adjustments),
                       "external_materials": len(dependency_check["checked"]),
                       "other_kit_unit_overlaps": len(affected)}, indent=2))
 

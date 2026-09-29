@@ -247,6 +247,9 @@ def build(args):
     created_root = not output.exists()
     output.mkdir(parents=True, exist_ok=True)
     output_rows, patch_records, adjustments = [], [], []
+    unit_archive = {key: target["archive"] for target, selected in plans
+                    for key in selected if key[0] == archive.UNIT}
+    vanilla_tables = {}
     try:
         catalog.copy_passthrough(mod_output)
         for relative, source in sources.items():
@@ -254,10 +257,20 @@ def build(args):
             for key, entry in source.entries.items():
                 before = source.data[entry.offsets[0]:entry.offsets[0] + entry.sizes[0]]
                 if key[0] == archive.UNIT and key in retained:
-                    before, changes = generic.repair_known_helmet(key[1], before)
-                    if changes:
-                        adjustments.append({"patch": relative.as_posix(), "source_unit": f"{key[1]:016x}",
-                                            "rule": generic.REPAIR_CATALOG, "fields": changes})
+                    archive_id = unit_archive.get(key)
+                    if archive_id is None:
+                        raise ValueError(f"Retained Unit {key[1]:016x} has no owning Kit archive")
+                    if archive_id not in vanilla_tables:
+                        vanilla_tables[archive_id] = reader.entries(archive_id)
+                    vanilla_entry = vanilla_tables[archive_id].get(key)
+                    if vanilla_entry is not None:
+                        # Units the mod adds without a vanilla counterpart keep the author's own
+                        # LOD choice; only replacements of a vanilla resource are repaired.
+                        vanilla_data = reader.read(archive_id, vanilla_entry.offsets[0], vanilla_entry.sizes[0])
+                        before, changes = b01.repair_helmet_lod(key[1], before, vanilla_data)
+                        if changes:
+                            adjustments.append({"patch": relative.as_posix(), "source_unit": f"{key[1]:016x}",
+                                                "rule": generic.LOD_REPAIR_RULE, "fields": changes})
                 after, changed, _ = archive.rewrite_references(key[0], before, all_shared)
                 for canonical_row in by_source[aliases.get(key, key)]:
                     row = {**canonical_row, "source": f"{key[1]:016x}"}
@@ -306,7 +319,7 @@ def build(args):
             "piece_fields": [{"kit": f"{owner:08x}", "offset": offset, "source": f"{source:016x}",
                               "target": f"{destination:016x}"} for owner, offset, source, destination in sorted(fields)],
             "external_material_check": external_check, "coexisting_manifests": coexist,
-            "helmet_lod_adjustments": adjustments, "payloads_verified": True, "source_ids_in_output_toc": 0,
+            "unit_lod_adjustments": adjustments, "payloads_verified": True, "source_ids_in_output_toc": 0,
             "game_runtime_verified": False, "output": output_rows,
             "modular": {"schema": SCHEMA, "mod_directory": mod_relative.as_posix(),
                         "manifest_format": "v1" if "Version" in catalog.manifest else "legacy",

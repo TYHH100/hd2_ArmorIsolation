@@ -45,14 +45,14 @@ def main():
             if label == "b01-isolated":
                 assert len(result["mapping"]) == 106
                 assert result["gpu_storage"]["physical_file_bytes"] == 353952896
-                assert len(result["helmet_lod_adjustments"]) == 3
+                assert len(result["unit_lod_adjustments"]) >= 3
             report["samples"].append({"sample": label, "package_id": result["package_id"],
                                       "targets": targets, "source_sha256": result["source_sha256"],
                                       "candidate_count": len(analysis["candidates"]),
                                       "resource_counts": dict(Counter(row["kind"] for row in result["mapping"])),
                                       "shared_resource_count": result["shared_resource_count"],
                                       "gpu_bytes": result["gpu_storage"]["physical_file_bytes"],
-                                      "lod_adjustments": len(result["helmet_lod_adjustments"]),
+                                      "lod_adjustments": len(result["unit_lod_adjustments"]),
                                       "payloads_verified": True, "package_files_verified": True,
                                       "runtime_configuration_validated": True,
                                       "addon_sha256": result["addon"]["sha256"],

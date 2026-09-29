@@ -193,6 +193,10 @@ class ArmorIsolationApp:
         self.open_button = self._button(selection, "打开输出文件夹", self._open_output)
         self.open_button.grid(row=0, column=3, padx=(8, 0))
         self.open_button.state(["disabled"])
+        self.builtin_identity = tk.BooleanVar(value=False)
+        self.identity_check = ttk.Checkbutton(
+            selection, text="输出内置基准身份（与已装的旧包共存）", variable=self.builtin_identity)
+        self.identity_check.grid(row=1, column=0, sticky="w", pady=(4, 0))
 
         ttk.Label(outer, textvariable=self.status).grid(row=8, column=0, sticky="w")
         self.progress = ttk.Progressbar(outer, mode="indeterminate")
@@ -433,7 +437,8 @@ class ArmorIsolationApp:
             try:
                 package = self.backend.generate_package(
                     paths["source"], paths["game"], paths["reader_tools"], paths["kits"], targets,
-                    paths["output"], coexist, lambda line: self.events.put(("log", str(line))))
+                    paths["output"], coexist, lambda line: self.events.put(("log", str(line))),
+                    builtin_identity=self.builtin_identity.get())
                 self.events.put(("generated", Path(package)))
             except Exception as error:
                 self.events.put(("error", ("生成失败", str(error), traceback.format_exc())))

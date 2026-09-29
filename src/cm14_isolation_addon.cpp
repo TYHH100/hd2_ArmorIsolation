@@ -6,6 +6,10 @@
 #include <algorithm>
 #include <cwctype>
 #include <filesystem>
+// ReShade 6.5.1 only exposes its overlay ImGui bindings when this translation unit
+// already saw 'IMGUI_VERSION_NUM 19191', so the Dear ImGui headers come first.
+#define ImTextureID ImU64
+#include <imgui.h>
 #endif
 #include <reshade.hpp>
 #include <array>
@@ -15,6 +19,7 @@
 #include <cstring>
 #include <iterator>
 #include <map>
+#include <memory>
 #include <set>
 #include <tuple>
 #include <string>
@@ -59,6 +64,9 @@ constexpr wchar_t config_section[] = L"CM14Isolation";
 constexpr char profile_label[] = "CM14";
 constexpr char profile_name[] = "CM14 Resource Isolation";
 constexpr char profile_description[] = "Version-guarded CM14 private armor and helmet resource configuration.";
+#endif
+#if defined(UNIVERSAL_ISOLATION)
+constexpr char overlay_title[] = "Armor Isolation";
 #endif
 uintptr_t kit_store_rva = 0x276c220;
 constexpr size_t kit_size = 64, body_size = 24, piece_size = 96;
@@ -125,6 +133,101 @@ std::wstring log_path, config_path;
 std::string last_status;
 bool fatal_error = false;
 bool log_started = false;
+
+#if defined(UNIVERSAL_ISOLATION)
+// The overlay only reads published snapshots. The poll callback owns the working copy and
+// swaps it in once per update, so the render thread never observes a half-written row.
+// Status rows keep the complete text: the overlay shows the whole reason string without
+// truncation, and ArmorIsolation.log keeps the full history.
+struct UiTargetRow {
+    uint32_t kit_id = 0;
+    std::string package, state, detail;
+};
+struct UiSnapshot {
+    uint64_t updated_ms = 0;
+    bool enabled = true;
+    bool diagnostic_only = false;
+    bool options_known = false;
+    bool profiles_failed = false;
+    bool native_adapted = false;
+    std::string global_state = "PENDING", global_detail;
+    uint32_t package_count = 0, target_count = 0, resource_count = 0;
+    uint32_t pending_count = 0, waiting_count = 0, ready_count = 0, applied_count = 0, failed_count = 0;
+    std::vector<UiTargetRow> targets;
+};
+std::array<UiSnapshot, 2> ui_snapshots;
+std::atomic<unsigned> ui_published{0};
+std::atomic<bool> ui_poll_requested{false};
+// The overlay stores these directly, so a click is reflected on the next frame instead of
+// waiting up to a second for the next poll; the poll callback still re-reads the INI afterwards.
+std::atomic<bool> active_enabled{true};
+std::atomic<bool> active_diagnostic{false};
+std::atomic<bool> active_options_known{false};
+
+struct ParsedStatus { std::string state, detail; };
+
+ParsedStatus parse_status(const std::string &text) {
+    ParsedStatus result;
+    if (text.empty()) {
+        result.state = "PENDING";
+        return result;
+    }
+    const size_t space = text.find(' ');
+    std::string head = space == std::string::npos ? text : text.substr(0, space);
+    result.detail = space == std::string::npos ? std::string() : text.substr(space + 1);
+    if (head.size() >= 2 && head.front() == '[' && head.back() == ']')
+        head = head.substr(1, head.size() - 2);
+    result.state = std::move(head);
+    return result;
+}
+
+unsigned state_rank(const std::string &state) noexcept {
+    if (state == "APPLIED") return 3;
+    if (state == "READY") return 2;
+    if (state == "FAILED") return 4;
+    if (state == "WAIT") return 1;
+    return 0;
+}
+
+void publish_ui_snapshot() {
+    const unsigned published = ui_published.load(std::memory_order_relaxed);
+    UiSnapshot &next = ui_snapshots[published ^ 1u];
+    next.updated_ms = GetTickCount64();
+    next.enabled = active_enabled.load(std::memory_order_relaxed);
+    next.diagnostic_only = active_diagnostic.load(std::memory_order_relaxed);
+    next.options_known = active_options_known.load(std::memory_order_relaxed);
+    next.profiles_failed = fatal_error;
+    next.native_adapted = native_layout_validated;
+    const ParsedStatus global = parse_status(last_status);
+    next.global_state = global.state;
+    next.global_detail = global.detail;
+    next.package_count = static_cast<uint32_t>(active_profile.package_ids.size());
+    next.resource_count = static_cast<uint32_t>(active_profile.resources.size());
+    const auto &targets = active_profile.targets;
+    const size_t target_count = targets.size();
+    next.target_count = static_cast<uint32_t>(target_count);
+    next.targets.assign(target_count, UiTargetRow{});
+    next.pending_count = next.waiting_count = next.ready_count = next.applied_count = next.failed_count = 0;
+    for (size_t index = 0; index < target_count; ++index) {
+        auto &row = next.targets[index];
+        row.kit_id = targets[index].id;
+        const auto owner = active_profile.target_packages.find(row.kit_id);
+        row.package = owner == active_profile.target_packages.end() ? "unknown" : owner->second;
+        const ParsedStatus target = parse_status(index < target_states.size() ? target_states[index].last_status : std::string());
+        row.state = target.state;
+        row.detail = target.detail;
+        switch (state_rank(target.state)) {
+        case 1: ++next.waiting_count; break;
+        case 2: ++next.ready_count; break;
+        case 3: ++next.applied_count; break;
+        case 4: ++next.failed_count; break;
+        default: ++next.pending_count; break;
+        }
+    }
+    // The overlay keeps the current per-target status; ArmorIsolation.log keeps the full history.
+    ui_published.store(published ^ 1u, std::memory_order_release);
+}
+#endif
 
 const auto &profile_targets() noexcept {
 #if defined(UNIVERSAL_ISOLATION)
@@ -699,7 +802,7 @@ void poll_target(uintptr_t game, uintptr_t exe, const TargetKit &target,
     Snapshot snapshot;
     std::string error;
     if (!capture_snapshot(game, target, snapshot, error, shared_index)) {
-        target_status(target, runtime, "WAIT", error);
+        target_status(target, runtime, "[WAIT]", error);
         return;
     }
     for (size_t index = 0; index < runtime.publication_count; ++index) {
@@ -707,35 +810,35 @@ void poll_target(uintptr_t game, uintptr_t exe, const TargetKit &target,
             continue;
         if (snapshot.data != runtime.publications[index].expected) {
             runtime.fatal_error = true;
-            target_status(target, runtime, "FAILED", "published target config changed; RESTART_REQUIRED; no further writes for this kit");
+            target_status(target, runtime, "[FAILED]", "published target config changed; RESTART_REQUIRED; no further writes for this kit");
         } else {
-            target_status(target, runtime, "APPLIED", std::string("private config active; switch away from this ") +
+            target_status(target, runtime, "[APPLIED]", std::string("private config active; switch away from this ") +
                 profile_label + " item and back to rebuild appearance; RESTART_REQUIRED for removal");
         }
         return;
     }
     if (!prepare_candidate(target, snapshot, runtime, error)) {
-        target_status(target, runtime, "FAILED", error + "; no config write");
+        target_status(target, runtime, "[FAILED]", error + "; no config write");
         return;
     }
     if (!private_resources_ready(exe, target, error, &runtime)) {
-        target_status(target, runtime, "WAIT", error);
+        target_status(target, runtime, "[WAIT]", error);
         return;
     }
     if (diagnostic) {
-        target_status(target, runtime, "READY", "all target guards passed; DiagnosticOnly=1; no config write");
+        target_status(target, runtime, "[READY]", "all target guards passed; DiagnosticOnly=1; no config write");
         return;
     }
     if (runtime.publication_count == publication_limit) {
         runtime.fatal_error = true;
-        target_status(target, runtime, "FAILED", "configuration reload limit reached; RESTART_REQUIRED; no further writes for this kit");
+        target_status(target, runtime, "[FAILED]", "configuration reload limit reached; RESTART_REQUIRED; no further writes for this kit");
         return;
     }
     auto candidate = runtime.cached_candidate;
     const size_t changed = runtime.cached_changes;
     auto *allocation = static_cast<uint8_t *>(VirtualAlloc(nullptr, candidate.size(), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE));
     if (!allocation) {
-        target_status(target, runtime, "FAILED", "cannot allocate independent target config; no config write");
+        target_status(target, runtime, "[FAILED]", "cannot allocate independent target config; no config write");
         return;
     }
     const uintptr_t clone = reinterpret_cast<uintptr_t>(allocation);
@@ -751,7 +854,7 @@ void poll_target(uintptr_t game, uintptr_t exe, const TargetKit &target,
     if (!snapshot_unchanged(game, target, snapshot) || !private_resources_ready(exe, target, error) ||
         !publish_pointer(snapshot.entry, snapshot.kit, clone)) {
         VirtualFree(allocation, 0, MEM_RELEASE);
-        target_status(target, runtime, "WAIT", "source config or resource readiness changed before publication; no config published");
+        target_status(target, runtime, "[WAIT]", "source config or resource readiness changed before publication; no config published");
         return;
     }
     // Published storage may still be held by the game after a reload or add-on unload.
@@ -761,10 +864,10 @@ void poll_target(uintptr_t game, uintptr_t exe, const TargetKit &target,
     runtime.cached_candidate.clear();
     uintptr_t published = 0;
     if (!read_value(snapshot.entry, published) || published != clone) {
-        target_status(target, runtime, "WAIT", "kit table changed immediately after publication; retained config allocation; retry after reload");
+        target_status(target, runtime, "[WAIT]", "kit table changed immediately after publication; retained config allocation; retry after reload");
         return;
     }
-    target_status(target, runtime, "APPLIED", "published private config with " + std::to_string(changed) +
+    target_status(target, runtime, "[APPLIED]", "published private config with " + std::to_string(changed) +
         " resource fields; switch away from this " + profile_label + " item and back; RESTART_REQUIRED for removal");
 }
 
@@ -826,6 +929,11 @@ void poll() {
         status("[FAILED]", "Enabled and DiagnosticOnly must be 0 or 1");
         return;
     }
+#if defined(UNIVERSAL_ISOLATION)
+    active_enabled.store(enabled != 0, std::memory_order_relaxed);
+    active_diagnostic.store(diagnostic != 0, std::memory_order_relaxed);
+    active_options_known.store(true, std::memory_order_relaxed);
+#endif
     if (!enabled) {
         bool published = false;
         for (const auto &runtime : target_states)
@@ -901,7 +1009,12 @@ void on_present(reshade::api::command_queue *, reshade::api::swapchain *, const 
     if (callback_active.test_and_set(std::memory_order_acquire))
         return;
     const uint64_t now = GetTickCount64();
-    if (now - last_poll >= 1000) {
+#if defined(UNIVERSAL_ISOLATION)
+    const bool requested = ui_poll_requested.exchange(false, std::memory_order_acq_rel);
+#else
+    const bool requested = false;
+#endif
+    if (requested || now - last_poll >= 1000) {
         last_poll = now;
         try {
             poll();
@@ -910,9 +1023,240 @@ void on_present(reshade::api::command_queue *, reshade::api::swapchain *, const 
             OutputDebugStringA(profile_label);
             OutputDebugStringA(" isolation FAILED: unexpected C++ exception; no further writes\n");
         }
+#if defined(UNIVERSAL_ISOLATION)
+        publish_ui_snapshot();
+#endif
     }
     callback_active.clear(std::memory_order_release);
 }
+
+#if defined(UNIVERSAL_ISOLATION)
+bool persist_option(const wchar_t *key, bool value) {
+    initialize_paths();
+    if (config_path.empty())
+        return false;
+    // The INI stays the single source of truth: the next poll reads the new value and the
+    // publication path is unchanged. Nothing here can restore an already published config.
+    return WritePrivateProfileStringW(config_section, key, value ? L"1" : L"0", config_path.c_str()) != FALSE;
+}
+
+// Overlay wording only. The status and log text itself is diagnostic evidence and stays in the
+// language it is written to ArmorIsolation.log, so log parsing and the documented format do not
+// change with the selected UI language.
+enum class UiLanguage { english, chinese };
+
+struct UiStrings {
+    const char *subtitle, *options, *enabled, *enabled_help, *diagnostic, *diagnostic_help,
+        *language, *status, *check_now, *updated, *waiting_first, *counts, *summary,
+        *options_unknown, *rejected, *adapted, *targets_empty, *copy_status, *copied_status,
+        *status_footer, *write_failed;
+};
+
+constexpr UiStrings ui_strings_english{
+    "read-only status; options are stored in ArmorIsolation.ini beside this add-on",
+    "Options",
+    "Enabled",
+    "Turning this off only stops future publications. It cannot restore a configuration that was "
+        "already published; that still needs a full game restart.",
+    "Diagnostic only",
+    "Diagnostic only checks every guard and dependency and reports READY without writing to the game process.",
+    "Language",
+    "Status",
+    "Check now",
+    "updated %.1f s ago",
+    "waiting for the first poll",
+    "packages %u   targets %u   resources %u",
+    "waiting %u   ready %u   applied %u   failed %u   not checked %u",
+    "ArmorIsolation.ini has not been read yet in this session",
+    "the configuration group was rejected; see the log below",
+    "native layout was re-discovered for this game build",
+    "no targets loaded; install an isolation package and restart the game",
+    "Copy status",
+    "copied %zu target rows to the clipboard",
+    "Full history: ArmorIsolation.log. Published configurations need a game restart to be removed.",
+    "Cannot write ArmorIsolation.ini, so the change was not applied. Check that the game folder is writable."
+};
+
+constexpr UiStrings ui_strings_chinese{
+    "只读状态；选项保存在插件旁的 ArmorIsolation.ini",
+    "选项",
+    "启用",
+    "关闭只停止后续发布，无法恢复已经发布的配置；恢复原状仍需完整重启游戏。",
+    "仅诊断",
+    "只校验全部守卫与依赖并报告 READY，不写入游戏进程。",
+    "语言",
+    "状态",
+    "立即检查",
+    "更新于 %.1f 秒前",
+    "等待首次轮询",
+    "配置包 %u   目标 %u   资源 %u",
+    "等待 %u   就绪 %u   已应用 %u   失败 %u   未检查 %u",
+    "本次会话尚未读取 ArmorIsolation.ini",
+    "配置组被拒绝；详见下方日志",
+    "已为该游戏版本重新发现原生布局",
+    "没有载入目标；请安装隔离包后重启游戏",
+    "复制状态",
+    "已复制 %zu 条目标状态到剪贴板",
+    "完整历史见 ArmorIsolation.log。已发布的配置需重启游戏才能移除。",
+    "无法写入 ArmorIsolation.ini，改动未生效。请检查游戏目录是否可写。"
+};
+
+// ReShade owns the ImGui context and exposes no way to add a font, so Chinese text is only
+// legible when the user points ReShade's own font setting at a font with CJK glyphs.
+constexpr char ui_cjk_warning[] =
+    "The ReShade font has no CJK glyphs, so Chinese text renders as empty boxes. Set Font in "
+    "ReShade's [STYLE] settings to a CJK font (for example C:\\Windows\\Fonts\\msyh.ttc) and then "
+    "reload the overlay. / 当前 ReShade 字体不含中文字形，中文会显示为方框：请在 ReShade 的 "
+    "[STYLE] 设置里把 Font 指向中文字体（例如 C:\\Windows\\Fonts\\msyh.ttc）后重新加载覆盖层。";
+
+UiLanguage ui_language = UiLanguage::english;
+bool ui_language_known = false;
+
+bool font_has_cjk_glyphs() {
+    ImFont *font = ImGui::GetFont();
+    return font != nullptr && font->FindGlyphNoFallback(static_cast<ImWchar>(0x4E2D)) != nullptr;
+}
+
+bool persist_language(UiLanguage language) {
+    initialize_paths();
+    if (config_path.empty())
+        return false;
+    return WritePrivateProfileStringW(config_section, L"Language",
+        language == UiLanguage::chinese ? L"zh" : L"en", config_path.c_str()) != FALSE;
+}
+
+void initialize_language() {
+    initialize_paths();
+    std::wstring configured;
+    if (!config_path.empty()) {
+        wchar_t value[16]{};
+        GetPrivateProfileStringW(config_section, L"Language", L"", value,
+            static_cast<DWORD>(std::size(value)), config_path.c_str());
+        configured = value;
+    }
+    if (configured == L"zh")
+        ui_language = UiLanguage::chinese;
+    else if (configured == L"en")
+        ui_language = UiLanguage::english;
+    else
+        ui_language = font_has_cjk_glyphs() ? UiLanguage::chinese : UiLanguage::english;
+    ui_language_known = true;
+}
+
+void on_overlay(reshade::api::effect_runtime *) {
+    if (!ui_language_known)
+        initialize_language();
+    const bool cjk = font_has_cjk_glyphs();
+    const UiStrings *text = ui_language == UiLanguage::chinese ? &ui_strings_chinese : &ui_strings_english;
+    const UiSnapshot &snapshot = ui_snapshots[ui_published.load(std::memory_order_acquire) & 1u];
+    bool enabled = snapshot.enabled, diagnostic = snapshot.diagnostic_only;
+    const uint64_t now = GetTickCount64();
+    static uint64_t copy_deadline = 0, write_failed_deadline = 0;
+    static size_t copy_count = 0;
+    ImGui::SetNextWindowSize(ImVec2(660.0f, 620.0f), ImGuiCond_FirstUseEver);
+    if (!ImGui::Begin(overlay_title, nullptr, 0)) {
+        ImGui::End();
+        return;
+    }
+    ImGui::TextUnformatted(profile_name, nullptr);
+    ImGui::TextDisabled("%s", text->subtitle);
+    if (!cjk && ui_language == UiLanguage::chinese)
+        ImGui::TextColored(ImVec4(1.0f, 0.55f, 0.2f, 1.0f), "%s", ui_cjk_warning);
+    ImGui::SeparatorText(text->options);
+    // Options take effect on the next frame: the new value is stored right here and an immediate
+    // poll is queued, so nothing waits for the one-second interval or a game restart.
+    if (ImGui::Checkbox(text->enabled, &enabled)) {
+        if (persist_option(L"Enabled", enabled)) {
+            active_enabled.store(enabled, std::memory_order_relaxed);
+            active_options_known.store(true, std::memory_order_relaxed);
+            ui_poll_requested.store(true, std::memory_order_release);
+        } else {
+            write_failed_deadline = now + 5000;
+        }
+    }
+    ImGui::TextWrapped("%s", text->enabled_help);
+    if (ImGui::Checkbox(text->diagnostic, &diagnostic)) {
+        if (persist_option(L"DiagnosticOnly", diagnostic)) {
+            active_diagnostic.store(diagnostic, std::memory_order_relaxed);
+            active_options_known.store(true, std::memory_order_relaxed);
+            ui_poll_requested.store(true, std::memory_order_release);
+        } else {
+            write_failed_deadline = now + 5000;
+        }
+    }
+    ImGui::TextWrapped("%s", text->diagnostic_help);
+    ImGui::TextUnformatted(text->language, nullptr);
+    ImGui::SameLine(0.0f, 12.0f);
+    int language = ui_language == UiLanguage::chinese ? 1 : 0;
+    if (ImGui::RadioButton("English", &language, 0) && ui_language != UiLanguage::english) {
+        ui_language = UiLanguage::english;
+        if (!persist_language(ui_language))
+            write_failed_deadline = now + 5000;
+    }
+    ImGui::SameLine(0.0f, 12.0f);
+    // Without CJK glyphs the Chinese label itself would be unreadable, so it falls back to ASCII.
+    if (ImGui::RadioButton(cjk ? "简体中文" : "Chinese", &language, 1) && ui_language != UiLanguage::chinese) {
+        ui_language = UiLanguage::chinese;
+        if (!persist_language(ui_language))
+            write_failed_deadline = now + 5000;
+    }
+    if (write_failed_deadline > now)
+        ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "%s", text->write_failed);
+    ImGui::SeparatorText(text->status);
+    if (ImGui::Button(text->check_now, ImVec2(130.0f, 0.0f)))
+        ui_poll_requested.store(true, std::memory_order_release);
+    ImGui::SameLine(0.0f, 12.0f);
+    if (snapshot.updated_ms)
+        ImGui::TextDisabled(text->updated, (now - snapshot.updated_ms) / 1000.0);
+    else
+        ImGui::TextDisabled("%s", text->waiting_first);
+    ImGui::Text(text->counts, snapshot.package_count, snapshot.target_count, snapshot.resource_count);
+    if (snapshot.target_count)
+        ImGui::ProgressBar(static_cast<float>(snapshot.ready_count + snapshot.applied_count) /
+            static_cast<float>(snapshot.target_count), ImVec2(-1.0f, 0.0f), nullptr);
+    ImGui::Text(text->summary, snapshot.waiting_count, snapshot.ready_count, snapshot.applied_count,
+        snapshot.failed_count, snapshot.pending_count);
+    if (!snapshot.options_known)
+        ImGui::TextDisabled("%s", text->options_unknown);
+    if (snapshot.profiles_failed)
+        ImGui::TextColored(ImVec4(1.0f, 0.4f, 0.4f, 1.0f), "%s", text->rejected);
+    if (snapshot.native_adapted)
+        ImGui::TextDisabled("%s", text->adapted);
+    ImGui::TextWrapped("[%s] %s", snapshot.global_state.c_str(), snapshot.global_detail.c_str());
+    // One status view only: the per-target rows below carry the complete reason text, and the
+    // full history stays in ArmorIsolation.log.
+    if (ImGui::Button(text->copy_status, ImVec2(140.0f, 0.0f))) {
+        std::string all;
+        for (const auto &row : snapshot.targets) {
+            char prefix[80]{};
+            std::snprintf(prefix, sizeof(prefix), "%08x  [%s]  %s  ",
+                row.kit_id, row.state.c_str(), row.package.c_str());
+            all += prefix;
+            all += row.detail;
+            all += "\r\n";
+        }
+        ImGui::SetClipboardText(all.c_str());
+        copy_deadline = now + 3000;
+        copy_count = snapshot.targets.size();
+    }
+    if (copy_deadline > now) {
+        ImGui::SameLine(0.0f, 12.0f);
+        ImGui::TextDisabled(text->copied_status, copy_count);
+    }
+    const ImVec2 available = ImGui::GetContentRegionAvail();
+    const float list_height = available.y > 80.0f ? available.y - 20.0f : 80.0f;
+    if (ImGui::BeginChild("armor-isolation-targets", ImVec2(0.0f, list_height), 0, 0)) {
+        if (snapshot.targets.empty())
+            ImGui::TextDisabled("%s", text->targets_empty);
+        for (const auto &row : snapshot.targets)
+            ImGui::TextWrapped("%08x  [%s]  %s  %s", row.kit_id, row.state.c_str(),
+                row.package.c_str(), row.detail.c_str());
+    }
+    ImGui::EndChild();
+    ImGui::TextDisabled("%s", text->status_footer);
+    ImGui::End();
+}
+#endif
 } // namespace
 
 #ifndef CM14_ISOLATION_TEST
@@ -926,7 +1270,13 @@ BOOL APIENTRY DllMain(HMODULE handle, DWORD reason, LPVOID reserved) {
         if (!reshade::register_addon(handle))
             return FALSE;
         reshade::register_event<reshade::addon_event::present>(on_present);
+#if defined(UNIVERSAL_ISOLATION)
+        reshade::register_overlay(overlay_title, on_overlay);
+#endif
     } else if (reason == DLL_PROCESS_DETACH && reserved == nullptr) {
+#if defined(UNIVERSAL_ISOLATION)
+        reshade::unregister_overlay(overlay_title, on_overlay);
+#endif
         reshade::unregister_event<reshade::addon_event::present>(on_present);
         reshade::unregister_addon(handle);
         OutputDebugStringA(profile_label);

@@ -502,6 +502,62 @@ void test_independent_publication() {
     }
     REQUIRE(!publish_pointer(0x123, 0, 1));
 }
+
+void test_overlay_snapshot() {
+    const auto saved_config = config_path;
+    last_status = "[CONFIG] validated packages=2 targets=2 resources=6";
+    fatal_error = false;
+    target_states[0].last_status = "[APPLIED] private config active; RESTART_REQUIRED for removal";
+    target_states[1].last_status = "[WAIT] private resources checked_ready=0/2 state=missing";
+    active_enabled.store(true);
+    active_diagnostic.store(true);
+    active_options_known.store(true);
+    publish_ui_snapshot();
+    const UiSnapshot &snapshot = ui_snapshots[ui_published.load(std::memory_order_acquire) & 1u];
+    REQUIRE(snapshot.target_count == 2);
+    REQUIRE(snapshot.package_count == 2 && snapshot.resource_count == 6);
+    REQUIRE(snapshot.enabled && snapshot.diagnostic_only && snapshot.options_known && !snapshot.profiles_failed);
+    REQUIRE(snapshot.global_state == "CONFIG");
+    REQUIRE(snapshot.targets[0].state == "APPLIED");
+    REQUIRE(snapshot.targets[1].state == "WAIT");
+    REQUIRE(snapshot.targets[1].detail.find("checked_ready=0/2") != std::string::npos);
+    REQUIRE(snapshot.applied_count == 1 && snapshot.waiting_count == 1 && snapshot.ready_count == 0);
+    REQUIRE(snapshot.pending_count == 0 && snapshot.failed_count == 0);
+    // The overlay keeps one status view: the per-target rows stay complete and untruncated.
+    REQUIRE(snapshot.targets[0].detail.find("private config active") != std::string::npos);
+    // A second publication must re-read the atomic options and flip the buffer.
+    const unsigned previous = ui_published.load(std::memory_order_acquire);
+    active_enabled.store(false);
+    fatal_error = true;
+    publish_ui_snapshot();
+    REQUIRE(ui_published.load(std::memory_order_acquire) != previous);
+    const UiSnapshot &next = ui_snapshots[ui_published.load(std::memory_order_acquire) & 1u];
+    REQUIRE(!next.enabled && next.profiles_failed);
+    active_enabled.store(true);
+    fatal_error = false;
+
+    config_path = (std::filesystem::temp_directory_path() /
+        ("armor-isolation-options-" + std::to_string(GetCurrentProcessId()) + ".ini")).wstring();
+    std::error_code ignored;
+    std::filesystem::remove(config_path, ignored);
+    persist_option(L"DiagnosticOnly", false);
+    REQUIRE(GetPrivateProfileIntW(config_section, L"DiagnosticOnly", 1, config_path.c_str()) == 0);
+    persist_option(L"DiagnosticOnly", true);
+    REQUIRE(GetPrivateProfileIntW(config_section, L"DiagnosticOnly", 0, config_path.c_str()) == 1);
+    REQUIRE(GetPrivateProfileIntW(config_section, L"Enabled", 1, config_path.c_str()) == 1);
+    persist_option(L"Enabled", false);
+    REQUIRE(GetPrivateProfileIntW(config_section, L"Enabled", 1, config_path.c_str()) == 0);
+    // The language choice round-trips through the same INI without touching the ImGui context.
+    persist_language(UiLanguage::chinese);
+    wchar_t language[16]{};
+    GetPrivateProfileStringW(config_section, L"Language", L"", language, 16, config_path.c_str());
+    REQUIRE(std::wstring(language) == L"zh");
+    persist_language(UiLanguage::english);
+    GetPrivateProfileStringW(config_section, L"Language", L"", language, 16, config_path.c_str());
+    REQUIRE(std::wstring(language) == L"en");
+    std::filesystem::remove(config_path, ignored);
+    config_path = saved_config;
+}
 } // namespace
 
 int main() {
@@ -530,12 +586,13 @@ int main() {
         test_session_log(temporary.directory);
         test_local_observation(temporary.directory);
         test_native_anchors();
+        test_overlay_snapshot();
         REQUIRE(legacy_addon_name(L"CM14Isolation.addon64"));
         REQUIRE(legacy_addon_name(L"B01Isolation.ADDON64"));
         REQUIRE(legacy_addon_name(L"ArmorIsolation_abc123.addon64"));
         REQUIRE(!legacy_addon_name(L"ArmorIsolation.addon64"));
         REQUIRE(!legacy_addon_name(L"unrelated.addon64"));
-        std::puts("UNIVERSAL_ADDON_TEST_OK: loaded JSON profiles, stable ownership, actual dependencies, cape/metadata preserved, source guards, independent CAS, legacy conflict detection");
+        std::puts("UNIVERSAL_ADDON_TEST_OK: loaded JSON profiles, stable ownership, actual dependencies, cape/metadata preserved, source guards, independent CAS, legacy conflict detection, overlay snapshot and INI options");
         return 0;
     } catch (const std::exception &exception) {
         std::fprintf(stderr, "UNIVERSAL_ADDON_TEST_FAILED: %s\n", exception.what());

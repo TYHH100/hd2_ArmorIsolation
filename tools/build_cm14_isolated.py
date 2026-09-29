@@ -145,6 +145,78 @@ def rewrite_references(kind, data, mapping):
     return bytes(result), changes, external
 
 
+def parse_unit_meshes(data):
+    """Return (MeshInfo identifiers, [(LOD selector offset, selector value)]) for a Unit payload."""
+    if len(data) < 0x68:
+        raise ValueError("Unit payload is too small for a MeshInfo table")
+    mesh_at = struct.unpack_from("<I", data, 0x64)[0]
+    if mesh_at + 4 > len(data):
+        raise ValueError("Unit MeshInfo table is out of range")
+    mesh_ids = []
+    for index in range(struct.unpack_from("<I", data, mesh_at)[0]):
+        at = mesh_at + struct.unpack_from("<I", data, mesh_at + 4 + index * 4)[0]
+        if at + 0x2C > len(data):
+            raise ValueError("Unit MeshInfo entry is out of range")
+        mesh_ids.append(struct.unpack_from("<I", data, at + 0x28)[0])
+    if len(data) < 0x34:
+        raise ValueError("Unit payload is too small for an LOD table")
+    lod_at = struct.unpack_from("<I", data, 0x30)[0]
+    if lod_at + 4 > len(data):
+        raise ValueError("Unit LOD table is out of range")
+    references = []
+    for group in range(struct.unpack_from("<I", data, lod_at)[0]):
+        at = lod_at + struct.unpack_from("<I", data, lod_at + 4 + group * 4)[0]
+        if at + 20 > len(data):
+            raise ValueError("Unit LOD group is out of range")
+        for entry in range(struct.unpack_from("<I", data, at + 16)[0]):
+            entry_at = at + struct.unpack_from("<I", data, at + 20 + entry * 4)[0]
+            if entry_at + 12 > len(data):
+                raise ValueError("Unit LOD entry is out of range")
+            for index in range(struct.unpack_from("<I", data, entry_at + 8)[0]):
+                offset = entry_at + 12 + index * 4
+                if offset + 4 > len(data):
+                    raise ValueError("Unit LOD selector is out of range")
+                references.append((offset, struct.unpack_from("<I", data, offset)[0]))
+    return mesh_ids, references
+
+
+def repair_unit_lod(private_data, vanilla_data):
+    """Rewrite LOD selectors so the replacement Unit keeps selecting the meshes vanilla selected.
+
+    A replacement Unit regularly gains helper meshes, which shifts every MeshInfo index. Only the
+    vanilla selection matched by MeshInfo identifier is safe to restore: the shift differs per Unit
+    (the B-01 helmets move by +10, its body Units by +8), so a fixed delta must never be assumed.
+    The selectors themselves must still hold the vanilla values, which rejects Units whose author
+    edited them on purpose instead of silently overriding that choice.
+    """
+    mesh_ids, references = parse_unit_meshes(private_data)
+    vanilla_meshes, vanilla_references = parse_unit_meshes(vanilla_data)
+    if len(references) != len(vanilla_references):
+        raise ValueError("LOD selector count differs between the source and vanilla Unit")
+    index_by_mesh = {}
+    for index, mesh_id in enumerate(mesh_ids):
+        if mesh_id in index_by_mesh:
+            raise ValueError(f"Source Unit repeats MeshInfo identifier {mesh_id:08x}; repair would be ambiguous")
+        index_by_mesh[mesh_id] = index
+    result, adjustments = bytearray(private_data), []
+    for (offset, current), (_, vanilla_value) in zip(references, vanilla_references):
+        if vanilla_value >= len(vanilla_meshes):
+            raise ValueError("Vanilla LOD selector is out of range")
+        desired = index_by_mesh.get(vanilla_meshes[vanilla_value])
+        if desired is None:
+            raise ValueError(f"Vanilla LOD mesh {vanilla_meshes[vanilla_value]:08x} is absent from the source Unit")
+        if current == desired:
+            continue
+        if current >= len(mesh_ids):
+            raise ValueError("Source LOD selector is out of range")
+        if current != vanilla_value:
+            raise ValueError(f"Source LOD selector at 0x{offset:x} was edited ({current} != {vanilla_value})")
+        struct.pack_into("<I", result, offset, desired)
+        adjustments.append({"offset": offset, "offset_hex": f"0x{offset:x}", "before": current,
+                            "after": desired, "mesh_id": f"{vanilla_meshes[vanilla_value]:08x}"})
+    return bytes(result), adjustments
+
+
 def make_mapping(keys, reserved, kit_id=KIT_ID, namespace="mods/cm14_isolation/v1"):
     reserved = set(reserved)
     thin = {value >> 32 for value in reserved}

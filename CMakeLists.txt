@@ -21,9 +21,13 @@ if(BUILD_UNIVERSAL_ISOLATION)
         CACHE PATH "Directory for the universal runtime")
     set(NLOHMANN_JSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/nlohmann-json-3.12.0/include"
         CACHE PATH "Directory containing nlohmann/json.hpp")
+    set(IMGUI_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/imgui"
+        CACHE PATH "Directory containing the Dear ImGui headers used by the ReShade overlay API")
     if(NOT EXISTS "${NLOHMANN_JSON_INCLUDE_DIR}/nlohmann/json.hpp" OR
+       NOT EXISTS "${IMGUI_INCLUDE_DIR}/imgui.h" OR
+       NOT EXISTS "${IMGUI_INCLUDE_DIR}/imconfig.h" OR
        NOT IS_ABSOLUTE "${ISOLATION_OUTPUT_DIRECTORY}")
-        message(FATAL_ERROR "The JSON parser header and an absolute runtime output directory are required.")
+        message(FATAL_ERROR "The JSON parser header, the Dear ImGui 1.91.9b headers and an absolute runtime output directory are required.")
     endif()
     enable_testing()
     add_library(UniversalResourceIsolation SHARED src/cm14_isolation_addon.cpp)
@@ -33,7 +37,7 @@ if(BUILD_UNIVERSAL_ISOLATION)
     foreach(task_target UniversalResourceIsolation validate_runtime_profile test_universal_addon test_runtime_profile)
         target_compile_features(${task_target} PRIVATE cxx_std_17)
         target_compile_definitions(${task_target} PRIVATE UNIVERSAL_ISOLATION)
-        target_include_directories(${task_target} PRIVATE include "${RESHADE_SDK_INCLUDE_DIR}" "${NLOHMANN_JSON_INCLUDE_DIR}")
+        target_include_directories(${task_target} PRIVATE include "${RESHADE_SDK_INCLUDE_DIR}" "${NLOHMANN_JSON_INCLUDE_DIR}" "${IMGUI_INCLUDE_DIR}")
         target_compile_options(${task_target} PRIVATE /W4 /permissive- /utf-8 /EHsc)
         set_target_properties(${task_target} PROPERTIES MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     endforeach()
