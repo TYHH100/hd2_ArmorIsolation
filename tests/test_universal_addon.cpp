@@ -167,6 +167,21 @@ void test_target(const TargetKit &target) {
     REQUIRE(probes == 4 && cached.waiting_resource == 0);
     available = false;
     REQUIRE(!private_resources_ready(0, target, error, nullptr, probe));
+
+    PollResourceCache resource_cache;
+    size_t cached_probes = 0;
+    const auto cached_probe = [&](uintptr_t, uint64_t type, uint64_t name, HANDLE) {
+        ++cached_probes;
+        return type == 1 && name == 2 ? cm14_isolation::resource_state::ready :
+            cm14_isolation::resource_state::pending;
+    };
+    REQUIRE(resource_cache.get(0, 1, 2, GetCurrentProcess(), cached_probe) ==
+            cm14_isolation::resource_state::ready);
+    REQUIRE(resource_cache.get(0, 1, 2, GetCurrentProcess(), cached_probe) ==
+            cm14_isolation::resource_state::ready);
+    REQUIRE(resource_cache.get(0, 1, 3, GetCurrentProcess(), cached_probe) ==
+            cm14_isolation::resource_state::pending);
+    REQUIRE(cached_probes == 2);
 }
 
 void test_session_log(const std::filesystem::path &directory) {

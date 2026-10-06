@@ -711,6 +711,25 @@ cm14_isolation::resource_state probe_active_resource(uintptr_t exe, uint64_t typ
     return cm14_isolation::probe_resource(exe, type, name, process);
 }
 
+// A resource can be required by several targets in one poll. Reuse only the
+// result from this poll; readiness is intentionally rechecked on the next poll
+// and immediately before publication.
+struct PollResourceCache {
+    std::map<std::pair<uint64_t, uint64_t>, cm14_isolation::resource_state> states;
+
+    template <class Probe>
+    cm14_isolation::resource_state get(uintptr_t exe, uint64_t type, uint64_t name,
+                                       HANDLE process, Probe probe) {
+        const auto key = std::make_pair(type, name);
+        const auto found = states.find(key);
+        if (found != states.end())
+            return found->second;
+        const auto state = probe(exe, type, name, process);
+        states.emplace(key, state);
+        return state;
+    }
+};
+
 template<class Probe = decltype(&probe_active_resource)>
 bool private_resources_ready(uintptr_t exe, const TargetKit &target, std::string &error,
                              TargetState *waiting = nullptr, Probe probe = &probe_active_resource) {
@@ -796,7 +815,8 @@ bool publish_pointer(uintptr_t address, uintptr_t expected, uintptr_t desired) n
 }
 
 void poll_target(uintptr_t game, uintptr_t exe, const TargetKit &target,
-                 TargetState &runtime, bool diagnostic, const KitIndex *shared_index = nullptr) {
+                 TargetState &runtime, bool diagnostic, const KitIndex *shared_index = nullptr,
+                 PollResourceCache *poll_resources = nullptr) {
     if (runtime.fatal_error)
         return;
     Snapshot snapshot;
@@ -821,7 +841,16 @@ void poll_target(uintptr_t game, uintptr_t exe, const TargetKit &target,
         target_status(target, runtime, "[FAILED]", error + "; no config write");
         return;
     }
-    if (!private_resources_ready(exe, target, error, &runtime)) {
+    if (poll_resources) {
+        const auto cached_probe = [poll_resources](uintptr_t resource_exe, uint64_t type,
+                                                   uint64_t name, HANDLE process) {
+            return poll_resources->get(resource_exe, type, name, process, &probe_active_resource);
+        };
+        if (!private_resources_ready(exe, target, error, &runtime, cached_probe)) {
+            target_status(target, runtime, "[WAIT]", error);
+            return;
+        }
+    } else if (!private_resources_ready(exe, target, error, &runtime)) {
         target_status(target, runtime, "[WAIT]", error);
         return;
     }
@@ -1000,8 +1029,10 @@ void poll() {
         status("[WAIT]", index_error);
         return;
     }
+    PollResourceCache poll_resources;
     for (size_t index = 0; index < std::size(profile_targets()); ++index)
-        poll_target(game, exe, profile_targets()[index], target_states[index], diagnostic != 0, &kit_index);
+        poll_target(game, exe, profile_targets()[index], target_states[index], diagnostic != 0,
+                    &kit_index, &poll_resources);
 }
 
 void on_present(reshade::api::command_queue *, reshade::api::swapchain *, const reshade::api::rect *,
