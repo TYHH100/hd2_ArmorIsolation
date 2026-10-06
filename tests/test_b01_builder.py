@@ -130,6 +130,14 @@ class B01BuilderTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             archive.repair_unit_lod(synthetic_unit(duplicated, [4, 3, 2, 1]), vanilla)
 
+    def test_lod_repair_preserves_fully_custom_mesh_set(self):
+        vanilla = synthetic_unit(VANILLA_MESHES, [4, 3, 2, 1])
+        custom_meshes = [0x101, 0x202, 0x303, 0x404, 0x505]
+        source = synthetic_unit(custom_meshes, [4, 3, 2, 1])
+        fixed, changes = archive.repair_unit_lod(source, vanilla)
+        self.assertEqual(changes, [])
+        self.assertEqual(fixed, source)
+
     def test_recorded_helmet_rule_still_agrees_with_the_generic_match(self):
         source_id = 0x781134771DD69FBE
         vanilla = synthetic_unit(VANILLA_MESHES, [4, 3, 2, 1])

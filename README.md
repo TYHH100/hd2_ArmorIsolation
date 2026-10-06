@@ -112,6 +112,7 @@ python -m venv .venv
 | `build_modular_isolated.py` | 模块化模组生成：保留目录与选项，处理跨补丁依赖和共享映射 |
 | `modular_source.py` | 解析旧版/V1 清单、本体、Options、SubOptions 和补丁来源 |
 | `modular_texture_aliases.py` | 识别符合条件的互斥分辨率分支，处理纹理 ID 对应关系 |
+| `modular_unit_aliases.py` | 在互斥选项间按严格结构证据归一自定义 Unit ID |
 | `runtime_profile.py` | 从生成包 manifest 导出通用插件配置，也用于旧包迁移 |
 | `isolation_paths.py` | 管理源码/EXE 资源与输出路径，并查找 Steam 游戏目录 |
 | `game_data/archive.py` | 读取本机游戏资源，供依赖分析等流程使用 |

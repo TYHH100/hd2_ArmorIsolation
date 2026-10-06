@@ -266,6 +266,8 @@ def _generate_package(source: Path, game: Path, reader_tools: Path, kits: Path,
                                target=list(targets), output=package,
                                coexist_manifest=[Path(path) for path in (coexist_manifests or [])])
         manifest = builder.build(args)
+        # Keep a human-readable origin in the embedded profile for conflict diagnostics.
+        manifest["source_label"] = source.parent.name
         if manifest.get("runtime_compatibility"):
             if release.get("adaptive_runtime_schema") != "hd2-armor-runtime/2":
                 raise ValueError("预编译插件不支持本机适配配置，请使用新版工具包。")

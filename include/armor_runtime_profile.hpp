@@ -61,6 +61,7 @@ struct Profile {
     std::vector<RequiredResource> required_resources;
     std::vector<TargetKit> targets;
     std::vector<std::string> package_ids;
+    std::map<std::string, std::string> package_labels;
     std::map<std::uint32_t, std::string> target_packages;
     std::map<std::uint32_t, std::set<std::pair<std::uint64_t, std::uint64_t>>> requirements_by_kit;
     // Separate allocations keep TargetKit pointers stable across profile moves.
@@ -92,6 +93,20 @@ inline void keys(const json &object, std::initializer_list<const char *> expecte
         reject("object fields do not match the runtime schema");
     for (const char *key : expected)
         if (!object.contains(key)) reject(std::string("missing field: ") + key);
+}
+
+inline void keys_with_optional(const json &object, std::initializer_list<const char *> expected,
+                               std::initializer_list<const char *> optional)
+{
+    if (!object.is_object() || object.size() < expected.size() || object.size() > expected.size() + optional.size())
+        reject("object fields do not match the runtime schema");
+    std::set<std::string> allowed;
+    for (const char *key : expected) allowed.insert(key);
+    for (const char *key : optional) allowed.insert(key);
+    for (const char *key : expected)
+        if (!object.contains(key)) reject(std::string("missing field: ") + key);
+    for (const auto &item : object.items())
+        if (!allowed.count(item.key())) reject(std::string("unexpected field: ") + item.key());
 }
 
 inline const json &array(const json &value, std::size_t maximum, bool nonempty = true)
@@ -227,11 +242,12 @@ inline void parse_document(const std::string &filename, const std::string &text,
     const auto schema = string(root.at("schema"));
     const bool adaptive = schema == adaptive_runtime_schema;
     if (adaptive)
-        keys(root, {"schema", "package_id", "expected_game_dll_sha256", "expected_game_version",
-            "selected_kit_metadata", "mapping", "piece_fields", "required_resources", "compatibility"});
+        keys_with_optional(root, {"schema", "package_id", "expected_game_dll_sha256", "expected_game_version",
+            "selected_kit_metadata", "mapping", "piece_fields", "required_resources", "compatibility"},
+            {"source_label"});
     else
-        keys(root, {"schema", "package_id", "expected_game_dll_sha256", "expected_game_version",
-            "selected_kit_metadata", "mapping", "piece_fields", "required_resources"});
+        keys_with_optional(root, {"schema", "package_id", "expected_game_dll_sha256", "expected_game_version",
+            "selected_kit_metadata", "mapping", "piece_fields", "required_resources"}, {"source_label"});
     if ((!adaptive && schema != runtime_schema) || (adaptive && !root.contains("compatibility")) ||
         (!adaptive && root.contains("compatibility")))
         reject("unsupported runtime schema or game version");
@@ -247,6 +263,18 @@ inline void parse_document(const std::string &filename, const std::string &text,
             hex_string(compatibility.at("kits_sha256"), 64).empty())
             reject("adaptive compatibility evidence is incomplete");
     }
+    const auto package_id = hex_string(root.at("package_id"), 24);
+    std::string source_label;
+    if (root.contains("source_label")) {
+        source_label = string(root.at("source_label"));
+        if (source_label.empty() || source_label.size() > 256)
+            reject("source_label is empty or too long");
+    }
+    const auto describe_package = [&](const std::string &id) {
+        const auto found = output.package_labels.find(id);
+        return id + (found == output.package_labels.end() || found->second.empty() ? "" :
+                     " (" + found->second + ")");
+    };
     if (output.package_ids.empty()) {
         output.expected_game_dll_sha256 = profile_hash;
         output.expected_game_version = profile_version;
@@ -254,14 +282,18 @@ inline void parse_document(const std::string &filename, const std::string &text,
         if (adaptive) output.compatibility = root.at("compatibility");
     } else if (output.expected_game_dll_sha256 != profile_hash || output.expected_game_version != profile_version ||
                output.adaptive != adaptive)
-        reject("runtime profiles target different game identities or compatibility modes");
+        reject("runtime profiles target different game identities or compatibility modes (package " +
+               package_id + (source_label.empty() ? "" : " (" + source_label + ")") +
+               "; existing package: " + describe_package(output.package_ids.front()) + ")");
     if (adaptive && output.compatibility != root.at("compatibility"))
-        reject("runtime profiles have different compatibility contexts");
-    const auto package_id = hex_string(root.at("package_id"), 24);
+        reject("runtime profiles have different compatibility contexts (package " + package_id +
+               (source_label.empty() ? "" : " (" + source_label + ")") + "; existing package: " +
+               describe_package(output.package_ids.front()) + ")");
     if (filename != package_id + ".json") reject("profile filename must equal package_id.json");
     if (std::find(output.package_ids.begin(), output.package_ids.end(), package_id) != output.package_ids.end())
         reject("duplicate package ID");
     output.package_ids.push_back(package_id);
+    output.package_labels.emplace(package_id, source_label);
     const auto first_target = output.targets.size();
     for (const auto &target : array(root.at("selected_kit_metadata"), max_targets))
         parse_target(target, package_id, output);

@@ -47,6 +47,36 @@ def build(arguments, kits):
 
 
 class ModularBuilderTests(unittest.TestCase):
+    def test_exclusive_custom_unit_ids_are_aliased_only_when_structure_matches(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            mod = root / "unit-aliases"
+            custom = fixture(mod / "custom", {(archive.UNIT, 99): unit(20),
+                                                (archive.MATERIAL, 20): material(30),
+                                                (archive.TEXTURE, 30): b"texture"})
+            canonical = fixture(mod / "canonical", {(archive.UNIT, 10): unit(20),
+                                                      (archive.MATERIAL, 20): material(30),
+                                                      (archive.TEXTURE, 30): b"texture"})
+            (mod / "manifest.json").write_text(json.dumps({
+                "Name": "legacy", "Options": [
+                    custom.parent.relative_to(mod).as_posix(),
+                    canonical.parent.relative_to(mod).as_posix(),
+                ]}), encoding="utf-8")
+            catalog, sources, variants, aliases, _ = builder.load_family(mod, [kit(1, 10)])
+            self.assertEqual(aliases[archive.UNIT, 99], (archive.UNIT, 10))
+            choices = builder.candidates([kit(1, 10)], variants, aliases)
+            self.assertTrue(choices[0]["supported"])
+            manifest = build(args(root, mod), [kit(1, 10)])
+            unit_rows = [row for row in manifest["mapping"] if row["kind"] == "unit"]
+            self.assertEqual(len(unit_rows), 1)
+            patch_rows = [row for row in manifest["modular"]["patches"]
+                          if row["path"].startswith(("custom/", "canonical/"))]
+            self.assertEqual({row["source"] for record in patch_rows for row in record["mapping"]
+                              if row["type"] == f"{archive.UNIT:016x}"},
+                             {"0000000000000063", "000000000000000a"})
+            self.assertEqual({row["target"] for record in patch_rows for row in record["mapping"]
+                              if row["type"] == f"{archive.UNIT:016x}"}, {unit_rows[0]["target"]})
+
     def test_legacy_root_mod_passes_public_analysis_and_complete_build(self):
         import armor_isolation_tool as tool
         with tempfile.TemporaryDirectory() as temporary:

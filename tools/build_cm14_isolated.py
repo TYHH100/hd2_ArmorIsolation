@@ -193,22 +193,29 @@ def repair_unit_lod(private_data, vanilla_data):
     vanilla_meshes, vanilla_references = parse_unit_meshes(vanilla_data)
     if len(references) != len(vanilla_references):
         raise ValueError("LOD selector count differs between the source and vanilla Unit")
+    if any(value >= len(mesh_ids) for _, value in references):
+        raise ValueError("Source LOD selector is out of range")
     index_by_mesh = {}
     for index, mesh_id in enumerate(mesh_ids):
         if mesh_id in index_by_mesh:
             raise ValueError(f"Source Unit repeats MeshInfo identifier {mesh_id:08x}; repair would be ambiguous")
         index_by_mesh[mesh_id] = index
+    if any(value >= len(vanilla_meshes) for _, value in vanilla_references):
+        raise ValueError("Vanilla LOD selector is out of range")
+    selected_meshes = {vanilla_meshes[value] for _, value in vanilla_references}
+    shared_selected = selected_meshes & index_by_mesh.keys()
+    if not shared_selected:
+        # A fully custom replacement may intentionally contain no vanilla MeshInfo entries. There
+        # is no safe selector mapping in that case, so preserve the author's LOD table. A partial
+        # overlap remains an error below: it usually means the replacement dropped a vanilla mesh.
+        return bytes(private_data), []
     result, adjustments = bytearray(private_data), []
     for (offset, current), (_, vanilla_value) in zip(references, vanilla_references):
-        if vanilla_value >= len(vanilla_meshes):
-            raise ValueError("Vanilla LOD selector is out of range")
         desired = index_by_mesh.get(vanilla_meshes[vanilla_value])
         if desired is None:
             raise ValueError(f"Vanilla LOD mesh {vanilla_meshes[vanilla_value]:08x} is absent from the source Unit")
         if current == desired:
             continue
-        if current >= len(mesh_ids):
-            raise ValueError("Source LOD selector is out of range")
         if current != vanilla_value:
             raise ValueError(f"Source LOD selector at 0x{offset:x} was edited ({current} != {vanilla_value})")
         struct.pack_into("<I", result, offset, desired)

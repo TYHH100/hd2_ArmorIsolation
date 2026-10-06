@@ -13,6 +13,7 @@ import struct
 import build_generic_isolated as generic
 from modular_source import load_catalog, manifest_options
 from modular_texture_aliases import discover_texture_aliases
+from modular_unit_aliases import discover_unit_aliases
 
 archive = generic.archive
 b01 = generic.b01
@@ -22,7 +23,10 @@ SCHEMA = "hd2-modular-isolation/1"
 def load_family(path, kits=()):
     catalog = load_catalog(path)
     sources = {relative: generic.load_source(catalog.root / relative) for relative in catalog.patch_paths}
-    aliases, alias_evidence = discover_texture_aliases(catalog, sources, kits)
+    unit_aliases, unit_evidence = discover_unit_aliases(catalog, sources, kits)
+    texture_aliases, texture_evidence = discover_texture_aliases(catalog, sources, kits)
+    aliases = {**unit_aliases, **texture_aliases}
+    alias_evidence = {"units": unit_evidence, "textures": texture_evidence}
     variants = defaultdict(list)
     for relative, source in sources.items():
         for key, entry in source.entries.items():
@@ -178,7 +182,9 @@ def analyze(args):
                         "option_count": len(catalog.manifest.get("Options") or []),
                         "patches": [{"path": path.as_posix(), "resources": len(source.entries)}
                                     for path, source in sources.items()],
-                        "missing_includes": list(catalog.missing_includes), "texture_aliases": alias_evidence},
+                        "missing_includes": list(catalog.missing_includes),
+                        "texture_aliases": alias_evidence["textures"],
+                        "unit_aliases": alias_evidence["units"]},
             "notes": ["All folders and options are preserved; targets must be selected explicitly.",
                       "Common suppliers for every variant are verified during generation."]}
 
@@ -229,7 +235,8 @@ def build(args):
     unused, unused_rows = archive.make_mapping(variants.keys() - retained, reserved | used_private, 0,
                                               f"mods/armor_isolation/v1/{identity}/unbound")
     all_shared = {**shared, **{key: value for key, value in unused.items() if key[0] != archive.UNIT}}
-    all_shared.update({key: all_shared[canonical] for key, canonical in aliases.items()})
+    all_shared.update({key: all_shared[canonical] for key, canonical in aliases.items()
+                       if key[0] != archive.UNIT})
     storage_rows = [*rows, *unused_rows]
     by_source = defaultdict(list)
     for row in storage_rows:
@@ -325,7 +332,8 @@ def build(args):
                         "manifest_format": "v1" if "Version" in catalog.manifest else "legacy",
                         "option_count": len(catalog.manifest.get("Options") or []),
                         "manifest_bytes_preserved": True, "folder_structure_preserved": True,
-                        "texture_aliases": alias_evidence,
+                        "texture_aliases": alias_evidence["textures"],
+                        "unit_aliases": alias_evidence["units"],
                         "source_resource_aliases": [{"type": f"{key[0]:016x}", "source": f"{key[1]:016x}",
                                                      "canonical": f"{canonical[1]:016x}"}
                                                     for key, canonical in sorted(aliases.items())],

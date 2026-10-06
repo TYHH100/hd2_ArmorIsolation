@@ -72,6 +72,7 @@ inline bool load_package_files(const std::vector<std::filesystem::path> &paths, 
 {
     try {
         std::map<std::string, std::string> unique;
+        std::map<std::string, std::string> origins;
         std::size_t total = 0;
         for (const auto &path : paths) {
             try {
@@ -96,20 +97,33 @@ inline bool load_package_files(const std::vector<std::filesystem::path> &paths, 
                 const auto canonical = root.dump();
                 const auto found = unique.find(id);
                 if (found != unique.end()) {
-                    if (found->second != canonical) profile_detail::reject("different configurations claim the same package ID");
+                    if (found->second != canonical)
+                        profile_detail::reject("different configurations claim the same package ID (first: " +
+                                               origins.at(id) + "; current: " + path.u8string() + ")");
                     continue;
                 }
                 if (unique.size() >= max_profile_files || canonical.size() > max_total_profile_bytes - total)
                     profile_detail::reject("combined package configuration limit exceeded");
                 total += canonical.size();
                 unique.emplace(id, canonical);
+                std::string origin = path.u8string();
+                if (root.contains("source_label") && root.at("source_label").is_string())
+                    origin += " [" + root.at("source_label").get<std::string>() + "]";
+                origins.emplace(id, std::move(origin));
             } catch (const std::exception &exception) {
                 profile_detail::reject(path.u8string() + ": " + exception.what());
             }
         }
         std::vector<std::pair<std::string, std::string>> documents;
         for (auto &[id, text] : unique) documents.emplace_back(id + ".json", std::move(text));
-        return load_documents(documents, output, error);
+        if (!load_documents(documents, output, error)) {
+            std::string sources;
+            for (const auto &[id, path] : origins)
+                sources += (sources.empty() ? "" : "; ") + id + " => " + path;
+            if (!sources.empty()) error += "; embedded sources: " + sources;
+            return false;
+        }
+        return true;
     } catch (const std::exception &exception) { error = exception.what(); return false; }
 }
 

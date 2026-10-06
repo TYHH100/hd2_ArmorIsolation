@@ -102,7 +102,8 @@ void run()
 {
     Profile output;
     std::string error;
-    const auto first = valid_profile();
+    auto first = valid_profile();
+    first["source_label"] = "sample-mod-a";
     {
         TemporaryDirectory temporary;
         const auto data = temporary.path / "data", legacy = temporary.path / "ArmorIsolation";
@@ -151,8 +152,14 @@ void run()
               "independent embedded packages should coexist");
         auto conflicting = first;
         conflicting["package_id"] = std::string(24, 'f');
+        conflicting["source_label"] = "sample-mod-b";
         write_patch(component, conflicting);
         check(!load_installed_packages(data, {}, empty, error), "embedded Kit conflicts must reject group");
+        check(error.find("embedded sources:") != std::string::npos &&
+              error.find("0123456789abcdef.patch") != std::string::npos &&
+              error.find("sample-mod-a") != std::string::npos &&
+              error.find("sample-mod-b") != std::string::npos,
+              "profile rejection must identify embedded patch sources");
         std::filesystem::remove(component);
         std::filesystem::remove(data / "fedcba9876543210.patch_42");
         std::ofstream(data / "0123456789abcdef.patch_0", std::ios::binary) << std::string(100, 'x');

@@ -195,6 +195,11 @@ def make_runtime_profile(manifest: dict, kits_path: Path = DEFAULT_KITS) -> dict
                "expected_game_dll_sha256": manifest.get("expected_game_dll_sha256", archive.DLL_SHA256),
                "selected_kit_metadata": metadata, "mapping": mapping,
                "piece_fields": fields, "required_resources": required}
+    if "source_label" in manifest:
+        label = manifest["source_label"]
+        if not isinstance(label, str) or not label or len(label) > 256:
+            raise ValueError("source_label must be a nonempty string of at most 256 characters")
+        profile["source_label"] = label
     if adaptive:
         profile["compatibility"] = copy.deepcopy(compatibility)
     return profile
