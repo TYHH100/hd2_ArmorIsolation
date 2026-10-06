@@ -535,6 +535,12 @@ void test_overlay_snapshot() {
     REQUIRE(snapshot.global_state == "CONFIG");
     REQUIRE(snapshot.targets[0].state == "APPLIED");
     REQUIRE(snapshot.targets[1].state == "WAIT");
+    REQUIRE(snapshot.targets[0].type == profile_targets()[0].type);
+    REQUIRE(snapshot.targets[0].body_count == profile_targets()[0].body_count);
+    REQUIRE(snapshot.targets[0].piece_count == profile_targets()[0].piece_count);
+    REQUIRE(snapshot.targets[0].unit_changes == profile_targets()[0].expected_unit_changes);
+    REQUIRE(snapshot.targets[0].required_resources == 3);
+    REQUIRE(snapshot.targets[0].publications == 0);
     REQUIRE(snapshot.targets[1].detail.find("checked_ready=0/2") != std::string::npos);
     REQUIRE(snapshot.applied_count == 1 && snapshot.waiting_count == 1 && snapshot.ready_count == 0);
     REQUIRE(snapshot.pending_count == 0 && snapshot.failed_count == 0);

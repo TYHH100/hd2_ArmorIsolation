@@ -142,6 +142,9 @@ bool log_started = false;
 // truncation, and ArmorIsolation.log keeps the full history.
 struct UiTargetRow {
     uint32_t kit_id = 0;
+    uint32_t type = 0, passive = 0;
+    uint32_t body_count = 0, piece_count = 0, unit_changes = 0;
+    uint32_t required_resources = 0, publications = 0;
     std::string package, state, detail;
 };
 struct UiSnapshot {
@@ -212,6 +215,16 @@ void publish_ui_snapshot() {
     for (size_t index = 0; index < target_count; ++index) {
         auto &row = next.targets[index];
         row.kit_id = targets[index].id;
+        row.type = targets[index].type;
+        row.passive = targets[index].passive;
+        row.body_count = static_cast<uint32_t>(targets[index].body_count);
+        row.piece_count = static_cast<uint32_t>(targets[index].piece_count);
+        row.unit_changes = static_cast<uint32_t>(targets[index].expected_unit_changes);
+        const auto requirements = active_profile.requirements_by_kit.find(row.kit_id);
+        row.required_resources = requirements == active_profile.requirements_by_kit.end() ? 0u :
+            static_cast<uint32_t>(requirements->second.size());
+        row.publications = index < target_states.size() ?
+            static_cast<uint32_t>(target_states[index].publication_count) : 0u;
         const auto owner = active_profile.target_packages.find(row.kit_id);
         row.package = owner == active_profile.target_packages.end() ? "unknown" : owner->second;
         const ParsedStatus target = parse_status(index < target_states.size() ? target_states[index].last_status : std::string());
@@ -1097,7 +1110,7 @@ struct UiStrings {
     const char *subtitle, *options, *enabled, *enabled_help, *diagnostic, *diagnostic_help,
         *language, *status, *check_now, *updated, *waiting_first, *counts, *summary,
         *options_unknown, *rejected, *adapted, *targets_empty, *copy_status, *copied_status,
-        *status_footer, *write_failed;
+        *status_footer, *write_failed, *target_type, *target_structure, *target_runtime;
 };
 
 constexpr UiStrings ui_strings_english{
@@ -1122,7 +1135,9 @@ constexpr UiStrings ui_strings_english{
     "Copy status",
     "copied %zu target rows to the clipboard",
     "Full history: ArmorIsolation.log. Published configurations need a game restart to be removed.",
-    "Cannot write ArmorIsolation.ini, so the change was not applied. Check that the game folder is writable."
+    "Cannot write ArmorIsolation.ini, so the change was not applied. Check that the game folder is writable.",
+    "type %s   passive %u", "bodies %u   pieces %u   private Units %u   required resources %u",
+    "publications %u"
 };
 
 constexpr UiStrings ui_strings_chinese{
@@ -1146,7 +1161,9 @@ constexpr UiStrings ui_strings_chinese{
     "复制状态",
     "已复制 %zu 条目标状态到剪贴板",
     "完整历史见 ArmorIsolation.log。已发布的配置需重启游戏才能移除。",
-    "无法写入 ArmorIsolation.ini，改动未生效。请检查游戏目录是否可写。"
+    "无法写入 ArmorIsolation.ini，改动未生效。请检查游戏目录是否可写。",
+    "类型 %s   被动 %u", "Body %u   Piece %u   私有 Unit %u   依赖资源 %u",
+    "已发布 %u 次"
 };
 
 // ReShade owns the ImGui context and exposes no way to add a font, so Chinese text is only
@@ -1276,9 +1293,12 @@ void on_overlay(reshade::api::effect_runtime *) {
     if (ImGui::Button(text->copy_status, ImVec2(140.0f, 0.0f))) {
         std::string all;
         for (const auto &row : snapshot.targets) {
-            char prefix[80]{};
-            std::snprintf(prefix, sizeof(prefix), "%08x  [%s]  %s  ",
-                row.kit_id, row.state.c_str(), row.package.c_str());
+            char prefix[256]{};
+            std::snprintf(prefix, sizeof(prefix),
+                "%08x  [%s]  %s  type=%s passive=%u bodies=%u pieces=%u units=%u resources=%u publications=%u  ",
+                row.kit_id, row.state.c_str(), row.package.c_str(), row.type == 1 ? "helmet" : "armor",
+                row.passive, row.body_count, row.piece_count, row.unit_changes, row.required_resources,
+                row.publications);
             all += prefix;
             all += row.detail;
             all += "\r\n";
@@ -1296,9 +1316,23 @@ void on_overlay(reshade::api::effect_runtime *) {
     if (ImGui::BeginChild("armor-isolation-targets", ImVec2(0.0f, list_height), 0, 0)) {
         if (snapshot.targets.empty())
             ImGui::TextDisabled("%s", text->targets_empty);
-        for (const auto &row : snapshot.targets)
-            ImGui::TextWrapped("%08x  [%s]  %s  %s", row.kit_id, row.state.c_str(),
-                row.package.c_str(), row.detail.c_str());
+        for (const auto &row : snapshot.targets) {
+            const bool chinese_ui = ui_language == UiLanguage::chinese && cjk;
+            const char *kind = row.type == 1 ? (chinese_ui ? "头盔" : "Helmet") :
+                (chinese_ui ? "体甲" : "Armor");
+            ImGui::PushID(static_cast<int>(row.kit_id));
+            const bool expanded = ImGui::TreeNodeEx("target", ImGuiTreeNodeFlags_SpanAvailWidth,
+                "%08x  [%s]  %s", row.kit_id, row.state.c_str(), row.package.c_str());
+            if (expanded) {
+                ImGui::Text(text->target_type, kind, row.passive);
+                ImGui::Text(text->target_structure, row.body_count, row.piece_count,
+                    row.unit_changes, row.required_resources);
+                ImGui::Text(text->target_runtime, row.publications);
+                ImGui::TextWrapped("%s", row.detail.c_str());
+                ImGui::TreePop();
+            }
+            ImGui::PopID();
+        }
     }
     ImGui::EndChild();
     ImGui::TextDisabled("%s", text->status_footer);
