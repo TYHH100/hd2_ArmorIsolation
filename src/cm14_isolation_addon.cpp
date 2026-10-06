@@ -101,6 +101,7 @@ struct KitLocation { uintptr_t entry = 0, kit = 0; size_t matches = 0; };
 struct KitIndex {
     uintptr_t store = 0, table = 0;
     uint32_t count = 0;
+    std::vector<uintptr_t> pointers;
     std::map<uint32_t, KitLocation> locations;
 };
 
@@ -481,20 +482,20 @@ bool build_kit_index(uintptr_t game, KitIndex &result, std::string &error) {
         error = "kit store is not initialized or count differs from 402";
         return false;
     }
-    std::vector<uintptr_t> pointers(result.count);
-    if (!read_bytes(result.table, pointers.data(), pointers.size() * sizeof(uintptr_t))) {
+    result.pointers.resize(result.count);
+    if (!read_bytes(result.table, result.pointers.data(), result.pointers.size() * sizeof(uintptr_t))) {
         error = "kit pointer array is unreadable";
         return false;
     }
-    for (size_t index = 0; index < pointers.size(); ++index) {
+    for (size_t index = 0; index < result.pointers.size(); ++index) {
         uint32_t id = 0;
-        if (!read_value(pointers[index], id)) {
+        if (!read_value(result.pointers[index], id)) {
             error = "kit array changed while reading";
             return false;
         }
         auto &location = result.locations[id];
         ++location.matches;
-        location.kit = pointers[index];
+        location.kit = result.pointers[index];
         location.entry = result.table + index * sizeof(uintptr_t);
     }
     return true;
@@ -552,10 +553,26 @@ bool capture_snapshot(uintptr_t game, const TargetKit &target, Snapshot &result,
     return true;
 }
 
-bool snapshot_unchanged(uintptr_t game, const TargetKit &target, const Snapshot &original) {
+bool kit_index_unchanged(uintptr_t game, const KitIndex &original) {
+    uintptr_t store = 0, table = 0;
+    uint32_t count = 0;
+    if (!read_value(game + kit_store_rva, store) || store != original.store ||
+        !read_value(store, table) || table != original.table ||
+        !read_value(store + 8, count) || count != original.count ||
+        original.pointers.size() != count)
+        return false;
+    std::vector<uintptr_t> pointers(count);
+    return read_bytes(table, pointers.data(), pointers.size() * sizeof(uintptr_t)) &&
+        pointers == original.pointers;
+}
+
+bool snapshot_unchanged(uintptr_t game, const TargetKit &target, const Snapshot &original,
+                        const KitIndex *shared_index = nullptr) {
+    if (shared_index && !kit_index_unchanged(game, *shared_index))
+        return false;
     Snapshot current;
     std::string error;
-    return capture_snapshot(game, target, current, error) && current.store == original.store &&
+    return capture_snapshot(game, target, current, error, shared_index) && current.store == original.store &&
         current.table == original.table && current.entry == original.entry &&
         current.kit == original.kit && current.bodies == original.bodies &&
         current.pieces == original.pieces && current.data == original.data;
@@ -880,7 +897,7 @@ void poll_target(uintptr_t game, uintptr_t exe, const TargetKit &target,
     }
     std::memcpy(allocation, candidate.data(), candidate.size());
     // The only game-owned write is one aligned pointer, after two complete source reads.
-    if (!snapshot_unchanged(game, target, snapshot) || !private_resources_ready(exe, target, error) ||
+    if (!snapshot_unchanged(game, target, snapshot, shared_index) || !private_resources_ready(exe, target, error) ||
         !publish_pointer(snapshot.entry, snapshot.kit, clone)) {
         VirtualFree(allocation, 0, MEM_RELEASE);
         target_status(target, runtime, "[WAIT]", "source config or resource readiness changed before publication; no config published");
