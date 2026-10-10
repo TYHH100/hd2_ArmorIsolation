@@ -138,6 +138,30 @@ class B01BuilderTests(unittest.TestCase):
         self.assertEqual(changes, [])
         self.assertEqual(fixed, source)
 
+    def test_lod_repair_preserves_author_order_when_selected_indices_did_not_move(self):
+        vanilla = synthetic_unit(VANILLA_MESHES, [4, 3, 2])
+        # Real CM-10 replacement: the mesh table is unchanged but LOD order is reversed.
+        # Appending an unrelated mesh also leaves all selected indices unchanged.
+        for meshes in (VANILLA_MESHES, VANILLA_MESHES + [0x99]):
+            with self.subTest(meshes=meshes):
+                source = synthetic_unit(meshes, [2, 3, 4])
+                fixed, changes = archive.repair_unit_lod(source, vanilla)
+                self.assertEqual(fixed, source)
+                self.assertEqual(changes, [])
+        # Reordering selected meshes still needs the original/already-repaired value guard.
+        reordered = [0x11, 0x22, 0x44, 0x55, 0x33]
+        with self.assertRaisesRegex(ValueError, "was edited"):
+            archive.repair_unit_lod(synthetic_unit(reordered, [2, 3, 4]), vanilla)
+
+    def test_lod_preservation_does_not_bypass_structural_guards(self):
+        vanilla = synthetic_unit(VANILLA_MESHES, [4, 3, 2])
+        with self.assertRaisesRegex(ValueError, "out of range"):
+            archive.repair_unit_lod(synthetic_unit(VANILLA_MESHES, [5, 3, 4]), vanilla)
+        with self.assertRaisesRegex(ValueError, "count differs"):
+            archive.repair_unit_lod(synthetic_unit(VANILLA_MESHES, [2, 3]), vanilla)
+        with self.assertRaisesRegex(ValueError, "repeats MeshInfo"):
+            archive.repair_unit_lod(synthetic_unit(VANILLA_MESHES + [0x55], [2, 3, 4]), vanilla)
+
     def test_recorded_helmet_rule_still_agrees_with_the_generic_match(self):
         source_id = 0x781134771DD69FBE
         vanilla = synthetic_unit(VANILLA_MESHES, [4, 3, 2, 1])

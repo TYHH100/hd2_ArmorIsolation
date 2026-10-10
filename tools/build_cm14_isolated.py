@@ -186,8 +186,9 @@ def repair_unit_lod(private_data, vanilla_data):
     A replacement Unit regularly gains helper meshes, which shifts every MeshInfo index. Only the
     vanilla selection matched by MeshInfo identifier is safe to restore: the shift differs per Unit
     (the B-01 helmets move by +10, its body Units by +8), so a fixed delta must never be assumed.
-    The selectors themselves must still hold the vanilla values, which rejects Units whose author
-    edited them on purpose instead of silently overriding that choice.
+    If the vanilla-selected meshes retain their indices, preserve the author's valid selectors.
+    When those indices move, selectors must still hold the vanilla or already repaired values;
+    edited choices cannot safely be inferred in that case.
     """
     mesh_ids, references = parse_unit_meshes(private_data)
     vanilla_meshes, vanilla_references = parse_unit_meshes(vanilla_data)
@@ -208,6 +209,12 @@ def repair_unit_lod(private_data, vanilla_data):
         # A fully custom replacement may intentionally contain no vanilla MeshInfo entries. There
         # is no safe selector mapping in that case, so preserve the author's LOD table. A partial
         # overlap remains an error below: it usually means the replacement dropped a vanilla mesh.
+        return bytes(private_data), []
+    if shared_selected == selected_meshes and all(
+            index_by_mesh[vanilla_meshes[value]] == value for _, value in vanilla_references):
+        # No selected MeshInfo index moved, so there is nothing to repair. In particular, a mod
+        # may reverse the LOD order without changing the mesh table; imposing vanilla's choices
+        # would overwrite the author's valid LOD selection. Keep the checks above intact.
         return bytes(private_data), []
     result, adjustments = bytearray(private_data), []
     for (offset, current), (_, vanilla_value) in zip(references, vanilla_references):

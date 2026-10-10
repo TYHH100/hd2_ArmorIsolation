@@ -1,0 +1,265 @@
+{
+  "status": "passed",
+  "exe": "G:\\Temp\\Githud\\hd2_mods-test\\dist\\portable-lod-preserve\\ArmorIsolation.exe",
+  "exe_sha256": "b5c16a3f1d2e3d4c11aaca864ad763f66dabb625ec082e3cc4abefa42fe6cd36",
+  "source": "G:\\Temp\\HD2ModManager\\Mods\\Mods\\VRC_瑞希 寄染赛车服 替换 CM-10全套 + EX00全套 +CM17头+无畏头_35cb466b\\无尾巴\\9ba626afa44a3aa3.patch_9",
+  "source_sha256": {
+    "G:\\Temp\\HD2ModManager\\Mods\\Mods\\VRC_瑞希 寄染赛车服 替换 CM-10全套 + EX00全套 +CM17头+无畏头_35cb466b\\无尾巴\\9ba626afa44a3aa3.patch_9": "447a760bd06938760fc33bcb5d53f0a1eb8f2e077d00d47aa52f18258c7208f7",
+    "G:\\Temp\\HD2ModManager\\Mods\\Mods\\VRC_瑞希 寄染赛车服 替换 CM-10全套 + EX00全套 +CM17头+无畏头_35cb466b\\无尾巴\\9ba626afa44a3aa3.patch_9.stream": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "G:\\Temp\\HD2ModManager\\Mods\\Mods\\VRC_瑞希 寄染赛车服 替换 CM-10全套 + EX00全套 +CM17头+无畏头_35cb466b\\无尾巴\\9ba626afa44a3aa3.patch_9.gpu_resources": "5ab1d29be65b18188b0bedae61ef69a69313d2a22f6626f77a1d2cf82155928d"
+  },
+  "source_unchanged": true,
+  "targets": [
+    "7a07031f",
+    "b18b6c66"
+  ],
+  "package": "G:\\Temp\\Githud\\hd2_mods-test\\dist\\generated-lod-preserve\\armor-17ba59ec54ec68093ad1eb10",
+  "resource_count": 45,
+  "unit_count_checked": 27,
+  "author_lod_units_preserved": [
+    {
+      "kit": "7a07031f",
+      "unit": "17138a2c2db819e6",
+      "source_selectors": [
+        2,
+        3,
+        4
+      ],
+      "vanilla_selectors": [
+        4,
+        3,
+        2
+      ]
+    },
+    {
+      "kit": "7a07031f",
+      "unit": "2123083d0288f018",
+      "source_selectors": [
+        2,
+        3,
+        4
+      ],
+      "vanilla_selectors": [
+        4,
+        3,
+        2
+      ]
+    },
+    {
+      "kit": "7a07031f",
+      "unit": "2cf4f8d5b5b713e1",
+      "source_selectors": [
+        3,
+        4,
+        5
+      ],
+      "vanilla_selectors": [
+        5,
+        4,
+        3
+      ]
+    },
+    {
+      "kit": "7a07031f",
+      "unit": "355f3e043ae79114",
+      "source_selectors": [
+        2,
+        3,
+        4
+      ],
+      "vanilla_selectors": [
+        4,
+        3,
+        2
+      ]
+    },
+    {
+      "kit": "7a07031f",
+      "unit": "3a5f38d8ca6c2c50",
+      "source_selectors": [
+        2,
+        3,
+        4
+      ],
+      "vanilla_selectors": [
+        4,
+        3,
+        2
+      ]
+    },
+    {
+      "kit": "7a07031f",
+      "unit": "44fbb1e8f438cb41",
+      "source_selectors": [
+        2,
+        3,
+        4
+      ],
+      "vanilla_selectors": [
+        4,
+        3,
+        2
+      ]
+    },
+    {
+      "kit": "7a07031f",
+      "unit": "46ca07b73e5f5713",
+      "source_selectors": [
+        2,
+        3,
+        4
+      ],
+      "vanilla_selectors": [
+        4,
+        3,
+        2
+      ]
+    },
+    {
+      "kit": "7a07031f",
+      "unit": "52258dfe5839afd3",
+      "source_selectors": [
+        3,
+        4,
+        5
+      ],
+      "vanilla_selectors": [
+        5,
+        4,
+        3
+      ]
+    },
+    {
+      "kit": "7a07031f",
+      "unit": "74e6cf2b3ac150c8",
+      "source_selectors": [
+        2,
+        3,
+        4
+      ],
+      "vanilla_selectors": [
+        4,
+        3,
+        2
+      ]
+    },
+    {
+      "kit": "7a07031f",
+      "unit": "92efa0738c71d6f3",
+      "source_selectors": [
+        2,
+        3,
+        4
+      ],
+      "vanilla_selectors": [
+        4,
+        3,
+        2
+      ]
+    },
+    {
+      "kit": "7a07031f",
+      "unit": "b8687b4b50530cb6",
+      "source_selectors": [
+        2,
+        3,
+        4
+      ],
+      "vanilla_selectors": [
+        4,
+        3,
+        2
+      ]
+    },
+    {
+      "kit": "7a07031f",
+      "unit": "c0c50a2583ffd8bd",
+      "source_selectors": [
+        2,
+        3,
+        4
+      ],
+      "vanilla_selectors": [
+        4,
+        3,
+        2
+      ]
+    },
+    {
+      "kit": "7a07031f",
+      "unit": "c9d31590346f4463",
+      "source_selectors": [
+        2,
+        3,
+        4
+      ],
+      "vanilla_selectors": [
+        4,
+        3,
+        2
+      ]
+    },
+    {
+      "kit": "7a07031f",
+      "unit": "d0cb562771740c6c",
+      "source_selectors": [
+        2,
+        3,
+        4
+      ],
+      "vanilla_selectors": [
+        4,
+        3,
+        2
+      ]
+    },
+    {
+      "kit": "7a07031f",
+      "unit": "d2519a74a0fb33b5",
+      "source_selectors": [
+        2,
+        3,
+        4
+      ],
+      "vanilla_selectors": [
+        4,
+        3,
+        2
+      ]
+    },
+    {
+      "kit": "b18b6c66",
+      "unit": "6c5bacf02c5aa0f0",
+      "source_selectors": [
+        2,
+        3,
+        4
+      ],
+      "vanilla_selectors": [
+        4,
+        3,
+        2
+      ]
+    }
+  ],
+  "lod_adjustments": [],
+  "payloads_verified": true,
+  "runtime_validation": "PROFILE_OK packages=1 targets=2 resources=45 fields=27 required=59\npackage=17ba59ec54ec68093ad1eb10 kit=7a07031f bodies=3 pieces=27 unit_changes=26\npackage=17ba59ec54ec68093ad1eb10 kit=b18b6c66 bodies=1 pieces=1 unit_changes=1",
+  "only_exe_copied": true,
+  "python_environment_removed": true,
+  "temporary_files_removed": true,
+  "stages": [
+    {
+      "action": "build",
+      "exit_code": 0,
+      "seconds": 6.149
+    }
+  ],
+  "game_runtime_verified": false,
+  "game_dll_sha256": "2e2c3b7c2500646dadd5f2b4c6e0504dbb7e7896139f64cddc0d1813c718f51e",
+  "package_identity": {
+    "expected_game_version": "local-2e2c3b7c2500646d",
+    "expected_game_dll_sha256": "2e2c3b7c2500646dadd5f2b4c6e0504dbb7e7896139f64cddc0d1813c718f51e",
+    "source_kits_sha256": "48740f4b6c43a9061154f718562c176b735cb1ac9d94e4617df3b3ad310188d6"
+  }
+}

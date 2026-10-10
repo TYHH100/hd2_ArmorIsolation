@@ -1,0 +1,81 @@
+{
+  "schema": "hd2-portable-exe-validation/1",
+  "status": "passed",
+  "exe": "G:\\Temp\\Githud\\hd2_mods-test\\dist\\portable-publish-retry\\ArmorIsolation.exe",
+  "exe_sha256": "f90a46ea917e6e4bc87295117d9659e197a569b32054ba25561cfc1ffc099637",
+  "source": "G:\\Temp\\HD2ModManager\\Mods\\Mods\\シエル(Ciel) 替换 O-44 _a44ead3d",
+  "game": "G:\\AppData\\SteamLibrary\\steamapps\\common\\Helldivers 2",
+  "targets": [
+    "41dd184d",
+    "bc5cf836"
+  ],
+  "game_runtime_verified": false,
+  "temporary_files_removed": true,
+  "stages": [
+    {
+      "action": "gui_smoke",
+      "exit_code": 0,
+      "seconds": 4.099
+    },
+    {
+      "action": "analyze",
+      "exit_code": 0,
+      "seconds": 2.771
+    },
+    {
+      "action": "build",
+      "exit_code": 0,
+      "seconds": 8.416
+    }
+  ],
+  "gui_smoke_ok": true,
+  "only_exe_copied": true,
+  "python_environment_removed": true,
+  "path_system_directories_only": true,
+  "independent_empty_cwd": true,
+  "candidates": [
+    {
+      "id": "b513fd54",
+      "name": "DP-40 Hero of the Federation",
+      "type": 0,
+      "supported": false
+    },
+    {
+      "id": "940716d6",
+      "name": "TR-9 Cavalier of democracy",
+      "type": 0,
+      "supported": false
+    },
+    {
+      "id": "e3aaa79d",
+      "name": "DP-11 Champion of the People",
+      "type": 0,
+      "supported": false
+    },
+    {
+      "id": "bc5cf836",
+      "name": "O-44 Bonded Pilot",
+      "type": 0,
+      "supported": true
+    },
+    {
+      "id": "41dd184d",
+      "name": "O-44 Bonded Pilot",
+      "type": 1,
+      "supported": true
+    }
+  ],
+  "package_id": "7902465e556a0251283f6207",
+  "resource_count": 45,
+  "profile_storage": "hd2-armor-patch-footer/1",
+  "embedded_patch_count": 1,
+  "no_sidecar_json": true,
+  "source_file_count": 6,
+  "source_directory_count": 0,
+  "all_relative_paths_preserved": true,
+  "all_non_patch_bytes_preserved": true,
+  "original_manifest_bytes_preserved": true,
+  "source_unchanged": true,
+  "addon_sha256": "607630ddcbd53368514a42cd1d51c9027878b34047420f455302a77076317729",
+  "runtime_configuration_result": "PROFILE_OK packages=1 targets=2 resources=45 fields=25 required=45"
+}

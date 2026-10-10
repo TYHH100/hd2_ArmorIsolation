@@ -12,6 +12,79 @@ import build_cm14_isolated as archive
 
 
 class ToolTests(unittest.TestCase):
+    @staticmethod
+    def windows_error(code):
+        error = OSError("simulated Windows publish error")
+        error.winerror = code
+        return error
+
+    def test_publication_retries_windows_contention_without_copying(self):
+        for code in (5, 32, 33):
+            with self.subTest(code=code), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                package, destination = root / "package", root / "published"
+                package.mkdir()
+                (package / "payload").write_bytes(b"validated")
+                rename = Path.rename
+                attempts = []
+
+                def contend(source, target):
+                    attempts.append(target)
+                    if len(attempts) <= 2:
+                        raise self.windows_error(code)
+                    return rename(source, target)
+
+                logs = []
+                with patch.object(Path, "rename", contend), patch.object(tool.time, "sleep") as sleep:
+                    tool._publish_package(package, destination, logs.append)
+                self.assertEqual(len(attempts), 3)
+                self.assertEqual(sleep.call_count, 2)
+                self.assertEqual(len(logs), 1)
+                self.assertFalse(package.exists())
+                self.assertEqual((destination / "payload").read_bytes(), b"validated")
+
+    def test_publication_wait_is_bounded_and_permanent_failure_is_reported(self):
+        with tempfile.TemporaryDirectory() as directory:
+            package, destination = Path(directory) / "package", Path(directory) / "published"
+            package.mkdir()
+            with patch.object(Path, "rename", side_effect=self.windows_error(5)) as rename, \
+                    patch.object(tool.time, "sleep") as sleep:
+                with self.assertRaisesRegex(RuntimeError, "输出目录仍无法发布"):
+                    tool._publish_package(package, destination, lambda _: None)
+            self.assertEqual(rename.call_count, len(tool.PUBLISH_RETRY_DELAYS) + 1)
+            self.assertEqual(sleep.call_count, len(tool.PUBLISH_RETRY_DELAYS))
+            self.assertLessEqual(sum(tool.PUBLISH_RETRY_DELAYS), 10)
+            self.assertTrue(package.exists())
+            self.assertFalse(destination.exists())
+
+    def test_publication_does_not_retry_unrelated_errors(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for error in (self.windows_error(112), PermissionError("non-Windows permission denial")):
+                with self.subTest(error=error), patch.object(Path, "rename", side_effect=error) as rename, \
+                        patch.object(tool.time, "sleep") as sleep:
+                    with self.assertRaises(OSError):
+                        tool._publish_package(Path(directory) / "package", Path(directory) / "published", lambda _: None)
+                    self.assertEqual(rename.call_count, 1)
+                    sleep.assert_not_called()
+
+    def test_publication_never_overwrites_destination_created_during_wait(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            package, destination = root / "package", root / "published"
+            package.mkdir()
+
+            def other_generator(_):
+                destination.mkdir()
+                (destination / "keep").write_bytes(b"existing output")
+
+            with patch.object(Path, "rename", side_effect=self.windows_error(32)) as rename, \
+                    patch.object(tool.time, "sleep", side_effect=other_generator):
+                with self.assertRaises(FileExistsError):
+                    tool._publish_package(package, destination, lambda _: None)
+            self.assertEqual(rename.call_count, 1)
+            self.assertEqual((destination / "keep").read_bytes(), b"existing output")
+            self.assertTrue(package.exists())
+
     def test_prebuilt_runtime_must_match_release_before_execution(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -135,7 +208,10 @@ class ToolTests(unittest.TestCase):
     def test_modular_failure_cleans_preserved_tree_without_publishing(self):
         self.exercise_pipeline(fail=True, modular=True)
 
-    def exercise_pipeline(self, fail, modular=False):
+    def test_publication_failure_cleans_validated_staging_tree(self):
+        self.exercise_pipeline(fail=False, modular=True, publish_failure=True)
+
+    def exercise_pipeline(self, fail, modular=False, publish_failure=False):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             source = root / ("mod/manifest.json" if modular else "mod/0123456789abcdef.patch_0")
@@ -201,11 +277,13 @@ class ToolTests(unittest.TestCase):
             with patch.dict(sys.modules, {module_name: module, "runtime_profile": exporter}), \
                     patch.object(tool, "run_logged", side_effect=fake_validator), \
                     patch.object(tool, "runtime_release", return_value=(runtime, release)), \
+                    patch.object(tool, "_publish_package", side_effect=RuntimeError("publish failure")
+                                 if publish_failure else tool._publish_package), \
                     patch.object(tool.shutil, "which", side_effect=AssertionError("No per-package compiler")):
                 call = lambda: tool.generate_package(source, root / "game", reader, root / "kits.json",
                                                      ["12345678"], output, log=lambda _: None)
-                if fail:
-                    with self.assertRaisesRegex(RuntimeError, "validation failure"):
+                if fail or publish_failure:
+                    with self.assertRaisesRegex(RuntimeError, "publish failure" if publish_failure else "validation failure"):
                         call()
                     self.assertEqual(list(output.iterdir()), [])
                 else:

@@ -41,10 +41,12 @@
 1. 核对游戏和快照 SHA，读取 TOC，验证三路边界与重叠。副文件缺失仅在该路所有资源长度为零时允许，输出仍有三件套。
 2. 从所选非披风 Piece.Unit 和动态纹理追踪 `Unit -> Material -> BaseMaterial/Texture`，只保留实际闭包；外部原版材质须检查纹理及基材质是否返回模组修改资源。
 3. 输入三路 SHA、目标集合、schema、已知修正规则及并存清单哈希决定包 ID。Unit 按 `(包, Kit, 类型, 原ID)` 隔离，材质/纹理按 `(包, 类型, 原ID)` 共享。检查已知完整 ID 与高 32 位冲突。
-4. 仅重写解析出的 64 位引用，保留槽哈希、骨骼索引与 Piece 标量。B-01 LOD 修正规则仅在源 Unit 主数据 SHA 精确匹配时应用。
+4. 仅重写解析出的 64 位引用，保留槽哈希、骨骼索引与 Piece 标量。每个替换 Unit 按 MeshInfo 标识检查 LOD：原版所选网格索引均未移动时保留作者有效的选择顺序；需要重映射时只接受原版值或已修复值。完全自定义且没有原版所选网格交集时保留源 LOD，部分缺失或歧义仍拒绝。已登记的 B-01 头盔规则作为回归守卫。
 5. 重算磁盘偏移、主/GPU 缓冲偏移和 256 字节对齐大小。回读 TOC，验证每条资源数据、源文件未变和输出不含旧 ID 覆盖。
 6. 从清单导出配置并附加到每个主补丁尾部，重算补丁大小和哈希；不生成待安装的独立 JSON。绑定目标元数据、typed 映射、允许修改的 Piece 字段和各 Kit 实际依赖；JSON 不提供任意地址、RVA 或可执行脚本。
 7. 使用与插件相同加载器的原生校验器直接检查内嵌配置的补丁；提供并存清单时一起转换并整组检查。成功后附带同一个预编译 DLL、INI、校验器和说明，再发布最终输出目录。
+
+Windows 最后重命名目录时若遇短暂访问拒绝或共享占用（`WinError 5/32/33`），工具最多等待约 10 秒重试，每次检查目标目录是否已存在。超时仍报错并清理自有临时目录，不覆盖旧输出，也不改用复制发布。O-44 样本的单文件 EXE 独立验收记录见 [publish-retry-portable-validation.json](publish-retry-portable-validation.json)；Windows 错误码参考 [Microsoft 系统错误码](https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499-)。
 
 单补丁模式仍生成 `generated/generic_resource_map.hpp` 离线映射，不参与通用插件编译。模块化模式的逐补丁映射直接记录在外层 manifest；完整处理流程见[保留选项目录的隔离生成](modular-isolation-tool.md)。每个生成包的 `addon.mode` 为 `universal_runtime`，内嵌配置所在补丁列表、格式版本与 DLL SHA 记入 manifest；`package_files` 记录所有输出文件的大小和哈希。
 

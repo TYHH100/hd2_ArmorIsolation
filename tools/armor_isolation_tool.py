@@ -14,11 +14,13 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from types import SimpleNamespace
 from isolation_paths import resource_root, default_output, discover_game_path
 
 ROOT = resource_root()
 PATCH_NAME = re.compile(r"^[0-9a-fA-F]{16}\.patch_[0-9]+$")
+PUBLISH_RETRY_DELAYS = (0.1, 0.2, 0.4, 0.8) + (1.0,) * 8
 
 
 def discover_defaults():
@@ -131,6 +133,28 @@ def run_logged(command, log_path: Path, log):
                 process.wait()
 
 
+def _publish_package(package: Path, destination: Path, log):
+    """Publish by rename, allowing a bounded wait for Windows directory contention."""
+    for attempt in range(len(PUBLISH_RETRY_DELAYS) + 1):
+        # Recheck after every wait: another generation may have published the same package.
+        if os.path.lexists(destination):
+            raise FileExistsError(f"该输入与目标已有输出，未覆盖：{destination}。如需重建，请选择新的输出目录。")
+        try:
+            package.rename(destination)
+            return
+        except OSError as error:
+            if getattr(error, "winerror", None) not in (5, 32, 33):
+                raise
+            if attempt == len(PUBLISH_RETRY_DELAYS):
+                raise RuntimeError(
+                    f"资源及配置校验已通过，但输出目录仍无法发布：{destination}。"
+                    f"请关闭正在使用该输出目录的程序，或选择其他可写输出目录后重试。原始错误：{error}"
+                ) from error
+            if attempt == 0:
+                log("输出目录暂时无法重命名，正在等待占用释放（最多约 10 秒）……")
+            time.sleep(PUBLISH_RETRY_DELAYS[attempt])
+
+
 def runtime_release(directory: Path | None = None):
     import build_cm14_isolated as archive
 
@@ -227,7 +251,7 @@ def package_readme(manifest):
 
 不同模组可以使用相同原资源 ID，输出按内容与目标生成独立命名空间；同一 Kit 同时由多个隔离包控制仍属于冲突。生成时可提供并存包的 manifest 检查，游戏启动时通用插件再验证已安装补丁中的配置及兼容旧 JSON；若存在冲突或损坏配置，则整组停止发布。
 
-LOD 选择器按 MeshInfo 标识逐个还原：替换 Unit 新增辅助网格后索引会整体偏移，偏移量因 Unit 而异（头盔与体甲不同），因此不使用固定增量，也只在源选择器仍等于原版值时改写；原版没有对应资源的 Unit 保持作者原样。已登记的头盔修正同时作为回归基准，与通用规则不一致即停止生成。
+LOD 选择器按 MeshInfo 标识逐个还原：替换 Unit 新增辅助网格后索引会整体偏移，偏移量因 Unit 而异（头盔与体甲不同），因此不使用固定增量，也只在源选择器仍等于原版值时改写；原版所选网格索引均未移动时，保留作者有效的 LOD 顺序。原版没有对应资源的 Unit 保持作者原样。已登记的头盔修正同时作为回归基准，与通用规则不一致即停止生成。
 """
 
 
@@ -339,7 +363,7 @@ def _generate_package(source: Path, game: Path, reader_tools: Path, kits: Path,
         (package / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         from game_compatibility import validate_current
         validate_current(game, kits)
-        package.rename(destination)
+        _publish_package(package, destination, log)
         log(f"生成完成：{destination}")
         return destination
 
