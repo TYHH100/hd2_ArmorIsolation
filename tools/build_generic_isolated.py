@@ -216,6 +216,21 @@ def inspect_external(reader, archives, external, source_entries):
         row["modified_base_overlap"] = [value for value in row["base_materials"] if int(value, 16) in materials]
     if not result["complete"] or any(row["modified_base_overlap"] for row in result["checked"]):
         raise ValueError("External Material is unresolved or references a modified Texture/BaseMaterial; private cloning is unsupported")
+    bones_checked = []
+    for kind, value in sorted(external):
+        if kind != archive.BONES:
+            continue
+        found = next(((name, reader.entries(name)[kind, value]) for name in archives
+                      if (kind, value) in reader.entries(name)), None)
+        if found is None:
+            raise ValueError(f"External Bones {value:016x} is unresolved in the selected/shared archives")
+        name, entry = found
+        data = reader.read(name, entry.offsets[0], entry.sizes[0])
+        archive.validate_bones(data)
+        bones_checked.append({"id": f"{value:016x}", "archive": name,
+                              "main_sha256": hashlib.sha256(data).hexdigest()})
+    if bones_checked:
+        result["bones_checked"] = bones_checked
     return result
 
 
@@ -377,7 +392,7 @@ def build(args):
                         for target, selected in plans],
             "selected_kit_metadata": targets,
             "shared_resource_owner": "00000000", "shared_resource_count": len(shared),
-            "shared_resource_scope": "One private Material/Texture set shared only inside this package",
+            "shared_resource_scope": "One private Material/Texture/Bones set shared only inside this package",
             "source_resources": [{"type": f"{kind:016x}", "source": f"{value:016x}"} for kind, value in source.entries],
             "excluded_resources": [{"type": f"{kind:016x}", "source": f"{value:016x}"}
                                    for kind, value in source.entries if (kind, value) not in retained],

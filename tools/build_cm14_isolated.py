@@ -16,7 +16,8 @@ MAGIC = 0xF0000011
 UNIT = 0xE0A48D0BE9A7453F
 MATERIAL = 0xEAC0B497876ADEDF
 TEXTURE = 0xCD4238C6A0C69E32
-KINDS = {UNIT: "unit", MATERIAL: "material", TEXTURE: "texture"}
+BONES = 0x18DEAD01056B72E9
+KINDS = {UNIT: "unit", MATERIAL: "material", TEXTURE: "texture", BONES: "bones"}
 KIT_ID = 0x38AA207D
 ARCHIVE_ID = 0xB0DB7F4F0A11DEBD
 HELMET_KIT_ID = 0x203F720C
@@ -103,20 +104,37 @@ def validate_segments(entries, lengths, toc_end=0):
             raise ValueError(f"Overlapping resource ranges in lane {lane}")
 
 
+def validate_bones(data):
+    """Check the bones hash/name arrays; the payload has no resource-ID references."""
+    if len(data) < 8:
+        raise ValueError("Truncated Bones header")
+    count, auxiliary_count = struct.unpack_from("<II", data)
+    names_at = 8 + auxiliary_count * 8 + count * 4
+    if names_at + count > len(data):
+        raise ValueError("Truncated Bones arrays or names")
+    for _ in range(count):
+        end = data.find(b"\0", names_at)
+        if end < 0:
+            raise ValueError("Unterminated Bones name")
+        names_at = end + 1
+
+
 def reference_fields(kind, data):
     """Return typed 64-bit reference offsets, never slot hashes or indices."""
     if kind == UNIT:
         if len(data) < 0x74:
             raise ValueError("Truncated Unit")
+        # Unit.Bones is a typed resource reference, independent of the material table.
+        references = [(BONES, 0x08)]
         at = struct.unpack_from("<I", data, 0x70)[0]
         if not at:
-            return []
+            return references
         if at > len(data) - 4:
             raise ValueError("Invalid Unit material table")
         count = struct.unpack_from("<I", data, at)[0]
         if at + 4 + count * 12 > len(data):
             raise ValueError("Truncated Unit material references")
-        return [(MATERIAL, at + 4 + count * 4 + i * 8) for i in range(count)]
+        return references + [(MATERIAL, at + 4 + count * 4 + i * 8) for i in range(count)]
     if kind == MATERIAL:
         if len(data) < 0x88:
             raise ValueError("Truncated Material")
@@ -125,6 +143,8 @@ def reference_fields(kind, data):
             raise ValueError("Truncated Material texture references")
         return [(MATERIAL, 0x18)] + [(TEXTURE, 0x88 + count * 4 + i * 8)
                                    for i in range(count)]
+    if kind == BONES:
+        validate_bones(data)
     return []
 
 

@@ -290,6 +290,9 @@ def _generate_package(source: Path, game: Path, reader_tools: Path, kits: Path,
                                target=list(targets), output=package,
                                coexist_manifest=[Path(path) for path in (coexist_manifests or [])])
         manifest = builder.build(args)
+        if (any(row["type"] == "18dead01056b72e9" for row in manifest["mapping"])
+                and "18dead01056b72e9" not in release.get("supported_resource_types", [])):
+            raise ValueError("预编译插件不支持 bones 隔离，请使用包含新版通用插件的完整工具包。")
         # Keep a human-readable origin in the embedded profile for conflict diagnostics.
         manifest["source_label"] = source.parent.name
         if manifest.get("runtime_compatibility"):

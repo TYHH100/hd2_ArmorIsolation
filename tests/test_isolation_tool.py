@@ -211,7 +211,10 @@ class ToolTests(unittest.TestCase):
     def test_publication_failure_cleans_validated_staging_tree(self):
         self.exercise_pipeline(fail=False, modular=True, publish_failure=True)
 
-    def exercise_pipeline(self, fail, modular=False, publish_failure=False):
+    def test_bones_package_rejects_legacy_runtime_and_cleans_staging(self):
+        self.exercise_pipeline(fail=False, modular=True, legacy_bones=True)
+
+    def exercise_pipeline(self, fail, modular=False, publish_failure=False, legacy_bones=False):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             source = root / ("mod/manifest.json" if modular else "mod/0123456789abcdef.patch_0")
@@ -241,6 +244,9 @@ class ToolTests(unittest.TestCase):
                 (args.output / "generated/generic_resource_map.hpp").write_text("header", encoding="ascii")
                 manifest = {"package_id": package_id, "mapping": [],
                             "targets": [{"kit": "12345678", "type": 0}]}
+                if legacy_bones:
+                    manifest["mapping"].append({"kit": "00000000", "type": f"{archive.BONES:016x}",
+                                                "source": "000000000000000a", "target": "8000000100000001"})
                 if modular:
                     original = args.output / "mod/original"
                     (original / "component").mkdir(parents=True)
@@ -282,7 +288,11 @@ class ToolTests(unittest.TestCase):
                     patch.object(tool.shutil, "which", side_effect=AssertionError("No per-package compiler")):
                 call = lambda: tool.generate_package(source, root / "game", reader, root / "kits.json",
                                                      ["12345678"], output, log=lambda _: None)
-                if fail or publish_failure:
+                if legacy_bones:
+                    with self.assertRaisesRegex(ValueError, "插件不支持 bones"):
+                        call()
+                    self.assertEqual(list(output.iterdir()), [])
+                elif fail or publish_failure:
                     with self.assertRaisesRegex(RuntimeError, "publish failure" if publish_failure else "validation failure"):
                         call()
                     self.assertEqual(list(output.iterdir()), [])

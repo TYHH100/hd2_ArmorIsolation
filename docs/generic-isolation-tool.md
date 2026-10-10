@@ -22,9 +22,9 @@
 
 | 输入情况 | 本版行为 |
 | --- | --- |
-| 单补丁三路数据，类型为 Unit/Material/Texture | 解析并校验 |
+| 单补丁三路数据，类型为 Unit/Material/Texture/Bones | 解析并校验 |
 | 输入覆盖所选体甲或头盔全部非披风 Unit | 继续依赖检查和生成 |
-| 模组内多个目标共用材质/纹理 | 共用一组模组私有资源 |
+| 模组内多个目标共用材质/纹理/骨骼资源 | 共用一组模组私有资源 |
 | V1 模组的本体、外挂材质与配件覆盖 | 保留目录和原清单，整套组件使用一致私有映射 |
 | 缺 Version 的旧版清单 | 字符串 Options 为一组多选一；无/null/空 Options 读取根目录补丁 |
 | 单选 4K/8K 使用不同纹理 ID | 材质槽结构与独占引用检查通过后归一逻辑纹理，仍只加载所选分支 |
@@ -39,14 +39,18 @@
 ## 生成过程
 
 1. 核对游戏和快照 SHA，读取 TOC，验证三路边界与重叠。副文件缺失仅在该路所有资源长度为零时允许，输出仍有三件套。
-2. 从所选非披风 Piece.Unit 和动态纹理追踪 `Unit -> Material -> BaseMaterial/Texture`，只保留实际闭包；外部原版材质须检查纹理及基材质是否返回模组修改资源。
-3. 输入三路 SHA、目标集合、schema、已知修正规则及并存清单哈希决定包 ID。Unit 按 `(包, Kit, 类型, 原ID)` 隔离，材质/纹理按 `(包, 类型, 原ID)` 共享。检查已知完整 ID 与高 32 位冲突。
+2. 从所选非披风 Piece.Unit 和动态纹理追踪 `Unit -> Material -> BaseMaterial/Texture` 与 `Unit -> Bones`，只保留实际闭包；外部原版材质须检查纹理及基材质是否返回模组修改资源，外部 bones 须在所查原版 Archive 中存在。
+3. 输入三路 SHA、目标集合、schema、已知修正规则及并存清单哈希决定包 ID。Unit 按 `(包, Kit, 类型, 原ID)` 隔离，材质/纹理/bones 按 `(包, 类型, 原ID)` 共享。检查已知完整 ID 与高 32 位冲突。
 4. 仅重写解析出的 64 位引用，保留槽哈希、骨骼索引与 Piece 标量。每个替换 Unit 按 MeshInfo 标识检查 LOD：原版所选网格索引均未移动时保留作者有效的选择顺序；需要重映射时只接受原版值或已修复值。完全自定义且没有原版所选网格交集时保留源 LOD，部分缺失或歧义仍拒绝。已登记的 B-01 头盔规则作为回归守卫。
 5. 重算磁盘偏移、主/GPU 缓冲偏移和 256 字节对齐大小。回读 TOC，验证每条资源数据、源文件未变和输出不含旧 ID 覆盖。
 6. 从清单导出配置并附加到每个主补丁尾部，重算补丁大小和哈希；不生成待安装的独立 JSON。绑定目标元数据、typed 映射、允许修改的 Piece 字段和各 Kit 实际依赖；JSON 不提供任意地址、RVA 或可执行脚本。
 7. 使用与插件相同加载器的原生校验器直接检查内嵌配置的补丁；提供并存清单时一起转换并整组检查。成功后附带同一个预编译 DLL、INI、校验器和说明，再发布最终输出目录。
 
 Windows 最后重命名目录时若遇短暂访问拒绝或共享占用（`WinError 5/32/33`），工具最多等待约 10 秒重试，每次检查目标目录是否已存在。超时仍报错并清理自有临时目录，不覆盖旧输出，也不改用复制发布。O-44 样本的单文件 EXE 独立验收记录见 [publish-retry-portable-validation.json](publish-retry-portable-validation.json)；Windows 错误码参考 [Microsoft 系统错误码](https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499-)。
+
+Bones 的类型为 `18dead01056b72e9`；Unit 主数据 `+0x08` 的引用单独改写，骨骼资源原始数据完整保留，不将其当作同名 Unit 的自引用。源 bones 的数组与名称边界通过检查后才输出；源未提供的 bones 继续使用已查到的原版引用。该能力需要配套新版通用插件，发布清单须声明 `supported_resource_types`，旧插件不能加载包含 bones 映射的配置。结构参考：[Filediver Bones 读取](https://github.com/xypwn/filediver/blob/70f3447cd415c964e0bd29ff0770b97a4d0f160d/stingray/bones/bones.go)、[Unit 的 bones 引用](https://github.com/xypwn/filediver/blob/70f3447cd415c964e0bd29ff0770b97a4d0f160d/extractor/unit/extractor.go#L34)。
+
+Kaguya 样本已通过 bones 分析，以及原始 `base` 单补丁的 CM-17 体甲/头盔离线生成验收（73 个资源，其中 18 个 bones，27 个 Unit 引用核对）。完整换色目录仍被拒绝：海军蓝分支还替换一个 Unit，其主/GPU 数据均不同于基础模型，超出纯材质分支纹理归一守卫；不能据此认定完整选项包已支持。单文件 EXE 验收、这一限制及临时文件清理记录见 [bones-portable-validation.json](bones-portable-validation.json)，游戏实测尚未执行。
 
 单补丁模式仍生成 `generated/generic_resource_map.hpp` 离线映射，不参与通用插件编译。模块化模式的逐补丁映射直接记录在外层 manifest；完整处理流程见[保留选项目录的隔离生成](modular-isolation-tool.md)。每个生成包的 `addon.mode` 为 `universal_runtime`，内嵌配置所在补丁列表、格式版本与 DLL SHA 记入 manifest；`package_files` 记录所有输出文件的大小和哈希。
 

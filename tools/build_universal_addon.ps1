@@ -78,6 +78,7 @@ try {
         schema = 'hd2-armor-runtime-release/1'; runtime_schema = 'hd2-armor-runtime/1'
         adaptive_runtime_schema = 'hd2-armor-runtime/2'
         patch_transport = 'hd2-armor-patch-footer/1'
+        supported_resource_types = @('e0a48d0be9a7453f', 'cd4238c6a0c69e32', 'eac0b497876adedf', '18dead01056b72e9')
         expected_game_dll_sha256 = 'cc75948d90fdfde259dcb519e9933db7ffa3ccb281ce4fb89e6b1b011557470c'
         reshade_version = '6.5.1'; sdk_api = 17; files = @($taskFiles)
     }

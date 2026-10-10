@@ -1,0 +1,77 @@
+{
+  "status": "analysis_and_base_generation_passed_full_modular_generation_unsupported",
+  "exe": "G:\\Temp\\Githud\\hd2_mods-test\\dist\\portable-bones\\ArmorIsolation.exe",
+  "exe_sha256": "4b8dc0c457faff7e82a74e5a8d992421c9d23acf7d57cd43c3301c846eed7905",
+  "source_counts": {
+    "unit": 87,
+    "bones": 57,
+    "material": 7,
+    "texture": 33
+  },
+  "modular_validation": {
+    "schema": "hd2-portable-exe-validation/1",
+    "status": "failed",
+    "exe": "G:\\Temp\\Githud\\hd2_mods-test\\dist\\portable-bones\\ArmorIsolation.exe",
+    "exe_sha256": "4b8dc0c457faff7e82a74e5a8d992421c9d23acf7d57cd43c3301c846eed7905",
+    "source": "G:\\Temp\\HD2ModManager\\Mods\\Mods\\Kaguya 替换 CM-17 CE-64 FS-05 FS-61 SC-37 AF-50 FS-11",
+    "game": "G:\\AppData\\SteamLibrary\\steamapps\\common\\Helldivers 2",
+    "targets": [
+      "95903adf",
+      "a67010e7"
+    ],
+    "game_runtime_verified": false,
+    "temporary_files_removed": true,
+    "stages": [
+      {
+        "action": "gui_smoke",
+        "exit_code": 0,
+        "seconds": 3.267
+      },
+      {
+        "action": "analyze",
+        "exit_code": 0,
+        "seconds": 3.002
+      },
+      {
+        "action": "build",
+        "exit_code": 1,
+        "seconds": 2.605
+      }
+    ],
+    "error": "EXE 阶段失败，退出码 1：\n正在分析依赖、分配私有 ID 并重打包资源……\n处理失败：Optional variants need resources without a common supplier; every resolution must provide the required IDs. Selection-specific profiles are unsupported\n"
+  },
+  "base_validation": {
+    "status": "passed",
+    "source": "G:\\Temp\\HD2ModManager\\Mods\\Mods\\Kaguya 替换 CM-17 CE-64 FS-05 FS-61 SC-37 AF-50 FS-11\\base\\9ba626afa44a3aa3.patch_0",
+    "targets": [
+      "95903adf",
+      "a67010e7"
+    ],
+    "package_id": "2147a71863c886305b465110",
+    "resource_count": 73,
+    "private_bones_count": 18,
+    "unit_bones_references_checked": 27,
+    "required_bones_count": 18,
+    "source_sha256": {
+      "G:\\Temp\\HD2ModManager\\Mods\\Mods\\Kaguya 替换 CM-17 CE-64 FS-05 FS-61 SC-37 AF-50 FS-11\\base\\9ba626afa44a3aa3.patch_0": "5518d4008ec11becd728484d3cde25334f0ad53ae4c3d68806e1a6613787445d",
+      "G:\\Temp\\HD2ModManager\\Mods\\Mods\\Kaguya 替换 CM-17 CE-64 FS-05 FS-61 SC-37 AF-50 FS-11\\base\\9ba626afa44a3aa3.patch_0.stream": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "G:\\Temp\\HD2ModManager\\Mods\\Mods\\Kaguya 替换 CM-17 CE-64 FS-05 FS-61 SC-37 AF-50 FS-11\\base\\9ba626afa44a3aa3.patch_0.gpu_resources": "c242d99ce84d24e4ac53583ec53971e1f0dde8fd77cca32106d8084b9b5f0d86"
+    },
+    "source_unchanged": true,
+    "bones_payloads_preserved": true,
+    "payloads_verified": true,
+    "runtime_configuration_result": "PROFILE_OK packages=1 targets=2 resources=73 fields=27 required=73\npackage=2147a71863c886305b465110 kit=95903adf bodies=3 pieces=27 unit_changes=26\npackage=2147a71863c886305b465110 kit=a67010e7 bodies=1 pieces=1 unit_changes=1",
+    "stages": [
+      {
+        "action": "build",
+        "exit_code": 0,
+        "seconds": 5.726
+      }
+    ],
+    "game_dll_sha256": "2e2c3b7c2500646dadd5f2b4c6e0504dbb7e7896139f64cddc0d1813c718f51e",
+    "game_runtime_verified": false,
+    "temporary_files_removed": true
+  },
+  "known_limitation": "The navy color branch changes a Unit main/GPU payload; mixed model branches are outside the pure Material/Texture alias guard. Full modular generation is rejected without output.",
+  "game_runtime_verified": false
+}

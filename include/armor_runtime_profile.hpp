@@ -26,6 +26,7 @@ inline constexpr char adaptive_runtime_schema[] = "hd2-armor-runtime/2";
 inline constexpr std::uint64_t unit_type = 0xe0a48d0be9a7453fULL;
 inline constexpr std::uint64_t texture_type = 0xcd4238c6a0c69e32ULL;
 inline constexpr std::uint64_t material_type = 0xeac0b497876adedfULL;
+inline constexpr std::uint64_t bones_type = 0x18dead01056b72e9ULL;
 inline constexpr std::size_t max_profile_bytes = 8 * 1024 * 1024;
 inline constexpr std::size_t max_total_profile_bytes = 32 * 1024 * 1024;
 inline constexpr std::size_t max_profile_files = 64;
@@ -169,7 +170,7 @@ inline json parse(const std::string &text)
 inline std::uint64_t kind(const json &value)
 {
     const auto result = hex(value, 16);
-    if (result != unit_type && result != texture_type && result != material_type)
+    if (result != unit_type && result != texture_type && result != material_type && result != bones_type)
         reject("unsupported resource type");
     return result;
 }

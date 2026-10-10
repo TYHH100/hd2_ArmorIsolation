@@ -35,6 +35,7 @@ json package(unsigned index) {
     const std::string unit = hex_id(index), private_unit = hex_id((0x100ULL + index) << 32);
     const std::string texture = hex_id(0x10), private_texture = hex_id((0x200ULL + index) << 32);
     const std::string material = hex_id(0x20), private_material = hex_id((0x300ULL + index) << 32);
+    const auto dependent_type = index == 1 ? universal_isolation::material_type : universal_isolation::bones_type;
     auto pieces = json::array();
     if (index == 1) pieces.push_back(piece(1, 0x50));
     pieces.push_back(piece(index == 1 ? 2 : 0, index));
@@ -47,12 +48,12 @@ json package(unsigned index) {
         {"mapping", json::array({
             {{"kit", id}, {"type", hex_id(universal_isolation::unit_type)}, {"source", unit}, {"target", private_unit}},
             {{"kit", "00000000"}, {"type", hex_id(universal_isolation::texture_type)}, {"source", texture}, {"target", private_texture}},
-            {{"kit", "00000000"}, {"type", hex_id(universal_isolation::material_type)}, {"source", material}, {"target", private_material}}})},
+            {{"kit", "00000000"}, {"type", hex_id(dependent_type)}, {"source", material}, {"target", private_material}}})},
         {"piece_fields", json::array({{{"kit", id}, {"offset", 0}, {"source", unit}, {"target", private_unit}},
             {{"kit", id}, {"offset", 0x18}, {"source", texture}, {"target", private_texture}}})},
         {"required_resources", json::array({{{"kit", id}, {"type", hex_id(universal_isolation::unit_type)}, {"target", private_unit}},
             {{"kit", id}, {"type", hex_id(universal_isolation::texture_type)}, {"target", private_texture}},
-            {{"kit", id}, {"type", hex_id(universal_isolation::material_type)}, {"target", private_material}}})}};
+            {{"kit", id}, {"type", hex_id(dependent_type)}, {"target", private_material}}})}};
 }
 
 Snapshot fixture(const TargetKit &target) {

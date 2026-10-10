@@ -245,6 +245,15 @@ void run()
     mutate_refuses([](json &v) { v["mapping"][0]["kit"] = "00000000"; }, "shared Unit owner accepted");
     mutate_refuses([](json &v) { v["mapping"][1]["kit"] = "ffffffff"; }, "foreign owner accepted");
     mutate_refuses([](json &v) { v["mapping"][0]["type"] = "1111111111111111"; }, "unknown resource type accepted");
+    auto with_bones = first;
+    with_bones["mapping"].push_back({{"kit", "00000000"}, {"type", hex_id(bones_type)},
+        {"source", "7000000000000001"}, {"target", "8000000100000001"}});
+    with_bones["required_resources"].push_back({{"kit", "00000001"}, {"type", hex_id(bones_type)},
+        {"target", "8000000100000001"}});
+    check(load_documents({document(with_bones)}, output, error) && output.resources.size() == 4 &&
+          output.requirements_by_kit.at(1).size() == 4, "private Bones dependency rejected or omitted");
+    with_bones["required_resources"].erase(3);
+    check(!load_documents({document(with_bones)}, output, error), "unrequired private Bones resource accepted");
     mutate_refuses([](json &v) { v["mapping"][0]["target"] = 1; }, "numeric resource ID accepted");
     mutate_refuses([](json &v) { v["mapping"][0]["source"] = "1"; }, "short resource ID accepted");
     mutate_refuses([](json &v) { v["mapping"][0]["target"] = "0000000000000000"; }, "zero resource accepted");

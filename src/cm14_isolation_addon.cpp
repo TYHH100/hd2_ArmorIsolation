@@ -593,7 +593,11 @@ bool snapshot_unchanged(uintptr_t game, const TargetKit &target, const Snapshot 
 
 bool is_shared_resource(const isolation_profile::ResourceMapping &resource) noexcept {
     return resource.kit_id == 0 && (resource.type == 0xeac0b497876adedfULL ||
-                                    resource.type == 0xcd4238c6a0c69e32ULL);
+                                    resource.type == 0xcd4238c6a0c69e32ULL
+#if defined(UNIVERSAL_ISOLATION) || defined(GENERIC_ISOLATION)
+                                    || resource.type == 0x18dead01056b72e9ULL
+#endif
+                                    );
 }
 
 bool resource_belongs_to_target(const isolation_profile::ResourceMapping &resource,
