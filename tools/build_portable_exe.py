@@ -49,10 +49,14 @@ def main():
             shutil.copy2(tk_license, licenses / "Tk.LICENSE.txt")
         data = [(ROOT / "docs/armor-isolation-live-kits.json", "docs"),
                 (ROOT / "docs/portable-exe.md", "docs"),
+                (ROOT / "docs/ias-compatibility.md", "docs"),
                 (ROOT / "assets", "assets"), (licenses, "assets/licenses"),
                 (ROOT / "tools/game_data/archive.py", "tools/game_data")]
         for name in ("runtime-release.json", "ArmorIsolation.ini", "ArmorIsolation.addon64", "validate_runtime_profile.exe"):
             data.append((runtime / name, "dist/armor-isolation-runtime"))
+        if release.get("ias_compatibility") == "manifest-handoff-v1":
+            for name in ("Prepare-IAS-Handoff.cmd", "Start-Game-With-Isolation.cmd"):
+                data.append((runtime / name, "dist/armor-isolation-runtime"))
         data.append((runtime / "licenses", "dist/armor-isolation-runtime/licenses"))
         for path, _ in data:
             if not path.exists():
@@ -61,7 +65,7 @@ def main():
                    "--windowed", "--noupx", "--name", "ArmorIsolation", "--optimize", "0",
                    "--paths", str(ROOT / "tools"), "--distpath", str(work / "dist"),
                    "--workpath", str(work / "work"), "--specpath", str(work)]
-        for name in ("build_generic_isolated", "build_modular_isolated", "lz4.block", "lz4._version"):
+        for name in ("build_generic_isolated", "build_modular_isolated", "ias_handoff", "lz4.block", "lz4._version"):
             command.extend(["--hidden-import", name])
         for path, destination in data:
             command.extend(["--add-data", f"{path}:{destination}"])
@@ -84,7 +88,8 @@ def main():
                                      ("pyinstaller", "pyinstaller-hooks-contrib", "lz4")},
                     "game_version": "1.0.0.18930", "game_dll_sha256": release["expected_game_dll_sha256"],
                     "reader_sha256": digest(ROOT / "tools/game_data/archive.py"),
-                    "runtime_files": release["files"], "gui_smoke_test": True,
+                    "runtime_files": release["files"], "ias_compatibility": release.get("ias_compatibility"),
+                    "gui_smoke_test": True,
                     "game_runtime_verified": False}
         (output / "release.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(manifest, ensure_ascii=False, indent=2))

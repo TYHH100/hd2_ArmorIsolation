@@ -30,6 +30,8 @@
 #include "armor_embedded_profile.hpp"
 #include "armor_local_data.hpp"
 #include "armor_native_compatibility.hpp"
+#include "armor_ias_compatibility.hpp"
+#include "armor_ias_handoff.hpp"
 namespace isolation_profile = universal_isolation;
 #elif defined(GENERIC_ISOLATION)
 #include "generic_resource_map.hpp"
@@ -145,6 +147,8 @@ struct TargetMappings {
 };
 std::map<uint32_t, TargetMappings> mappings_by_kit;
 std::set<std::tuple<uint32_t, uint64_t, uint64_t, uint64_t>> owned_mappings;
+armor_ias::Session ias_session;
+std::string ias_detail;
 #else
 std::array<TargetState, std::size(isolation_profile::targets)> target_states{};
 #endif
@@ -173,9 +177,11 @@ struct UiSnapshot {
     bool options_known = false;
     bool profiles_failed = false;
     bool native_adapted = false;
+    bool ias_active = false;
     std::string global_state = "PENDING", global_detail;
     uint32_t package_count = 0, target_count = 0, resource_count = 0;
     uint32_t pending_count = 0, waiting_count = 0, ready_count = 0, applied_count = 0, failed_count = 0;
+    uint32_t ias_count = 0;
     std::vector<UiTargetRow> targets;
 };
 std::array<UiSnapshot, 2> ui_snapshots;
@@ -209,6 +215,7 @@ unsigned state_rank(const std::string &state) noexcept {
     if (state == "READY") return 2;
     if (state == "FAILED") return 4;
     if (state == "WAIT") return 1;
+    if (state == "IAS_PAUSED" || state == "IAS_HANDOFF") return 5;
     return 0;
 }
 
@@ -221,6 +228,8 @@ void publish_ui_snapshot() {
     next.options_known = active_options_known.load(std::memory_order_relaxed);
     next.profiles_failed = fatal_error;
     next.native_adapted = native_layout_validated;
+    next.ias_active = ias_session.seen;
+    next.ias_count = 0;
     const ParsedStatus global = parse_status(last_status);
     next.global_state = global.state;
     next.global_detail = global.detail;
@@ -254,6 +263,7 @@ void publish_ui_snapshot() {
         case 2: ++next.ready_count; break;
         case 3: ++next.applied_count; break;
         case 4: ++next.failed_count; break;
+        case 5: ++next.ias_count; break;
         default: ++next.pending_count; break;
         }
     }
@@ -442,7 +452,77 @@ bool initialize_profiles() {
     }
     return true;
 }
+
+bool check_ias_session(const armor_ias::Peer &peer) {
+    if (ias_session.observe(peer)) return true;
+    ias_detail = ias_session.reason + (ias_session.restart_required ?
+        "; RESTART_REQUIRED; no further config writes" :
+        "; isolation is delegated through IAS isolation manifests");
+    return false;
+}
+
+// Read-only file verification, before native startup. IAS reads declarations
+// during its own initialization; never create or reload them in a live game.
+bool prepare_ias_pass() {
+    armor_ias::Peer peer;
+    if (check_ias_session(peer)) return true;
+    if (!ias_session.handoff_checked && !ias_session.restart_required) {
+        ias_session.handoff_checked = true;
+        try {
+            isolation_profile::Profile delegated;
+            std::string error;
+            if (patches_directory.empty() || profiles_directory.empty())
+                throw std::runtime_error("cannot locate installed isolation profiles");
+            if (!isolation_profile::load_installed_packages(patches_directory, profiles_directory, delegated, error))
+                throw std::runtime_error(error);
+            const auto directory = profiles_directory.parent_path() / L"HD2IndependentRig";
+            std::array<wchar_t, 32768> path{};
+            const auto length = GetModuleFileNameW(peer.module(), path.data(), static_cast<DWORD>(path.size()));
+            if (!length || length >= path.size() ||
+                armor_local_data::file_sha256(path.data()) != armor_ias::supported_addon_sha256)
+                throw std::runtime_error("unsupported IAS build for isolation manifest handoff");
+            ias_session.handoff_prepared = armor_ias::prepared(armor_ias::make_handoff(delegated), directory);
+            const auto counts = " packages=" + std::to_string(delegated.package_ids.size()) +
+                " targets=" + std::to_string(delegated.targets.size());
+            ias_session.handoff_detail = ias_session.handoff_prepared ?
+                "IAS isolation declarations match installed packages; IAS owns publication; "
+                "this is file verification, not confirmation of IAS binding or game appearance" :
+                "IAS isolation declarations are missing or stale; exit game and run Prepare-IAS-Handoff.cmd, then restart";
+            ias_session.handoff_detail += counts;
+            if (!profiles_initialized) {
+                active_profile = std::move(delegated);
+                profiles_initialized = true;
+                initialize_mapping_indexes();
+                target_states.resize(active_profile.targets.size());
+            }
+        } catch (const std::exception &error) {
+            ias_session.handoff_detail = std::string("IAS handoff unavailable: ") + error.what() +
+                "; exit game and run Prepare-IAS-Handoff.cmd";
+        }
+    }
+    const bool ready = ias_session.handoff_prepared && !ias_session.restart_required;
+    if (!ias_session.handoff_detail.empty()) ias_detail += "; " + ias_session.handoff_detail;
+    const auto state = ready ? "[IAS_HANDOFF]" : "[IAS_PAUSED]";
+    status(state, ias_detail);
+    for (size_t index = 0; index < target_states.size(); ++index)
+        target_status(profile_targets()[index], target_states[index], state, ias_detail);
+    return false;
+}
 #endif
+
+bool target_can_publish(const TargetKit &target, TargetState &runtime) {
+#if defined(UNIVERSAL_ISOLATION)
+    armor_ias::Peer peer;
+    if (!check_ias_session(peer)) {
+        target_status(target, runtime, "[IAS_PAUSED]", ias_detail);
+        return false;
+    }
+#else
+    (void)target;
+    (void)runtime;
+#endif
+    return true;
+}
 
 bool module_matches(uintptr_t base, uint32_t timestamp, uint32_t image_size) noexcept {
     IMAGE_DOS_HEADER dos{};
@@ -470,6 +550,9 @@ StartupResult prepare_startup(const StartupRequest &request) {
     StartupResult result;
     const auto started = GetTickCount64();
     try {
+        armor_ias::Peer peer;
+        if (peer.module())
+            throw std::runtime_error("HD2IAS detected before native preparation; isolation startup skipped");
         std::array<wchar_t, 32768> game_path{}, exe_path{};
         const auto game_length = GetModuleFileNameW(reinterpret_cast<HMODULE>(request.game), game_path.data(),
                                                     static_cast<DWORD>(game_path.size()));
@@ -488,6 +571,9 @@ StartupResult prepare_startup(const StartupRequest &request) {
         const auto local_started = GetTickCount64();
         armor_local_data::json report;
         try {
+            armor_ias::Peer current_peer;
+            if (current_peer.module())
+                throw std::runtime_error("HD2IAS detected during native preparation; local snapshot export skipped");
             std::string conflict;
             if (!no_legacy_addons(conflict)) throw std::runtime_error(conflict);
             report = armor_local_data::capture(GetCurrentProcess(), request.game, game_path.data(),
@@ -504,6 +590,9 @@ StartupResult prepare_startup(const StartupRequest &request) {
         result.native_ready = true;
         if (result.local_error.empty()) {
             try {
+                armor_ias::Peer current_peer;
+                if (current_peer.module())
+                    throw std::runtime_error("HD2IAS detected before local snapshot save; export skipped");
                 std::string conflict;
                 if (!no_legacy_addons(conflict)) throw std::runtime_error(conflict);
                 const auto path = std::filesystem::path(exe_path.data()).parent_path().parent_path() /
@@ -593,6 +682,7 @@ bool consume_startup(uintptr_t game, uintptr_t exe) {
 }
 
 bool ensure_startup(uintptr_t game, uintptr_t exe) {
+    if (!prepare_ias_pass()) return false;
     if (startup_finished) return true;
     if (startup_job) return consume_startup(game, exe);
     const auto now = GetTickCount64();
@@ -1049,12 +1139,14 @@ bool publish_indexed_pointer(const Snapshot &source, uintptr_t clone, KitIndex *
     return true;
 }
 
-template<class Probe = decltype(&probe_active_resource)>
+template<class Probe = decltype(&probe_active_resource), class Guard = decltype(&target_can_publish)>
 void poll_target(uintptr_t game, uintptr_t exe, const TargetKit &target,
                  TargetState &runtime, bool diagnostic, KitIndex *shared_index = nullptr,
-                 PollResourceCache *poll_resources = nullptr, Probe probe = &probe_active_resource) {
+                 PollResourceCache *poll_resources = nullptr, Probe probe = &probe_active_resource,
+                 Guard guard = &target_can_publish) {
     if (runtime.fatal_error)
         return;
+    if (!guard(target, runtime)) return;
     Snapshot snapshot;
     std::string error;
     if (!capture_snapshot(game, target, snapshot, error, shared_index)) {
@@ -1117,8 +1209,16 @@ void poll_target(uintptr_t game, uintptr_t exe, const TargetKit &target,
     std::memcpy(allocation, candidate.data(), candidate.size());
     // The only game-owned write is one aligned pointer, after two complete source reads.
     if (!snapshot_unchanged(game, target, snapshot, shared_index) ||
-        !private_resources_ready(exe, target, error, nullptr, probe) ||
-        !publish_indexed_pointer(snapshot, clone, shared_index)) {
+        !private_resources_ready(exe, target, error, nullptr, probe)) {
+        VirtualFree(allocation, 0, MEM_RELEASE);
+        target_status(target, runtime, "[WAIT]", "source config or resource readiness changed before publication; no config published");
+        return;
+    }
+    if (!guard(target, runtime)) {
+        VirtualFree(allocation, 0, MEM_RELEASE);
+        return;
+    }
+    if (!publish_indexed_pointer(snapshot, clone, shared_index)) {
         VirtualFree(allocation, 0, MEM_RELEASE);
         target_status(target, runtime, "[WAIT]", "source config or resource readiness changed before publication; no config published");
         return;
@@ -1126,6 +1226,9 @@ void poll_target(uintptr_t game, uintptr_t exe, const TargetKit &target,
     // Published storage may still be held by the game after a reload or add-on unload.
     // It is intentionally process-lifetime storage, bounded to 16 allocations per kit.
     runtime.publications[runtime.publication_count++] = {clone, std::move(candidate)};
+#if defined(UNIVERSAL_ISOLATION)
+    ias_session.published = true;
+#endif
     runtime.cached_source.clear();
     runtime.cached_candidate.clear();
     uintptr_t published = 0;
@@ -1161,6 +1264,7 @@ void poll() {
         return;
     }
 #if defined(UNIVERSAL_ISOLATION)
+    if (!prepare_ias_pass()) return;
     if (!initialize_profiles()) return;
     std::string conflict;
     if (!no_legacy_addons(conflict)) {
@@ -1267,6 +1371,7 @@ struct UiStrings {
         *language, *status, *check_now, *updated, *waiting_first, *counts, *summary,
         *options_unknown, *rejected, *adapted, *targets_empty, *copy_status, *copied_status,
         *status_footer, *write_failed, *target_type, *target_structure, *target_runtime;
+    const char *ias;
 };
 
 constexpr UiStrings ui_strings_english{
@@ -1283,7 +1388,7 @@ constexpr UiStrings ui_strings_english{
     "updated %.1f s ago",
     "waiting for the first poll",
     "packages %u   targets %u   resources %u",
-    "waiting %u   ready %u   applied %u   failed %u   not checked %u",
+    "waiting %u   ready %u   applied %u   failed %u   IAS paused %u   not checked %u",
     "ArmorIsolation.ini has not been read yet in this session",
     "the configuration group was rejected; see the log below",
     "native layout was re-discovered for this game build",
@@ -1293,7 +1398,8 @@ constexpr UiStrings ui_strings_english{
     "Full history: ArmorIsolation.log. Published configurations need a game restart to be removed.",
     "Cannot write ArmorIsolation.ini, so the change was not applied. Check that the game folder is writable.",
     "type %s   passive %u", "bodies %u   pieces %u   private Units %u   required resources %u",
-    "publications %u"
+    "publications %u",
+    "HD2IAS is the isolation backend. Own Kit writes are stopped. Prepare IAS declarations after exiting the game; see the status below."
 };
 
 constexpr UiStrings ui_strings_chinese{
@@ -1309,7 +1415,7 @@ constexpr UiStrings ui_strings_chinese{
     "更新于 %.1f 秒前",
     "等待首次轮询",
     "配置包 %u   目标 %u   资源 %u",
-    "等待 %u   就绪 %u   已应用 %u   失败 %u   未检查 %u",
+    "等待 %u   就绪 %u   已应用 %u   失败 %u   IAS 暂停 %u   未检查 %u",
     "本次会话尚未读取 ArmorIsolation.ini",
     "配置组被拒绝；详见下方日志",
     "已为该游戏版本重新发现原生布局",
@@ -1319,7 +1425,8 @@ constexpr UiStrings ui_strings_chinese{
     "完整历史见 ArmorIsolation.log。已发布的配置需重启游戏才能移除。",
     "无法写入 ArmorIsolation.ini，改动未生效。请检查游戏目录是否可写。",
     "类型 %s   被动 %u", "Body %u   Piece %u   私有 Unit %u   依赖资源 %u",
-    "已发布 %u 次"
+    "已发布 %u 次",
+    "已选择 HD2IAS 隔离后端，本插件停止写入 Kit。请在退出游戏后准备 IAS 声明，具体结果见下方状态。"
 };
 
 // ReShade owns the ImGui context and exposes no way to add a font, so Chinese text is only
@@ -1436,7 +1543,9 @@ void on_overlay(reshade::api::effect_runtime *) {
         ImGui::ProgressBar(static_cast<float>(snapshot.ready_count + snapshot.applied_count) /
             static_cast<float>(snapshot.target_count), ImVec2(-1.0f, 0.0f), nullptr);
     ImGui::Text(text->summary, snapshot.waiting_count, snapshot.ready_count, snapshot.applied_count,
-        snapshot.failed_count, snapshot.pending_count);
+        snapshot.failed_count, snapshot.ias_count, snapshot.pending_count);
+    if (snapshot.ias_active)
+        ImGui::TextWrapped("%s", text->ias);
     if (!snapshot.options_known)
         ImGui::TextDisabled("%s", text->options_unknown);
     if (snapshot.profiles_failed)
@@ -1470,7 +1579,7 @@ void on_overlay(reshade::api::effect_runtime *) {
     const ImVec2 available = ImGui::GetContentRegionAvail();
     const float list_height = available.y > 80.0f ? available.y - 20.0f : 80.0f;
     if (ImGui::BeginChild("armor-isolation-targets", ImVec2(0.0f, list_height), 0, 0)) {
-        if (snapshot.targets.empty())
+        if (snapshot.targets.empty() && !snapshot.ias_active)
             ImGui::TextDisabled("%s", text->targets_empty);
         for (const auto &row : snapshot.targets) {
             const bool chinese_ui = ui_language == UiLanguage::chinese && cjk;

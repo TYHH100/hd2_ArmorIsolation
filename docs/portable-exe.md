@@ -2,6 +2,10 @@
 
 分发 `ArmorIsolation.exe` 一个文件即可。适用于 Windows 10/11 x64，内置 Python、Tk、LZ4、游戏数据读取器、装备名称、Kit 快照和通用 ReShade 插件，无需安装 Python 或编译工具。
 
+2026-10-19 IAS 交接版：`dist/portable-ias-handoff/ArmorIsolation.exe`。生成包同时附带 IAS 声明与新版通用插件，窗口显示交接支持结果。安装、卸载或切换隔离模组后，正常退出游戏，在窗口点击“同步已安装模组到 IAS”；该操作只需要游戏目录，按当前 `data` 顶层活动补丁整组同步，不使用刚生成但尚未安装的包。它会更新本工具管理的 IAS 声明，保留原有 IAS 配置；无 IAS 时不修改文件，继续使用自有隔离。
+
+命令行等价入口：`ArmorIsolation.exe --cli prepare-ias --game <游戏目录>`，Python 源码入口为 `python tools/armor_isolation_tool.py prepare-ias --game <游戏目录>`。生成本身不安装补丁、不写 IAS 声明到游戏；同步完成也不代表游戏画面验证通过。生成包内另附先同步再启动游戏的 CMD，直接从 Steam 启动不会执行离线同步。支持范围和许可证见 [IAS 交接说明](ias-compatibility.md)。
+
 2026-09-22 自动兼容改进版：`dist/portable-compatible/ArmorIsolation.exe`。通过两种已审定的完整装配模板识别，允许已核实的外部对象字段位置和数组步长成组变化；六个函数、Piece 字段及内部指令守卫全部保留。已有旧插件时先正常退出游戏，更新 `dist/armor-isolation-runtime/ArmorIsolation.addon64` 到游戏 `bin`，重启后由新插件导出本次版本数据。详见 [本次验证](native-19099-validation.md)。
 
 2026-09-21 内嵌配置版位于 `dist/portable-embedded/ArmorIsolation.exe`，旧 `dist/portable/` 保留。新版生成包的配置随主补丁安装和卸载，不再要求逐模组复制 JSON；需一次性更新通用插件，详见[补丁内嵌配置](embedded-patch-profile.md)。

@@ -1,6 +1,7 @@
 #include "armor_embedded_profile.hpp"
 #include "armor_local_data.hpp"
 #include "armor_native_compatibility.hpp"
+#include "armor_ias_handoff.hpp"
 #include <cstdio>
 #include <filesystem>
 #include <string>
@@ -30,13 +31,74 @@ DWORD find_game_process(const std::filesystem::path &directory) {
     return found;
 }
 
+void require_game_stopped() {
+    const HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snapshot == INVALID_HANDLE_VALUE) throw std::runtime_error("cannot enumerate processes");
+    PROCESSENTRY32W entry{};
+    entry.dwSize = sizeof(entry);
+    bool running = false;
+    if (!Process32FirstW(snapshot, &entry)) {
+        CloseHandle(snapshot);
+        throw std::runtime_error("cannot inspect running processes");
+    }
+    do { running = running || _wcsicmp(entry.szExeFile, L"helldivers2.exe") == 0; }
+    while (Process32NextW(snapshot, &entry));
+    const auto error = GetLastError();
+    CloseHandle(snapshot);
+    if (error != ERROR_NO_MORE_FILES) throw std::runtime_error("process enumeration failed");
+    if (running) throw std::runtime_error("exit Helldivers 2 normally before preparing IAS handoff");
+}
+
 int wmain(int argc, wchar_t **argv) {
     if (argc < 2) {
-        std::fputs("Usage: validate_runtime_profile.exe <package.json|main.patch_N|JSON-directory> | --inputs <files...> | --patches <data-directory> [legacy-directory]\n", stderr);
+        std::fputs("Usage: validate_runtime_profile.exe <profile|patch|directory> | --inputs <files...> | --patches <data-directory> [legacy-directory] | --ias-plan <game-directory> <new-output-directory> | --ias-prepare <game-directory> | --ias-export <new-output-directory> <inputs...>\n", stderr);
         return 2;
     }
     try {
         const std::filesystem::path input(argv[1]);
+        if (input == L"--ias-prepare" || input == L"--ias-plan" || input == L"--ias-export") {
+            const bool install = input == L"--ias-prepare", export_inputs = input == L"--ias-export";
+            if ((install && argc != 3) || (!install && argc < 4) || (!export_inputs && !install && argc != 4))
+                throw std::runtime_error("invalid IAS handoff arguments");
+            universal_isolation::Profile profile;
+            std::string error;
+            armor_ias::Files files;
+            std::filesystem::path destination;
+            if (export_inputs) {
+                std::vector<std::filesystem::path> paths;
+                for (int i = 3; i < argc; ++i) paths.emplace_back(argv[i]);
+                if (!universal_isolation::load_package_files(paths, profile, error)) throw std::runtime_error(error);
+                destination = argv[2];
+            } else {
+                const std::filesystem::path game(argv[2]);
+                if (!std::filesystem::is_regular_file(game / L"bin/helldivers2.exe"))
+                    throw std::runtime_error("game directory does not contain bin/helldivers2.exe");
+                const auto peer = game / L"bin/HD2IndependentRig.addon64";
+                if (!std::filesystem::exists(peer)) {
+                    if (install) {
+                        std::puts("IAS_ABSENT: ordinary ArmorIsolation remains selected; no files changed");
+                        return 0;
+                    }
+                    throw std::runtime_error("IAS add-on is not installed");
+                }
+                if (armor_local_data::file_sha256(peer) != armor_ias::supported_addon_sha256)
+                    throw std::runtime_error("IAS file contract has only been checked for the supported 1.4.6 binary; unknown build");
+                if (!universal_isolation::load_installed_packages(game / L"data", game / L"bin/ArmorIsolation", profile, error))
+                    throw std::runtime_error(error);
+                files = armor_ias::make_handoff(profile);
+                armor_ias::validate_group(files, armor_ias::inventory(game / L"bin/HD2IndependentRig"));
+                destination = install ? game / L"bin/HD2IndependentRig" : std::filesystem::path(argv[3]);
+            }
+            if (export_inputs) files = armor_ias::make_handoff(profile);
+            if (install) require_game_stopped();
+            else if (std::filesystem::exists(destination))
+                throw std::runtime_error("IAS export directory already exists; choose a new directory");
+            const bool changed = armor_ias::synchronize(files, destination);
+            std::printf("IAS_HANDOFF_%s packages=%zu targets=%zu declarations=%zu changed=%s game_runtime_verified=false\n",
+                install ? "PREPARED" : "EXPORTED", profile.package_ids.size(), profile.targets.size(), files.size(),
+                changed ? "true" : "false");
+            return 0;
+        }
         if ((input == L"--capture-local" || input == L"--capture-game") && argc == 4) {
             wchar_t *end = nullptr;
             const auto pid_value = input == L"--capture-game" ? find_game_process(argv[2]) : std::wcstoul(argv[2], &end, 10);

@@ -30,6 +30,8 @@ Helldivers 2/
 
 INI 内容：
 
+检测到 HD2IAS 后自动选择 IAS 隔离后端：停止自身 Kit 发布和原生扫描，只核对已准备的 IAS 隔离声明。退出游戏后用 `Prepare-IAS-Handoff.cmd <游戏目录>` 按当前活动补丁整组同步声明，也可通过 `Start-Game-With-Isolation.cmd <游戏目录>` 在每次启动前自动同步。无 IAS 时继续原有隔离流程。声明准备完成显示 `IAS_HANDOFF`，只代表文件匹配，不代表 IAS 实际绑定或画面验收；支持范围和安装步骤见 [IAS 交接说明](ias-compatibility.md)。
+
 ```ini
 [ArmorIsolation]
 Enabled=1

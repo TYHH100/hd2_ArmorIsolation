@@ -170,6 +170,8 @@ def runtime_release(directory: Path | None = None):
             release.get("sdk_api") != 17 or release.get("reshade_version") != "6.5.1"):
         raise ValueError("预编译通用插件版本不匹配。")
     required = {"ArmorIsolation.addon64", "ArmorIsolation.ini", "validate_runtime_profile.exe"}
+    if release.get("ias_compatibility") == "manifest-handoff-v1":
+        required.update({"Prepare-IAS-Handoff.cmd", "Start-Game-With-Isolation.cmd"})
     rows = release.get("files", [])
     if len(rows) != len(required) or {row.get("name") for row in rows} != required:
         raise ValueError("通用插件发布清单不完整。")
@@ -186,6 +188,35 @@ def inspect_local_game(game: Path, output: Path):
     runtime, release = runtime_release()
     return inspect_game(game, output, runtime, ROOT / "docs/armor-isolation-live-kits.json",
                         release["expected_game_dll_sha256"])
+
+
+def prepare_ias_handoff(game: Path, log=print):
+    """Synchronize declarations for installed patches through the native transaction."""
+    runtime, release = runtime_release()
+    if release.get("ias_compatibility") != "manifest-handoff-v1":
+        raise ValueError("当前运行组件不支持 IAS 交接，请使用新版完整工具包。")
+    result = subprocess.run(
+        [str(runtime / "validate_runtime_profile.exe"), "--ias-prepare", str(Path(game).expanduser().resolve())],
+        cwd=ROOT, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+        encoding="utf-8", errors="replace", env={**os.environ, "PYTHONUTF8": "1"},
+        creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0)
+    output = result.stdout.strip()
+    for line in output.splitlines():
+        log(line)
+    if result.returncode:
+        if "exit Helldivers 2 normally" in output:
+            raise RuntimeError("请先正常退出游戏，再同步 IAS 声明。")
+        raise RuntimeError(f"IAS 声明同步失败（退出码 {result.returncode}）：{output}")
+    if output.startswith("IAS_ABSENT:"):
+        return {"status": "absent", "changed": False, "game_runtime_verified": False}
+    match = re.fullmatch(
+        r"IAS_HANDOFF_PREPARED packages=(\d+) targets=(\d+) declarations=(\d+) "
+        r"changed=(true|false) game_runtime_verified=false", output)
+    if not match:
+        raise RuntimeError("IAS 同步器未返回可识别的完成结果，请查看窗口日志。")
+    packages, targets, declarations, changed = match.groups()
+    return {"status": "prepared", "packages": int(packages), "targets": int(targets),
+            "declarations": int(declarations), "changed": changed == "true", "game_runtime_verified": False}
 
 
 def package_readme(manifest):
@@ -219,6 +250,18 @@ def package_readme(manifest):
                  "仅纹理/材质替换、部分 Unit 替换、披风及未知外部依赖尚未支持。")
     header_description = ("" if modular else
                           "- `generated/generic_resource_map.hpp`：资源映射的离线导出，通用插件不读取或编译此头文件。\n")
+    handoff = manifest.get("ias_handoff", {})
+    if handoff.get("status") == "exported":
+        ias_notes = ("\n检测到 HD2IAS 时，通用插件自动停止自己的 Kit 写入，改用 IAS 隔离声明。"
+                     "本包声明位于 `ias/HD2IndependentRig/`，私有资源 ID 保持不变。"
+                     "安装或更换补丁后，退出游戏运行 `tools/Prepare-IAS-Handoff.cmd <游戏目录>`，"
+                     "按游戏 data 顶层当前活动补丁整组同步声明；以后也可用同目录的 "
+                     "`Start-Game-With-Isolation.cmd <游戏目录>` 先同步再启动。"
+                     "仅复制声明不能自动清理卸载包，优先使用整组同步。IAS 是否成功绑定仍须游戏验证。\n")
+    elif handoff.get("status") == "unsupported":
+        ias_notes = "\n本包暂不能交给 IAS 隔离：" + handoff["reason"] + "。无 IAS 时仍使用自有隔离。\n"
+    else:
+        ias_notes = ""
     return f"""# 护甲资源隔离包 {package_id}
 
 本包已完成资源生成及通用插件配置校验，尚未单独通过游戏画面验收。工具没有部署补丁或插件；本机适配数据可导出到游戏根目录，生成本包不需要 C++ 编译环境。
@@ -238,10 +281,11 @@ def package_readme(manifest):
 1. 正常退出游戏。停用源模组及其他仍覆盖相同原资源的版本；不能让原版覆盖包与隔离包同时生效。
 2. {installation}
 3. 将 `runtime/` 内容按目录结构部署到游戏 `bin/`。需要已启用 add-on 的 ReShade 6.5.1 / API17。新版通用 DLL 只需安装一次；以后安装、切换或卸载模组只操作补丁，无需另外管理 JSON。迁移时停用确认属于旧实验版的 `CM14Isolation`、`B01Isolation` 或 `ArmorIsolation_<包ID>` 插件。
-4. 启动后在军械库加载目标，查看 `bin/ArmorIsolation.log` 中包 ID 和各 Kit 的 `APPLIED`，切换装备触发重建；检查体甲两种体型、头盔、混搭以及原本共用资源的其他装备。
+4. 启动后在军械库加载目标，查看 `bin/ArmorIsolation.log`：无 IAS 时检查各 Kit 的 `APPLIED`；有 IAS 时检查 `IAS_HANDOFF`，由 IAS 完成隔离。若为 `IAS_PAUSED`，按日志退出游戏后处理声明问题。切换装备触发重建，检查体甲两种体型、头盔、混搭以及原本共用资源的其他装备。
 
 新版插件启动后在自身修改前自动导出 `游戏根目录/ArmorIsolation.local-game.json`，EXE 可在游戏退出后复用；DLL/EXE 变化时旧文件失效。关键原生特征或数据结构改变会停止自动适配。适配包附 `compatibility/kits.json`，绑定本次游戏文件与数据，不能跨版本混装。日志每次启动清空一次，导出文件成功后覆盖，不累积历史版本。
 5. 预览通过后再检查舰桥和任务场景。`APPLIED` 仅代表配置发布，不能替代外观验收。
+{ias_notes}
 
 回退：完整退出游戏，通过原部署方式卸载本包补丁（迁移旧包时同时移除旧的对应 JSON），再启用原模组。其他隔离包仍在使用时保留通用 DLL/INI。不要删除不确定归属的文件或造成补丁编号断层；配置只在启动时读取，关闭 INI 开关不能在运行中恢复已发布的配置。
 
@@ -338,13 +382,27 @@ def _generate_package(source: Path, game: Path, reader_tools: Path, kits: Path,
             validation_paths.append(existing_path)
         run_logged([str(runtime_dir / "validate_runtime_profile.exe"), "--inputs", *map(str, validation_paths)],
                    package / "runtime-check.log", log)
+        if release.get("ias_compatibility") == "manifest-handoff-v1":
+            from ias_handoff import unsupported_reason
+            reason = unsupported_reason(profile)
+            if reason:
+                manifest["ias_handoff"] = {"status": "unsupported", "reason": reason}
+                log("IAS 交接暂不支持：" + reason)
+            else:
+                run_logged([str(runtime_dir / "validate_runtime_profile.exe"), "--ias-export",
+                            str(package / "ias/HD2IndependentRig"), *map(str, patch_paths)],
+                           package / "ias-check.log", log)
+                manifest["ias_handoff"] = {"status": "exported", "format": "IAS isolation_version=1",
+                                           "directory": "ias/HD2IndependentRig", "game_runtime_verified": False}
+                log("IAS 声明已导出；安装补丁后，退出游戏并同步已安装模组的声明。")
         (package / "tools").mkdir()
         for row in release["files"]:
-            subdirectory = "tools" if row["name"].endswith(".exe") else "runtime"
+            subdirectory = "tools" if row["name"].endswith((".exe", ".cmd")) else "runtime"
             shutil.copy2(runtime_dir / row["name"], package / subdirectory / row["name"])
         (package / "licenses").mkdir()
-        for name in ("nlohmann-json.LICENSE.MIT", "ReShade.LICENSE.md"):
-            shutil.copy2(runtime_dir / "licenses" / name, package / "licenses" / name)
+        for path in (runtime_dir / "licenses").iterdir():
+            if path.is_file():
+                shutil.copy2(path, package / "licenses" / path.name)
         shutil.copy2(runtime_dir / "runtime-release.json", package / "runtime-release.json")
         addon = package / "runtime/ArmorIsolation.addon64"
         manifest["package_status"] = "built_and_runtime_configuration_validated"
@@ -376,8 +434,8 @@ def main():
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8", errors="replace")
     defaults = discover_defaults()
-    parser = argparse.ArgumentParser(description="护甲隔离包生成工具，不部署游戏文件")
-    parser.add_argument("action", choices=("analyze", "build", "inspect-local"))
+    parser = argparse.ArgumentParser(description="生成护甲隔离包、检查本机数据或同步已安装模组的 IAS 声明")
+    parser.add_argument("action", choices=("analyze", "build", "inspect-local", "prepare-ias"))
     parser.add_argument("--source", type=Path,
                         help="模组目录、旧版/V1 manifest.json 或主 patch 文件")
     parser.add_argument("--game", type=Path, default=Path(defaults["game"]))
@@ -390,10 +448,13 @@ def main():
     parser.add_argument("--identity", choices=("auto", "builtin"), default="auto",
                         help="auto: 按当前游戏版本输出身份；builtin: 输出内置基准身份，可与旧包共存")
     args = parser.parse_args()
-    if args.action != "inspect-local" and args.source is None:
+    if args.action in ("analyze", "build") and args.source is None:
         parser.error("分析或生成时必须指定 --source")
     try:
-        if args.action == "inspect-local":
+        if args.action == "prepare-ias":
+            print(json.dumps(prepare_ias_handoff(args.game, lambda line: print(line, file=sys.stderr)),
+                             ensure_ascii=False, indent=2))
+        elif args.action == "inspect-local":
             path, report = inspect_local_game(args.game, args.output)
             print(json.dumps({"report": str(path), **report}, ensure_ascii=False, indent=2))
         elif args.action == "analyze":

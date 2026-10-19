@@ -2,6 +2,7 @@
 #include "../src/cm14_isolation_addon.cpp"
 #include <fstream>
 #include <chrono>
+#include <sstream>
 #include <stdexcept>
 
 #define REQUIRE(condition) do { if (!(condition)) throw std::runtime_error("assertion failed at line " + std::to_string(__LINE__)); } while (false)
@@ -623,6 +624,150 @@ void test_same_poll_publication() {
     std::puts("SAME_POLL_PUBLICATION_OK: all ready targets applied, external changes/readiness/CAS still guarded");
 }
 
+void test_ias_compatibility() {
+    const auto saved_log = log_path, saved_config = config_path;
+    const auto saved_profiles = profiles_directory, saved_patches = patches_directory;
+    const auto saved_profiles_initialized = profiles_initialized;
+    TemporaryProfiles temporary;
+    log_path = (temporary.directory / L"ias-test.log").wstring();
+    config_path = (temporary.directory / L"ArmorIsolation.ini").wstring();
+    std::ofstream(config_path) << "[ArmorIsolation]\nEnabled=1\nDiagnosticOnly=0\n";
+    ias_session = {};
+    REQUIRE(prepare_ias_pass());
+    std::array<wchar_t, 32768> path{};
+    REQUIRE(GetModuleFileNameW(nullptr, path.data(), static_cast<DWORD>(path.size())));
+    const auto fixture_path = std::filesystem::path(path.data()).parent_path() / L"HD2IndependentRig.addon64";
+    const auto module = LoadLibraryW(fixture_path.c_str());
+    REQUIRE(module);
+    const auto configure = reinterpret_cast<void (*)(uint32_t, uint64_t)>(GetProcAddress(module, "ias_fixture_configure"));
+    const auto ownership_calls = reinterpret_cast<uint32_t (*)()>(GetProcAddress(module, "ias_fixture_ownership_calls"));
+    REQUIRE(configure && ownership_calls);
+    {
+        armor_ias::Peer peer;
+        REQUIRE(peer.module() == module);
+        // Reproduce the old false authorization: ownership=unmanaged while the
+        // equipment can still be used as a transmog carrier. Every reply pauses.
+        for (const auto reply : {1u, 2u, 0x6400u, 0x6500u}) {
+            configure(reply, 0);
+            REQUIRE(!prepare_ias_pass());
+            REQUIRE(ownership_calls() == 0);
+        }
+        // Exercise the actual poll entry before package I/O and native startup.
+        // These paths would fail initialization if the IAS guard ran too late.
+        profiles_directory = temporary.directory / L"missing-profiles";
+        patches_directory = temporary.directory / L"missing-patches";
+        profiles_initialized = false;
+        const auto attempts_before = native_attempts;
+        REQUIRE(!startup_job && !startup_finished);
+        poll();
+        REQUIRE(!profiles_initialized && !fatal_error);
+        REQUIRE(!startup_job && !startup_finished && native_attempts == attempts_before);
+        REQUIRE(last_status.find("[IAS_PAUSED]") == 0);
+        REQUIRE(ownership_calls() == 0);
+        REQUIRE(!ensure_startup(1, 2) && !startup_job && native_attempts == attempts_before);
+        const auto blocked_startup = prepare_startup(StartupRequest{});
+        REQUIRE(!blocked_startup.native_ready && !blocked_startup.local_saved);
+        REQUIRE(blocked_startup.error.find("HD2IAS detected before native preparation") == 0);
+        for (const auto &state : target_states) {
+            REQUIRE(state.last_status.find("[IAS_PAUSED]") == 0);
+            REQUIRE(state.publication_count == 0);
+        }
+        publish_ui_snapshot();
+        const auto &snapshot = ui_snapshots[ui_published.load(std::memory_order_acquire) & 1u];
+        REQUIRE(snapshot.ias_active && snapshot.ias_count == 2 && snapshot.applied_count == 0);
+        REQUIRE(snapshot.pending_count == 0 && snapshot.global_state == "IAS_PAUSED");
+
+        Snapshot source = fixture(profile_targets()[0]);
+        uint32_t unrelated = 0;
+        std::array<uintptr_t, 402> table{};
+        table.fill(reinterpret_cast<uintptr_t>(&unrelated));
+        table[5] = reinterpret_cast<uintptr_t>(source.data.data());
+        const auto original = table;
+        struct { uintptr_t table; uint32_t count; } store{reinterpret_cast<uintptr_t>(table.data()), 402};
+        uintptr_t address = reinterpret_cast<uintptr_t>(&store);
+        const auto game = reinterpret_cast<uintptr_t>(&address) - kit_store_rva;
+        TargetState runtime;
+        size_t probes = 0;
+        const auto ready = [&](uintptr_t, uint64_t, uint64_t, HANDLE) {
+            ++probes;
+            return cm14_isolation::resource_state::ready;
+        };
+        configure(1, 0);
+        poll_target(game, 0, profile_targets()[0], runtime, false, nullptr, nullptr, ready);
+        REQUIRE(probes == 0 && runtime.publication_count == 0 && table == original);
+        REQUIRE(ownership_calls() == 0);
+        // Retain a reference until all observations finish.
+        REQUIRE(FreeLibrary(module));
+        REQUIRE(GetModuleHandleW(L"HD2IndependentRig.addon64") == module);
+    }
+    REQUIRE(!GetModuleHandleW(L"HD2IndependentRig.addon64"));
+    REQUIRE(!prepare_ias_pass() && ias_session.restart_required);
+
+    // IAS loaded between resource checks and the final CAS also blocks the write.
+    ias_session = {};
+    Snapshot source = fixture(profile_targets()[0]);
+    uint32_t unrelated = 0;
+    std::array<uintptr_t, 402> table{};
+    table.fill(reinterpret_cast<uintptr_t>(&unrelated));
+    table[5] = reinterpret_cast<uintptr_t>(source.data.data());
+    const auto original = table;
+    struct { uintptr_t table; uint32_t count; } store{reinterpret_cast<uintptr_t>(table.data()), 402};
+    uintptr_t address = reinterpret_cast<uintptr_t>(&store);
+    const auto game = reinterpret_cast<uintptr_t>(&address) - kit_store_rva;
+    TargetState runtime;
+    HMODULE late_module = nullptr;
+    size_t probes = 0;
+    const auto load_during_probe = [&](uintptr_t, uint64_t, uint64_t, HANDLE) {
+        if (++probes == 6) {
+            late_module = LoadLibraryW(fixture_path.c_str());
+            REQUIRE(late_module);
+        }
+        return cm14_isolation::resource_state::ready;
+    };
+    poll_target(game, 0, profile_targets()[0], runtime, false, nullptr, nullptr, load_during_probe);
+    REQUIRE(probes == 6 && runtime.publication_count == 0 && table == original);
+    REQUIRE(ias_session.seen && !ias_session.published);
+    REQUIRE(runtime.last_status.find("[IAS_PAUSED]") == 0);
+    REQUIRE(FreeLibrary(late_module));
+
+    // A module without any IAS ownership export must pause just as reliably.
+    ias_session = {};
+    const auto unsupported_path = temporary.directory / L"HD2IndependentRig.addon64";
+    std::filesystem::copy_file(std::filesystem::path(path.data()).parent_path() / L"startup_module_fixture.dll",
+        unsupported_path);
+    const auto unsupported = LoadLibraryW(unsupported_path.c_str());
+    REQUIRE(unsupported);
+    REQUIRE(!prepare_ias_pass() && !ias_session.restart_required);
+    REQUIRE(FreeLibrary(unsupported));
+    std::filesystem::remove(unsupported_path);
+
+    // With IAS absent, the ordinary guarded isolation transaction still works.
+    ias_session = {};
+    const auto resource_ready = [](uintptr_t, uint64_t, uint64_t, HANDLE) {
+        return cm14_isolation::resource_state::ready;
+    };
+    poll_target(game, 0, profile_targets()[0], runtime, false, nullptr, nullptr, resource_ready);
+    REQUIRE(runtime.publication_count == 1 && table[5] == runtime.publications[0].address);
+    REQUIRE(ias_session.published && !ias_session.seen);
+    const auto late = LoadLibraryW(fixture_path.c_str());
+    REQUIRE(late);
+    REQUIRE(!prepare_ias_pass() && ias_session.restart_required);
+    REQUIRE(ias_detail.find("RESTART_REQUIRED") != std::string::npos);
+    REQUIRE(table[5] == runtime.publications[0].address); // No hot restoration.
+    REQUIRE(FreeLibrary(late));
+    table = original;
+    REQUIRE(VirtualFree(reinterpret_cast<void *>(runtime.publications[0].address), 0, MEM_RELEASE));
+    ias_session = {};
+    ias_detail.clear();
+    target_states.assign(profile_targets().size(), TargetState{});
+    profiles_initialized = saved_profiles_initialized;
+    profiles_directory = saved_profiles;
+    patches_directory = saved_patches;
+    config_path = saved_config;
+    log_path = saved_log;
+    std::puts("IAS_PRIORITY_OK: unmanaged carrier blocked, zero IAS calls, poll before profiles/startup, zero probes/writes, final CAS late-load guard, no-API module, unload latch, IAS-absent publication");
+}
+
 HANDLE startup_entered = nullptr, startup_release = nullptr;
 bool startup_throw = false;
 StartupResult delayed_startup(const StartupRequest &) {
@@ -833,6 +978,7 @@ int main() {
         test_local_observation(temporary.directory);
         test_native_anchors();
         test_background_startup();
+        test_ias_compatibility();
         test_overlay_snapshot();
         REQUIRE(legacy_addon_name(L"CM14Isolation.addon64"));
         REQUIRE(legacy_addon_name(L"B01Isolation.ADDON64"));

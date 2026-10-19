@@ -126,6 +126,13 @@ def validate(args):
             smoke = run_stage(copied_exe, ["--smoke-test"], logs / "gui.log", cwd,
                               environment, report["stages"])
             require("GUI_SMOKE_OK" in smoke, "EXE 图形界面启动检查未返回 GUI_SMOKE_OK")
+            fake_game = temporary_root / "未安装 IAS 的测试游戏"
+            (fake_game / "bin").mkdir(parents=True)
+            (fake_game / "bin/helldivers2.exe").write_bytes(b"test placeholder; never executed")
+            prepared = run_stage(copied_exe, ["--cli", "prepare-ias", "--game", str(fake_game)],
+                                 logs / "ias-absent.log", cwd, environment, report["stages"])
+            require('"status": "absent"' in prepared and not (fake_game / "bin/HD2IndependentRig").exists(),
+                    "未安装 IAS 时不应写入声明")
             analysis = run_stage(copied_exe, ["--cli", "analyze", "--source", str(source),
                                              "--game", str(game)], logs / "analyze.log", cwd,
                                  environment, report["stages"])
@@ -167,6 +174,21 @@ def validate(args):
                 require(sha256(output_files[relative]) == digest, f"原清单或附件被改动：{relative}")
             addon_hash = sha256(package / "runtime/ArmorIsolation.addon64")
             release = json.loads((package / "runtime-release.json").read_text(encoding="utf-8"))
+            for row in release["files"]:
+                parent = "tools" if row["name"].endswith((".exe", ".cmd")) else "runtime"
+                require(sha256(package / parent / row["name"]) == row["sha256"],
+                        f"内置运行组件哈希不符：{row['name']}")
+            if release.get("ias_compatibility") == "manifest-handoff-v1":
+                handoff = manifest.get("ias_handoff", {})
+                require(handoff.get("status") in {"exported", "unsupported"}, "缺少 IAS 交接结果")
+                declarations = list((package / "ias/HD2IndependentRig").glob("*.isolation.ini"))
+                if handoff["status"] == "exported":
+                    require(len(declarations) == len(targets), "IAS 声明数量与生成目标不符")
+                    require("IAS_HANDOFF_EXPORTED " in (package / "ias-check.log").read_text(encoding="utf-8"),
+                            "IAS 导出未通过原生校验")
+                else:
+                    require(handoff.get("reason") and not declarations, "不支持交接时不应输出半份声明")
+                report["ias_handoff"] = {**handoff, "declarations": len(declarations), "absent_no_changes": True}
             addon_rows = [row for row in release["files"] if row["name"] == "ArmorIsolation.addon64"]
             require(len(addon_rows) == 1 and addon_rows[0]["sha256"] == addon_hash
                     and manifest["addon"]["sha256"] == addon_hash, "通用插件哈希与发布记录不符")

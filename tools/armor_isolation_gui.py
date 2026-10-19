@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import json
 import os
 from pathlib import Path
 import queue
@@ -46,6 +47,7 @@ class ArmorIsolationApp:
                        for key in ("source", "game", "reader_tools", "output", "kits", "names")}
         self.search = tk.StringVar()
         self.status = tk.StringVar(value="待分析")
+        self.ias_status = tk.StringVar(value="IAS：安装或切换隔离模组后，退出游戏再同步声明。")
         self.selection_summary = tk.StringVar(value="已选 0 项")
         self.candidate_summary = tk.StringVar(value="候选 0 项")
         self.detail = tk.StringVar(value="")
@@ -103,6 +105,11 @@ class ArmorIsolationApp:
         self.advanced_button.grid(row=3, column=0, columnspan=2, sticky="w", pady=(4, 0))
         self._button(paths, "使用说明", self._show_help).grid(row=3, column=2, columnspan=2, sticky="e")
         self._button(paths, "读取本机游戏数据", self.inspect_local).grid(row=3, column=1, sticky="e", padx=8)
+        compatibility = ttk.Frame(paths)
+        compatibility.grid(row=4, column=0, columnspan=4, sticky="ew", pady=(8, 0))
+        compatibility.columnconfigure(0, weight=1)
+        ttk.Label(compatibility, textvariable=self.ias_status, wraplength=700).grid(row=0, column=0, sticky="w")
+        self._button(compatibility, "同步已安装模组到 IAS", self.prepare_ias).grid(row=0, column=1, padx=(8, 0))
 
         self.advanced_view = ttk.Frame(outer)
         self.advanced_view.columnconfigure(0, weight=1)
@@ -222,7 +229,7 @@ class ArmorIsolationApp:
         view.configure(yscrollcommand=scroll.set)
         view.pack(fill="both", expand=True)
         assets = resource_root()
-        files = [assets / "docs/portable-exe.md", assets / "assets/THIRD_PARTY.md"]
+        files = [assets / "docs/portable-exe.md", assets / "docs/ias-compatibility.md", assets / "assets/THIRD_PARTY.md"]
         files.extend(sorted((assets / "assets/licenses").glob("*")))
         files.extend(sorted((assets / "dist/armor-isolation-runtime/licenses").glob("*")))
         for path in files:
@@ -280,6 +287,7 @@ class ArmorIsolationApp:
         self.package = None
         self.detail.set("")
         self.status.set("参数已变更，待分析")
+        self.ias_status.set("IAS：安装或切换隔离模组后，退出游戏再同步声明。")
         self.open_button.state(["disabled"])
         self._render_candidates()
 
@@ -397,6 +405,26 @@ class ArmorIsolationApp:
 
         threading.Thread(target=work, name="local-game-inspection", daemon=False).start()
 
+    def prepare_ias(self) -> None:
+        if self.busy:
+            return
+        game = self.values["game"].get().strip()
+        if not game:
+            messagebox.showerror("参数错误", "请选择游戏目录。", parent=self.root)
+            return
+        self._set_busy(True, "正在同步已安装模组的 IAS 声明…")
+        self._append_log(f"IAS 同步：{game}")
+
+        def work() -> None:
+            try:
+                result = self.backend.prepare_ias_handoff(
+                    Path(game), lambda line: self.events.put(("log", str(line))))
+                self.events.put(("ias-prepared", result))
+            except Exception as error:
+                self.events.put(("error", ("IAS 同步失败", str(error), traceback.format_exc())))
+
+        threading.Thread(target=work, name="ias-handoff-preparation", daemon=False).start()
+
     def analyze(self) -> None:
         if self.busy:
             return
@@ -429,6 +457,7 @@ class ArmorIsolationApp:
             return
         targets = sorted(self.selected)
         coexist = list(self.coexist)
+        builtin_identity = self.builtin_identity.get()
         self.package = None
         self._set_busy(True, "正在生成隔离包…")
         self._append_log("生成目标：" + ", ".join(targets))
@@ -438,8 +467,9 @@ class ArmorIsolationApp:
                 package = self.backend.generate_package(
                     paths["source"], paths["game"], paths["reader_tools"], paths["kits"], targets,
                     paths["output"], coexist, lambda line: self.events.put(("log", str(line))),
-                    builtin_identity=self.builtin_identity.get())
-                self.events.put(("generated", Path(package)))
+                    builtin_identity=builtin_identity)
+                handoff = json.loads((Path(package) / "manifest.json").read_text(encoding="utf-8")).get("ias_handoff", {})
+                self.events.put(("generated", (Path(package), handoff)))
             except Exception as error:
                 self.events.put(("error", ("生成失败", str(error), traceback.format_exc())))
 
@@ -486,13 +516,31 @@ class ArmorIsolationApp:
                         self._append_log(f"选项模组：{len(modular.get('patches', []))} 个补丁，"
                                          f"{modular.get('option_count', 0)} 个选项；保留原目录，配件继续在管理器中选择。")
                 elif kind == "generated":
-                    self.package = value
+                    self.package, handoff = value
                     self._set_busy(False, "隔离包已生成")
-                    self._append_log(f"输出：{value}")
+                    self._append_log(f"输出：{self.package}")
+                    if handoff.get("status") == "exported":
+                        self.ias_status.set("IAS：声明已导出；安装补丁后，退出游戏再点击同步。")
+                    elif handoff.get("status") == "unsupported":
+                        self.ias_status.set("IAS：本包暂不支持交接，" + handoff["reason"])
+                    else:
+                        self.ias_status.set("IAS：本包未包含交接声明，请使用新版运行组件生成。")
+                    self._append_log(self.ias_status.get())
+                elif kind == "ias-prepared":
+                    if value["status"] == "absent":
+                        message = "IAS：未安装，继续使用自有隔离；未修改声明。"
+                    else:
+                        action = "已同步" if value["changed"] else "已核对，无需更新"
+                        message = f"IAS：{action}（{value['packages']} 包、{value['targets']} 个目标、{value['declarations']} 份声明）；启动后由 IAS 接管。"
+                    self.ias_status.set(message)
+                    self._set_busy(False, "IAS 处理完成")
+                    self._append_log(message)
                 elif kind == "error":
                     title, message, details = value
                     self._set_busy(False, title)
                     self._append_log(details)
+                    if title == "IAS 同步失败":
+                        self.ias_status.set("IAS：同步失败，" + message)
                     messagebox.showerror(title, message, parent=self.root)
         except queue.Empty:
             pass

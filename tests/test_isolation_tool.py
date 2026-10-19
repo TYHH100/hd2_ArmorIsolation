@@ -208,13 +208,23 @@ class ToolTests(unittest.TestCase):
     def test_modular_failure_cleans_preserved_tree_without_publishing(self):
         self.exercise_pipeline(fail=True, modular=True)
 
+    def test_ias_handoff_is_included_in_the_complete_modular_package(self):
+        self.exercise_pipeline(fail=False, modular=True, handoff=True)
+
+    def test_unsupported_ias_conversion_is_reported_without_unit_only_output(self):
+        self.exercise_pipeline(fail=False, handoff=True, unsupported_ias=True)
+
+    def test_ias_export_failure_does_not_publish_partial_package(self):
+        self.exercise_pipeline(fail=False, handoff=True, fail_ias=True)
+
     def test_publication_failure_cleans_validated_staging_tree(self):
         self.exercise_pipeline(fail=False, modular=True, publish_failure=True)
 
     def test_bones_package_rejects_legacy_runtime_and_cleans_staging(self):
         self.exercise_pipeline(fail=False, modular=True, legacy_bones=True)
 
-    def exercise_pipeline(self, fail, modular=False, publish_failure=False, legacy_bones=False):
+    def exercise_pipeline(self, fail, modular=False, publish_failure=False, legacy_bones=False,
+                          handoff=False, unsupported_ias=False, fail_ias=False):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             source = root / ("mod/manifest.json" if modular else "mod/0123456789abcdef.patch_0")
@@ -231,6 +241,11 @@ class ToolTests(unittest.TestCase):
             for name in ("ArmorIsolation.addon64", "ArmorIsolation.ini", "validate_runtime_profile.exe"):
                 (runtime / name).write_bytes(name.encode("ascii"))
                 release["files"].append({"name": name, "sha256": "a" * 64})
+            if handoff:
+                release["ias_compatibility"] = "manifest-handoff-v1"
+                for name in ("Prepare-IAS-Handoff.cmd", "Start-Game-With-Isolation.cmd"):
+                    (runtime / name).write_bytes(name.encode("ascii"))
+                    release["files"].append({"name": name, "sha256": "a" * 64})
             (runtime / "runtime-release.json").write_text(json.dumps(release), encoding="ascii")
             (runtime / "licenses").mkdir()
             for name in ("nlohmann-json.LICENSE.MIT", "ReShade.LICENSE.md"):
@@ -267,6 +282,14 @@ class ToolTests(unittest.TestCase):
             def fake_validator(command, log_path, log):
                 self.assertIsInstance(command, list)
                 self.assertEqual(Path(command[0]).name, "validate_runtime_profile.exe")
+                if command[1] == "--ias-export":
+                    if fail_ias:
+                        raise RuntimeError("IAS export failure")
+                    destination = Path(command[2])
+                    destination.mkdir(parents=True)
+                    (destination / "armorbridge_fixture.isolation.ini").write_text("validated fixture", encoding="ascii")
+                    log_path.write_text("IAS export passed", encoding="ascii")
+                    return
                 self.assertEqual(command[1], "--inputs")
                 import embedded_profile
                 self.assertEqual(json.loads(embedded_profile.read_payload(command[2]))["package_id"], package_id)
@@ -278,7 +301,15 @@ class ToolTests(unittest.TestCase):
             module = types.ModuleType(module_name)
             module.build = fake_builder
             exporter = types.ModuleType("runtime_profile")
-            exporter.make_runtime_profile = lambda manifest, kits: {"package_id": manifest["package_id"]}
+            def fake_profile(manifest, kits):
+                profile = {"package_id": manifest["package_id"]}
+                if handoff:
+                    profile.update(piece_fields=[{"offset": 24}] if unsupported_ias else [{"offset": 0}],
+                                   selected_kit_metadata=[{"id": "12345678", "archive": "0123456789abcdef",
+                                                           "type": 0, "bodies": [{"pieces": [{"slot": 2, "resources": {"unit": "0000000000000001"}}]}] * 3}],
+                                   mapping=[{"kit": "12345678", "type": "e0a48d0be9a7453f", "source": "0000000000000001"}])
+                return profile
+            exporter.make_runtime_profile = fake_profile
             exporter.write_profile = lambda profile, path: path.write_text(json.dumps(profile), encoding="ascii")
             with patch.dict(sys.modules, {module_name: module, "runtime_profile": exporter}), \
                     patch.object(tool, "run_logged", side_effect=fake_validator), \
@@ -292,8 +323,9 @@ class ToolTests(unittest.TestCase):
                     with self.assertRaisesRegex(ValueError, "插件不支持 bones"):
                         call()
                     self.assertEqual(list(output.iterdir()), [])
-                elif fail or publish_failure:
-                    with self.assertRaisesRegex(RuntimeError, "publish failure" if publish_failure else "validation failure"):
+                elif fail or publish_failure or fail_ias:
+                    message = "IAS export failure" if fail_ias else "publish failure" if publish_failure else "validation failure"
+                    with self.assertRaisesRegex(RuntimeError, message):
                         call()
                     self.assertEqual(list(output.iterdir()), [])
                 else:
@@ -304,7 +336,12 @@ class ToolTests(unittest.TestCase):
                     self.assertEqual(manifest["addon"]["mode"], "universal_runtime")
                     self.assertEqual((package / "runtime/ArmorIsolation.addon64").read_bytes(),
                                      (runtime / "ArmorIsolation.addon64").read_bytes())
-                    self.assertEqual(len(manifest["package_files"]), 12 if modular else 10)
+                    expected_files = (12 if modular else 10) + (2 if handoff else 0) + (2 if handoff and not unsupported_ias else 0)
+                    self.assertEqual(len(manifest["package_files"]), expected_files)
+                    if handoff:
+                        self.assertTrue((package / "tools/Prepare-IAS-Handoff.cmd").is_file())
+                        self.assertEqual(manifest["ias_handoff"]["status"], "unsupported" if unsupported_ias else "exported")
+                        self.assertEqual((package / "ias/HD2IndependentRig").exists(), not unsupported_ias)
                     self.assertEqual(manifest["addon"]["profile_storage"], "hd2-armor-patch-footer/1")
                     self.assertFalse((package / "runtime/ArmorIsolation").exists())
                     for row in manifest["output"]:

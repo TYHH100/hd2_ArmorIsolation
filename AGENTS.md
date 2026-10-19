@@ -71,6 +71,10 @@
 - ReShade 不导出字体加载接口，中文字形只能来自 ReShade 自己的 `[STYLE] Font` 设置；用 `ImFont::FindGlyphNoFallback` 检测缺字形并退回英文标签，不能假定中文一定能渲染。界面语言写 INI 的 `Language` 键，但日志正文保持原有英文诊断文本，避免日志格式、文档和测试断言漂移。
 - 覆盖层只保留一份状态视图：按 Kit 的目标行 `detail` 用 `std::string` 不截断，完整历史交给 `ArmorIsolation.log`；不要再加一个独立的会话日志区，两处内容会重复。
 - `reshade::register_addon` 在定义了 `IMGUI_VERSION_NUM` 时会要求 ReShade 提供 ImGui 函数表，缺失即返回失败并让 `DllMain` 返回 FALSE。若将来需要兼容不带 ImGui 的 ReShade，必须先分离覆盖层注册路径，不能假定插件仍会加载。
+- IAS 的 Unit 归属接口返回 unmanaged 不等于允许替换 Kit：幻化目录和载体还依赖 equipment / Archive / Body / Unit 完整身份，上一版据此放行已被游戏实测否定。检测 IAS 后停止自身 Kit 发布和原生扫描，按退出游戏后准备的 `.isolation.ini` 交接；私有 Unit 不等于 Rig Profile，不能凭私有 ID 生成 `rig_profile=`。IAS v1 不能表达 Piece 纹理字段替换，也不允许两份声明占同一 Archive，遇到这些配置整组报不支持，不能只交 Unit 然后宣称完整接管。仅删除本工具有身份标记的过期声明，保留 IAS 原有配置。`IAS_HANDOFF` 只确认文件匹配；事务绑定完成也不等于头盔载体和差分已就绪。具体证据与验收见 `docs/ias-compatibility.md`。
+- 本机原生事务测试曾在游戏运行时无法创建进程（CTest `operation not permitted` / Windows 拒绝访问），正常退出游戏后同一二进制通过；先核对游戏是否退出，不改 ACL、不把测试未启动记成断言失败，也不据此断言是哪一个保护组件拦截。
+- IAS 交接能力更新须同步 Python 生成器、GUI/CLI、默认运行包和单文件 EXE；只更新磁盘 DLL 不会更新旧 EXE 的内置组件。GUI/CLI 复用原生 `--ias-prepare`，只按已安装活动补丁同步，生成阶段不写游戏。验收移动后的单文件，覆盖声明导出和无 IAS 不写入分支。
+- IAS 头盔差分/幻化异常的对照须包含修改头盔、披风护甲被动的 Lua 模组；本次用户最终定位到此类 Lua 冲突，而非隔离模型。仅凭“启用整组隔离模组后异常”不能归因于私有 Unit ID，先区分同时启用的其他模组；未经调用跟踪不要推断 Lua 冲突的内部机制。
 
 ## 崩溃转储分析
 

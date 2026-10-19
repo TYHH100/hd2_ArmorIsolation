@@ -67,10 +67,20 @@ try {
     }
     $taskLicenses = Join-Path $taskOutput 'licenses'
     New-Item -ItemType Directory -Path $taskLicenses -Force | Out-Null
+    Copy-Item -LiteralPath (Join-Path $taskRoot 'LICENSE') -Destination (Join-Path $taskLicenses 'ArmorIsolation.LICENSE.txt') -Force
     Copy-Item -LiteralPath (Join-Path $taskRoot 'third_party\nlohmann-json-3.12.0\LICENSE.MIT') -Destination (Join-Path $taskLicenses 'nlohmann-json.LICENSE.MIT') -Force
     Copy-Item -LiteralPath (Join-Path $taskRoot 'third_party\reshade-v6.5.1\LICENSE.md') -Destination (Join-Path $taskLicenses 'ReShade.LICENSE.md') -Force
     Copy-Item -LiteralPath (Join-Path $taskRoot 'third_party\imgui\LICENSE.txt') -Destination (Join-Path $taskLicenses 'imgui.LICENSE.txt') -Force
-    $taskFiles = foreach ($taskName in @('ArmorIsolation.addon64', 'ArmorIsolation.ini', 'validate_runtime_profile.exe')) {
+    $taskIasNotes = [IO.File]::ReadAllText((Join-Path $taskRoot 'docs\ias-compatibility.md'))
+    $taskIasNotes = $taskIasNotes.Replace('(../LICENSE)', '(licenses/ArmorIsolation.LICENSE.txt)').
+        Replace('(../third_party/reshade-v6.5.1/LICENSE.md)', '(licenses/ReShade.LICENSE.md)').
+        Replace('(../third_party/nlohmann-json-3.12.0/LICENSE.MIT)', '(licenses/nlohmann-json.LICENSE.MIT)').
+        Replace('(../third_party/imgui/LICENSE.txt)', '(licenses/imgui.LICENSE.txt)')
+    [IO.File]::WriteAllText((Join-Path $taskOutput 'ias-compatibility.md'), $taskIasNotes, [Text.UTF8Encoding]::new($false))
+    foreach ($taskScript in @('Prepare-IAS-Handoff.cmd', 'Start-Game-With-Isolation.cmd')) {
+        Copy-Item -LiteralPath (Join-Path $PSScriptRoot $taskScript) -Destination (Join-Path $taskOutput $taskScript) -Force
+    }
+    $taskFiles = foreach ($taskName in @('ArmorIsolation.addon64', 'ArmorIsolation.ini', 'validate_runtime_profile.exe', 'Prepare-IAS-Handoff.cmd', 'Start-Game-With-Isolation.cmd')) {
         $taskFile = Get-Item -LiteralPath (Join-Path $taskOutput $taskName)
         @{ name = $taskName; size = $taskFile.Length; sha256 = (Get-FileHash -LiteralPath $taskFile.FullName -Algorithm SHA256).Hash.ToLowerInvariant() }
     }
@@ -81,6 +91,8 @@ try {
         supported_resource_types = @('e0a48d0be9a7453f', 'cd4238c6a0c69e32', 'eac0b497876adedf', '18dead01056b72e9')
         expected_game_dll_sha256 = 'cc75948d90fdfde259dcb519e9933db7ffa3ccb281ce4fb89e6b1b011557470c'
         reshade_version = '6.5.1'; sdk_api = 17; files = @($taskFiles)
+        ias_compatibility = 'manifest-handoff-v1'
+        ias_addon_sha256 = 'df37a3489edf51887cde7b130651282e3c7745d9586b9348662908403430e1d1'
     }
     [IO.File]::WriteAllText((Join-Path $taskOutput 'runtime-release.json'), ($taskRelease | ConvertTo-Json -Depth 5), [Text.UTF8Encoding]::new($false))
     Get-FileHash -LiteralPath $taskAddon -Algorithm SHA256
