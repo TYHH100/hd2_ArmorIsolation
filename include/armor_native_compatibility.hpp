@@ -79,6 +79,7 @@ inline uintptr_t relative(HANDLE process, uintptr_t base, uintptr_t instruction,
 struct Layout {
     uintptr_t kit_store = 0, application = 0;
     std::map<std::string, uintptr_t> functions;
+    armor_local_data::Discovery kit_discovery;
 };
 
 inline std::map<std::string, uintptr_t> discover_functions(const Image &game_image, const Image &exe_image,
@@ -124,7 +125,8 @@ inline Layout discover(HANDLE process, uintptr_t game, uintptr_t exe,
                        armor_local_data::json *diagnostics = nullptr) {
     using namespace armor_local_data;
     Layout result;
-    result.kit_store = armor_local_data::discover(process, game).global_rva;
+    result.kit_discovery = armor_local_data::discover(process, game);
+    result.kit_store = result.kit_discovery.global_rva;
     const auto game_image = read_image(process, game), exe_image = read_image(process, exe);
     result.functions = discover_functions(game_image, exe_image, diagnostics);
     validate_assembly_references(process, game, result.functions.at("armor_assembly"),
@@ -150,6 +152,21 @@ inline Layout discover(HANDLE process, uintptr_t game, uintptr_t exe,
     return result;
 }
 
+// Caller must bind this same-session layout and report to unchanged DLL/EXE hashes.
+// This only serializes evidence; it does not authorize any resource/config write.
+inline void attach_validated_evidence(armor_local_data::json &report, const Layout &layout,
+                                     const std::string &exe_hash, armor_local_data::json diagnostics) {
+    using namespace armor_local_data;
+    require(report.at("status") == "observed_layout_candidate", "Kit snapshot not ready");
+    require(report.at("kit_store_rva") == hex(layout.kit_store, 8), "Kit snapshot and native layout disagree");
+    diagnostics["status"] = "passed";
+    report["native_diagnostics"] = std::move(diagnostics);
+    report["native_compatibility"] = {{"mode", "signature-validated-v1"},
+        {"exe_sha256", exe_hash}, {"kit_store_rva", hex(layout.kit_store, 8)},
+        {"application_rva", hex(layout.application, 8)}, {"functions", layout.functions}};
+    report["kits_sha256"] = kits_sha256(report.at("kits"));
+}
+
 inline void attach_evidence(armor_local_data::json &report, HANDLE process, uintptr_t game, uintptr_t exe,
                             const std::filesystem::path &game_path, const std::filesystem::path &exe_path) {
     using namespace armor_local_data;
@@ -167,11 +184,6 @@ inline void attach_evidence(armor_local_data::json &report, HANDLE process, uint
         report["native_diagnostics"] = std::move(diagnostics);
         throw;
     }
-    diagnostics["status"] = "passed";
-    report["native_diagnostics"] = std::move(diagnostics);
-    report["native_compatibility"] = {{"mode", "signature-validated-v1"},
-        {"exe_sha256", hash}, {"kit_store_rva", hex(layout.kit_store, 8)},
-        {"application_rva", hex(layout.application, 8)}, {"functions", layout.functions}};
-    report["kits_sha256"] = kits_sha256(report.at("kits"));
+    attach_validated_evidence(report, layout, hash, std::move(diagnostics));
 }
 } // namespace armor_native

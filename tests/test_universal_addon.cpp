@@ -269,6 +269,37 @@ void test_local_observation(const std::filesystem::path &directory) {
     image[0x1016] ^= 1;
     section->Misc.VirtualSize = 0x4000;
     REQUIRE(rejects());
+    section->Misc.VirtualSize = 0x1000;
+    auto first_kit = fixture(profile_targets()[0]), second_kit = fixture(profile_targets()[1]);
+    std::array<uintptr_t, 2> kit_table{reinterpret_cast<uintptr_t>(first_kit.data.data()),
+                                       reinterpret_cast<uintptr_t>(second_kit.data.data())};
+    struct { uintptr_t table; uint32_t count; } store{reinterpret_cast<uintptr_t>(kit_table.data()), 2};
+    put(image.data(), 0x2000, reinterpret_cast<uintptr_t>(&store));
+    const auto session_layout = armor_local_data::discover(GetCurrentProcess(), base);
+    auto independent = armor_local_data::capture(GetCurrentProcess(), base);
+    auto reused = armor_local_data::capture(GetCurrentProcess(), base, {}, &session_layout);
+    REQUIRE(independent.at("status") == "observed_layout_candidate");
+    REQUIRE(reused.at("discovery") == "validated_session_layout");
+    independent.erase("discovery");
+    reused.erase("discovery");
+    REQUIRE(independent == reused);
+    armor_native::Layout validated;
+    validated.kit_store = session_layout.global_rva;
+    validated.application = 0x2100;
+    validated.kit_discovery = session_layout;
+    armor_native::attach_validated_evidence(reused, validated, std::string(64, 'a'), json::object());
+    REQUIRE(reused.at("native_compatibility").at("kit_store_rva") == "00002000");
+    REQUIRE(reused.at("kits_sha256") == armor_local_data::kits_sha256(reused.at("kits")));
+    auto mismatched = independent;
+    mismatched["kit_store_rva"] = "00002008";
+    bool mismatch_rejected = false;
+    try { armor_native::attach_validated_evidence(mismatched, validated, std::string(64, 'a'), json::object()); }
+    catch (const std::exception &) { mismatch_rejected = true; }
+    REQUIRE(mismatch_rejected);
+    nt->FileHeader.TimeDateStamp ^= 1;
+    REQUIRE(armor_local_data::capture(GetCurrentProcess(), base, {}, &session_layout).at("status") ==
+            "unsupported_or_not_ready");
+    nt->FileHeader.TimeDateStamp ^= 1;
     auto report = armor_local_data::capture(GetCurrentProcess(), 0);
     REQUIRE(report.at("status") == "unsupported_or_not_ready");
     REQUIRE(report.at("write_authorized") == false && !report.contains("kits"));
@@ -508,15 +539,207 @@ void test_independent_publication() {
         const size_t slot = index * 7 + 5;
         const uintptr_t previous = expected_table[slot];
         const auto destination = reinterpret_cast<uintptr_t>(candidates[index].data());
-        REQUIRE(publish_pointer(snapshots[index].entry, previous, destination));
+        REQUIRE(snapshot_unchanged(game, profile_targets()[index], snapshots[index], &shared));
+        REQUIRE(publish_indexed_pointer(snapshots[index], destination, &shared));
         expected_table[slot] = destination;
         REQUIRE(table == expected_table);
+        REQUIRE(kit_index_unchanged(game, shared));
+        REQUIRE(shared.locations.at(profile_targets()[index].id).kit == destination);
         REQUIRE(!publish_pointer(snapshots[index].entry, previous, 0));
         for (size_t pending = index + 1; pending < count; ++pending)
-            REQUIRE(snapshot_unchanged(game, profile_targets()[pending], snapshots[pending]));
+            REQUIRE(snapshot_unchanged(game, profile_targets()[pending], snapshots[pending], &shared));
         REQUIRE(sources[index].data == snapshots[index].data);
     }
     REQUIRE(!publish_pointer(0x123, 0, 1));
+}
+
+void test_same_poll_publication() {
+    const size_t count = profile_targets().size();
+    std::vector<Snapshot> sources(count);
+    std::vector<TargetState> states(count);
+    uint32_t unrelated = 0, changed_unrelated = 99;
+    std::array<uintptr_t, 402> table{};
+    table.fill(reinterpret_cast<uintptr_t>(&unrelated));
+    for (size_t i = 0; i < count; ++i) {
+        sources[i] = fixture(profile_targets()[i]);
+        table[i + 5] = reinterpret_cast<uintptr_t>(sources[i].data.data());
+    }
+    const auto original_table = table;
+    struct { uintptr_t table; uint32_t count; } store{reinterpret_cast<uintptr_t>(table.data()), 402};
+    uintptr_t store_address = reinterpret_cast<uintptr_t>(&store);
+    const uintptr_t game = reinterpret_cast<uintptr_t>(&store_address) - kit_store_rva;
+    KitIndex cycle;
+    std::string error;
+    REQUIRE(build_kit_index(game, cycle, error));
+    PollResourceCache resources;
+    size_t probes = 0;
+    const auto ready = [&](uintptr_t, uint64_t, uint64_t, HANDLE) {
+        ++probes;
+        return cm14_isolation::resource_state::ready;
+    };
+    for (size_t i = 0; i < count; ++i) {
+        // Exercise exactly the production path, including final full dependency recheck.
+        poll_target(game, 0, profile_targets()[i], states[i], false, &cycle, &resources, ready);
+        REQUIRE(states[i].publication_count == 1);
+        REQUIRE(states[i].last_status.find("[APPLIED]") == 0);
+        REQUIRE(kit_index_unchanged(game, cycle));
+        Snapshot published;
+        REQUIRE(capture_snapshot(game, profile_targets()[i], published, error, &cycle));
+        REQUIRE(published.data == states[i].publications[0].expected);
+    }
+    REQUIRE(probes == count * 6 && resources.states.size() == count * 3);
+    table[1] = reinterpret_cast<uintptr_t>(&changed_unrelated);
+    REQUIRE(!kit_index_unchanged(game, cycle)); // Other writers are never absorbed into the expected table.
+    table = original_table;
+    for (const auto &state : states)
+        REQUIRE(VirtualFree(reinterpret_cast<void *>(state.publications[0].address), 0, MEM_RELEASE));
+
+    REQUIRE(build_kit_index(game, cycle, error));
+    const auto expected_pointers = cycle.pointers;
+    TargetState rejected;
+    probes = 0;
+    const auto external_change = [&](uintptr_t, uint64_t, uint64_t, HANDLE) {
+        if (++probes == 3) table[1] = reinterpret_cast<uintptr_t>(&changed_unrelated);
+        return cm14_isolation::resource_state::ready;
+    };
+    poll_target(game, 0, profile_targets()[0], rejected, false, &cycle, nullptr, external_change);
+    REQUIRE(rejected.publication_count == 0 && table[5] == original_table[5]);
+    REQUIRE(cycle.pointers == expected_pointers);
+    table = original_table;
+    probes = 0;
+    const auto readiness_changed = [&](uintptr_t, uint64_t, uint64_t, HANDLE) {
+        return ++probes <= 3 ? cm14_isolation::resource_state::ready : cm14_isolation::resource_state::pending;
+    };
+    poll_target(game, 0, profile_targets()[0], rejected, false, &cycle, nullptr, readiness_changed);
+    REQUIRE(probes == 4 && rejected.publication_count == 0 && table == original_table);
+    probes = 0;
+    const auto cas_changed = [&](uintptr_t, uint64_t, uint64_t, HANDLE) {
+        if (++probes == 6) table[5] = reinterpret_cast<uintptr_t>(&changed_unrelated);
+        return cm14_isolation::resource_state::ready;
+    };
+    poll_target(game, 0, profile_targets()[0], rejected, false, &cycle, nullptr, cas_changed);
+    REQUIRE(rejected.publication_count == 0 && cycle.pointers == expected_pointers);
+    table = original_table;
+    std::puts("SAME_POLL_PUBLICATION_OK: all ready targets applied, external changes/readiness/CAS still guarded");
+}
+
+HANDLE startup_entered = nullptr, startup_release = nullptr;
+bool startup_throw = false;
+StartupResult delayed_startup(const StartupRequest &) {
+    SetEvent(startup_entered);
+    REQUIRE(WaitForSingleObject(startup_release, 5000) == WAIT_OBJECT_0);
+    if (startup_throw) throw std::runtime_error("simulated startup exception");
+    StartupResult result;
+    result.native_ready = true;
+    result.layout.kit_store = 0x123450;
+    result.local_error = "simulated local export failure";
+    return result;
+}
+
+void test_background_startup() {
+    const auto saved_layout = native_layout;
+    const auto saved_rva = kit_store_rva;
+    const auto saved_status = last_status;
+    startup_finished = false;
+    native_layout_validated = false;
+    native_attempts = 1;
+    startup_entered = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+    startup_release = CreateEventW(nullptr, TRUE, FALSE, nullptr);
+    REQUIRE(startup_entered && startup_release);
+    std::array<wchar_t, 32768> executable_path{};
+    REQUIRE(GetModuleFileNameW(nullptr, executable_path.data(), static_cast<DWORD>(executable_path.size())));
+    const auto fixture_path = std::filesystem::path(executable_path.data()).parent_path() / L"startup_module_fixture.dll";
+    const auto fixture = LoadLibraryW(fixture_path.c_str());
+    REQUIRE(fixture);
+    const auto game = reinterpret_cast<uintptr_t>(fixture);
+    const auto exe = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
+    auto job = std::make_unique<StartupJob>();
+    job->request.game = game;
+    job->request.exe = exe;
+    job->request.native_required = true;
+    job->prepare = delayed_startup;
+    REQUIRE(queue_startup(job));
+    startup_job = std::move(job);
+    REQUIRE(WaitForSingleObject(startup_entered, 5000) == WAIT_OBJECT_0);
+    // Exercise the real GetModuleHandleEx/FreeLibrary callback path, including
+    // the owner unloading its module while preparation still holds a reference.
+    REQUIRE(FreeLibrary(fixture));
+    REQUIRE(GetModuleHandleW(fixture_path.c_str()) == fixture);
+    REQUIRE(!consume_startup(game, exe) && !startup_finished && !native_layout_validated);
+    SetEvent(startup_release);
+    const auto deadline = GetTickCount64() + 5000;
+    while (!startup_job->ready.load(std::memory_order_acquire) && GetTickCount64() < deadline) Sleep(1);
+    REQUIRE(startup_job->ready.load(std::memory_order_acquire));
+    REQUIRE(!GetModuleHandleW(fixture_path.c_str()));
+    // Export failure never incurs another 10-second wait or invalidates native evidence.
+    REQUIRE(consume_startup(game, exe));
+    REQUIRE(startup_finished && native_layout_validated && kit_store_rva == 0x123450 && !startup_job);
+    REQUIRE(ensure_startup(game, exe) && !startup_job);
+
+    // Exceptions also release the held game module before publishing completion.
+    ResetEvent(startup_entered);
+    ResetEvent(startup_release);
+    startup_throw = true;
+    const auto throwing_fixture = LoadLibraryW(fixture_path.c_str());
+    REQUIRE(throwing_fixture);
+    job = std::make_unique<StartupJob>();
+    job->request.game = reinterpret_cast<uintptr_t>(throwing_fixture);
+    job->prepare = delayed_startup;
+    REQUIRE(queue_startup(job));
+    REQUIRE(WaitForSingleObject(startup_entered, 5000) == WAIT_OBJECT_0);
+    REQUIRE(FreeLibrary(throwing_fixture));
+    REQUIRE(GetModuleHandleW(fixture_path.c_str()) == throwing_fixture);
+    SetEvent(startup_release);
+    const auto exception_deadline = GetTickCount64() + 5000;
+    while (!job->ready.load(std::memory_order_acquire) && GetTickCount64() < exception_deadline) Sleep(1);
+    REQUIRE(job->ready.load(std::memory_order_acquire));
+    REQUIRE(!job->result.native_ready && !job->result.error.empty());
+    REQUIRE(!GetModuleHandleW(fixture_path.c_str()));
+    job.reset();
+    startup_throw = false;
+
+    job = std::make_unique<StartupJob>();
+    job->request.game = 1; // Unmapped address: acquisition fails and rolls back the add-on reference.
+    REQUIRE(!queue_startup(job));
+    REQUIRE(!job->addon_reference && !job->game_reference && !job->ready.load());
+    job.reset();
+    CloseHandle(startup_entered);
+    CloseHandle(startup_release);
+    startup_entered = startup_release = nullptr;
+
+    const auto failed_result = [&](bool identity, size_t attempt) {
+        startup_finished = false;
+        native_layout_validated = false;
+        native_attempts = attempt;
+        fatal_error = false;
+        startup_job = std::make_unique<StartupJob>();
+        startup_job->request.game = 1;
+        startup_job->request.exe = 2;
+        startup_job->request.native_required = true;
+        startup_job->result.identity_rejected = identity;
+        startup_job->result.error = "simulated incompatible native layout";
+        startup_job->ready.store(true, std::memory_order_release);
+        REQUIRE(!consume_startup(1, 2));
+        REQUIRE(!startup_finished && !native_layout_validated);
+    };
+    failed_result(false, 1);
+    REQUIRE(!fatal_error);
+    failed_result(false, 6);
+    REQUIRE(fatal_error);
+    failed_result(true, 1);
+    REQUIRE(fatal_error);
+    startup_job = std::make_unique<StartupJob>();
+    startup_job->request.game = 1;
+    startup_job->request.exe = 2;
+    startup_job->result.native_ready = true;
+    startup_job->ready.store(true, std::memory_order_release);
+    REQUIRE(!consume_startup(3, 2) && !startup_finished && !native_layout_validated);
+    native_layout = saved_layout;
+    kit_store_rva = saved_rva;
+    last_status = saved_status;
+    native_attempts = last_native_attempt = 0;
+    fatal_error = startup_finished = native_layout_validated = false;
+    std::puts("BACKGROUND_STARTUP_OK: real module references, unload during work, exception cleanup, no blocking, optional export failure, identity/native/module guards");
 }
 
 void test_overlay_snapshot() {
@@ -605,9 +828,11 @@ int main() {
         initialize_mapping_indexes();
         for (const auto &target : profile_targets()) test_target(target);
         test_independent_publication();
+        test_same_poll_publication();
         test_session_log(temporary.directory);
         test_local_observation(temporary.directory);
         test_native_anchors();
+        test_background_startup();
         test_overlay_snapshot();
         REQUIRE(legacy_addon_name(L"CM14Isolation.addon64"));
         REQUIRE(legacy_addon_name(L"B01Isolation.ADDON64"));

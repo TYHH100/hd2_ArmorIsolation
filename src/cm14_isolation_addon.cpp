@@ -111,13 +111,32 @@ std::atomic_flag callback_active = ATOMIC_FLAG_INIT;
 isolation_profile::Profile active_profile;
 std::vector<TargetState> target_states;
 bool profiles_initialized = false;
-bool local_data_saved = false;
-uint64_t last_local_attempt = 0;
-unsigned local_attempts = 0;
 bool native_layout_validated = false;
 uint64_t last_native_attempt = 0;
 size_t native_attempts = 0;
 armor_native::Layout native_layout;
+bool startup_finished = false;
+struct StartupRequest {
+    uintptr_t game = 0, exe = 0;
+    bool native_required = false, adaptive = false;
+    std::string expected_game_hash, expected_exe_hash;
+};
+struct StartupResult {
+    bool native_ready = false, identity_rejected = false, local_saved = false;
+    armor_native::Layout layout;
+    std::string error, local_error;
+    uint64_t total_ms = 0, native_ms = 0, local_ms = 0;
+};
+StartupResult prepare_startup(const StartupRequest &request);
+struct StartupJob {
+    StartupRequest request;
+    StartupResult result;
+    StartupResult (*prepare)(const StartupRequest &) = &prepare_startup;
+    HMODULE addon_reference = nullptr, game_reference = nullptr;
+    std::atomic<bool> ready{false};
+};
+std::unique_ptr<StartupJob> startup_job;
+std::string performance_status;
 std::filesystem::path profiles_directory;
 std::filesystem::path patches_directory;
 struct TargetMappings {
@@ -445,6 +464,161 @@ bool code_matches(uintptr_t game) noexcept {
     std::array<uint8_t, expected.size()> observed{};
     return read_bytes(game + 0xf39010, observed.data(), observed.size()) && observed == expected;
 }
+
+#if defined(UNIVERSAL_ISOLATION)
+StartupResult prepare_startup(const StartupRequest &request) {
+    StartupResult result;
+    const auto started = GetTickCount64();
+    try {
+        std::array<wchar_t, 32768> game_path{}, exe_path{};
+        const auto game_length = GetModuleFileNameW(reinterpret_cast<HMODULE>(request.game), game_path.data(),
+                                                    static_cast<DWORD>(game_path.size()));
+        const auto exe_length = GetModuleFileNameW(nullptr, exe_path.data(), static_cast<DWORD>(exe_path.size()));
+        armor_local_data::require(game_length && game_length < game_path.size() &&
+                                  exe_length && exe_length < exe_path.size(), "cannot locate current modules");
+        const auto game_hash = armor_local_data::file_sha256(game_path.data());
+        const auto exe_hash = armor_local_data::file_sha256(exe_path.data());
+        if (request.adaptive && (game_hash != request.expected_game_hash || exe_hash != request.expected_exe_hash)) {
+            result.identity_rejected = true;
+            throw std::runtime_error("adaptive package belongs to another game build; regenerate against the current game");
+        }
+        armor_local_data::json diagnostics;
+        result.layout = armor_native::discover(GetCurrentProcess(), request.game, request.exe, &diagnostics);
+        result.native_ms = GetTickCount64() - started;
+        const auto local_started = GetTickCount64();
+        armor_local_data::json report;
+        try {
+            std::string conflict;
+            if (!no_legacy_addons(conflict)) throw std::runtime_error(conflict);
+            report = armor_local_data::capture(GetCurrentProcess(), request.game, game_path.data(),
+                                               &result.layout.kit_discovery);
+            armor_native::attach_validated_evidence(report, result.layout, exe_hash, std::move(diagnostics));
+            report["snapshot_stage"] = "before_isolation";
+        } catch (const std::exception &error) {
+            // The generator export is optional. It cannot invalidate an independently
+            // validated layout, nor hold runtime initialization hostage to file I/O.
+            result.local_error = error.what();
+        }
+        armor_local_data::require(game_hash == armor_local_data::file_sha256(game_path.data()) &&
+            exe_hash == armor_local_data::file_sha256(exe_path.data()), "game files changed during native validation");
+        result.native_ready = true;
+        if (result.local_error.empty()) {
+            try {
+                std::string conflict;
+                if (!no_legacy_addons(conflict)) throw std::runtime_error(conflict);
+                const auto path = std::filesystem::path(exe_path.data()).parent_path().parent_path() /
+                                  L"ArmorIsolation.local-game.json";
+                armor_local_data::save(path, report);
+                result.local_saved = true;
+            } catch (const std::exception &error) {
+                result.local_error = error.what();
+            }
+        }
+        result.local_ms = GetTickCount64() - local_started;
+    } catch (const std::exception &error) {
+        result.error = error.what();
+    }
+    result.total_ms = GetTickCount64() - started;
+    return result;
+}
+
+void CALLBACK startup_worker(PTP_CALLBACK_INSTANCE instance, void *context) noexcept {
+    auto *job = static_cast<StartupJob *>(context);
+    const auto addon_reference = std::exchange(job->addon_reference, nullptr);
+    const auto game_reference = std::exchange(job->game_reference, nullptr);
+    // The callback supports only one deferred DLL release. Keep its own code
+    // mapped until return; release the game separately after the last module read.
+    // DllMain never waits for this worker.
+    if (addon_reference) FreeLibraryWhenCallbackReturns(instance, addon_reference);
+    CallbackMayRunLong(instance);
+    try {
+        job->result = job->prepare(job->request);
+    } catch (...) {
+        try { job->result.error = "unexpected startup preparation exception"; } catch (...) {}
+    }
+    if (game_reference) FreeLibrary(game_reference);
+    // Last access to job: the polling callback may now consume and destroy it.
+    job->ready.store(true, std::memory_order_release);
+}
+
+bool queue_startup(std::unique_ptr<StartupJob> &job) {
+    if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+            reinterpret_cast<LPCWSTR>(&startup_worker), &job->addon_reference))
+        return false;
+    if (!GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+            reinterpret_cast<LPCWSTR>(job->request.game), &job->game_reference)) {
+        FreeLibrary(job->addon_reference);
+        job->addon_reference = nullptr;
+        return false;
+    }
+    if (TrySubmitThreadpoolCallback(startup_worker, job.get(), nullptr))
+        return true;
+    if (job->game_reference) FreeLibrary(job->game_reference);
+    if (job->addon_reference) FreeLibrary(job->addon_reference);
+    job->game_reference = job->addon_reference = nullptr;
+    return false;
+}
+
+bool consume_startup(uintptr_t game, uintptr_t exe) {
+    if (!startup_job || !startup_job->ready.load(std::memory_order_acquire)) return false;
+    auto completed = std::move(startup_job);
+    const auto &request = completed->request;
+    const auto &result = completed->result;
+    if (request.game != game || request.exe != exe) {
+        status("[WAIT]", "modules changed during startup preparation; retry without publication");
+        return false;
+    }
+    std::string timing;
+    timing = "startup background=1 total_ms=" + std::to_string(result.total_ms) +
+        " native_ms=" + std::to_string(result.native_ms) + " local_export_ms=" + std::to_string(result.local_ms);
+    status("[PERF]", timing, performance_status);
+    if (result.identity_rejected || (!result.native_ready && request.native_required)) {
+        fatal_error = result.identity_rejected || native_attempts >= 6;
+        status(fatal_error ? "[FAILED]" : "[WAIT]",
+               "automatic compatibility not ready or unsupported: " + result.error);
+        return false;
+    }
+    if (result.native_ready) {
+        native_layout = result.layout;
+        kit_store_rva = native_layout.kit_store;
+        native_layout_validated = true;
+        status("[ADAPTED]", "native layout signatures and resource manager validated; source guards remain mandatory");
+    }
+    startup_finished = true;
+    status("[LOCAL_DATA]", result.local_saved ?
+        "exported ArmorIsolation.local-game.json in game root for the generator" :
+        "cannot save local observation; runtime source guards remain active: " +
+            (result.local_error.empty() ? result.error : result.local_error));
+    return true;
+}
+
+bool ensure_startup(uintptr_t game, uintptr_t exe) {
+    if (startup_finished) return true;
+    if (startup_job) return consume_startup(game, exe);
+    const auto now = GetTickCount64();
+    if (last_native_attempt && now - last_native_attempt < 10000) return false;
+    last_native_attempt = now;
+    ++native_attempts;
+    auto job = std::make_unique<StartupJob>();
+    job->request.game = game;
+    job->request.exe = exe;
+    job->request.adaptive = active_profile.adaptive;
+    job->request.native_required = active_profile.adaptive ||
+        !module_matches(game, 0x6a86132e, 0x3a6b000) || !module_matches(exe, 0x6a85c636, 0x39f1000);
+    if (active_profile.adaptive) {
+        job->request.expected_game_hash = active_profile.expected_game_dll_sha256;
+        job->request.expected_exe_hash = active_profile.compatibility.at("exe_sha256").get<std::string>();
+    }
+    if (!queue_startup(job)) {
+        fatal_error = native_attempts >= 6;
+        status(fatal_error ? "[FAILED]" : "[WAIT]", "cannot queue read-only startup preparation; no config write");
+        return false;
+    }
+    startup_job = std::move(job);
+    status("[WAIT]", "validating native layout and exporting local data in background; no config write");
+    return false;
+}
+#endif
 
 bool layout_matches(const TargetKit &target, const Snapshot &snapshot, std::string &error) {
     if (snapshot.data.size() != clone_size(target) || !target.body_count || !target.piece_count) {
@@ -848,9 +1022,37 @@ bool publish_pointer(uintptr_t address, uintptr_t expected, uintptr_t desired) n
     }
 }
 
+bool publish_indexed_pointer(const Snapshot &source, uintptr_t clone, KitIndex *index) noexcept {
+    if (source.data.size() < sizeof(uint32_t)) return false;
+    KitLocation *location = nullptr;
+    size_t slot = 0;
+    if (index) {
+        const auto found = index->locations.find(get<uint32_t>(source.data.data(), 0));
+        if (source.store != index->store || source.table != index->table || source.count != index->count ||
+            source.entry < index->table || (source.entry - index->table) % sizeof(uintptr_t) ||
+            found == index->locations.end() || found->second.matches != 1 ||
+            found->second.entry != source.entry || found->second.kit != source.kit)
+            return false;
+        slot = (source.entry - index->table) / sizeof(uintptr_t);
+        if (slot >= index->pointers.size() || index->pointers[slot] != source.kit)
+            return false;
+        location = &found->second;
+    }
+    if (!publish_pointer(source.entry, source.kit, clone))
+        return false;
+    // Accept only our successful CAS, never adopt unrelated engine/other add-on changes.
+    // The next target still compares the entire live table against this expected table.
+    if (index) {
+        index->pointers[slot] = clone;
+        location->kit = clone;
+    }
+    return true;
+}
+
+template<class Probe = decltype(&probe_active_resource)>
 void poll_target(uintptr_t game, uintptr_t exe, const TargetKit &target,
-                 TargetState &runtime, bool diagnostic, const KitIndex *shared_index = nullptr,
-                 PollResourceCache *poll_resources = nullptr) {
+                 TargetState &runtime, bool diagnostic, KitIndex *shared_index = nullptr,
+                 PollResourceCache *poll_resources = nullptr, Probe probe = &probe_active_resource) {
     if (runtime.fatal_error)
         return;
     Snapshot snapshot;
@@ -876,15 +1078,15 @@ void poll_target(uintptr_t game, uintptr_t exe, const TargetKit &target,
         return;
     }
     if (poll_resources) {
-        const auto cached_probe = [poll_resources](uintptr_t resource_exe, uint64_t type,
+        const auto cached_probe = [poll_resources, probe](uintptr_t resource_exe, uint64_t type,
                                                    uint64_t name, HANDLE process) {
-            return poll_resources->get(resource_exe, type, name, process, &probe_active_resource);
+            return poll_resources->get(resource_exe, type, name, process, probe);
         };
         if (!private_resources_ready(exe, target, error, &runtime, cached_probe)) {
             target_status(target, runtime, "[WAIT]", error);
             return;
         }
-    } else if (!private_resources_ready(exe, target, error, &runtime)) {
+    } else if (!private_resources_ready(exe, target, error, &runtime, probe)) {
         target_status(target, runtime, "[WAIT]", error);
         return;
     }
@@ -914,8 +1116,9 @@ void poll_target(uintptr_t game, uintptr_t exe, const TargetKit &target,
     }
     std::memcpy(allocation, candidate.data(), candidate.size());
     // The only game-owned write is one aligned pointer, after two complete source reads.
-    if (!snapshot_unchanged(game, target, snapshot, shared_index) || !private_resources_ready(exe, target, error) ||
-        !publish_pointer(snapshot.entry, snapshot.kit, clone)) {
+    if (!snapshot_unchanged(game, target, snapshot, shared_index) ||
+        !private_resources_ready(exe, target, error, nullptr, probe) ||
+        !publish_indexed_pointer(snapshot, clone, shared_index)) {
         VirtualFree(allocation, 0, MEM_RELEASE);
         target_status(target, runtime, "[WAIT]", "source config or resource readiness changed before publication; no config published");
         return;
@@ -938,54 +1141,6 @@ void poll() {
     initialize_paths();
     if (fatal_error)
         return;
-#if defined(UNIVERSAL_ISOLATION)
-    if (!local_data_saved) {
-        const auto observed_game = reinterpret_cast<uintptr_t>(GetModuleHandleW(L"game.dll"));
-        uintptr_t observed_store = 0;
-        uint32_t observed_count = 0;
-        const bool known = observed_game && module_matches(observed_game, 0x6a86132e, 0x3a6b000);
-        const bool ready = known && code_matches(observed_game) &&
-            read_value(observed_game + kit_store_rva, observed_store) &&
-            read_value(observed_store + 8, observed_count) && observed_count > 0;
-        if (observed_game && (!known || ready)) {
-            const auto now = GetTickCount64();
-            if (last_local_attempt && now - last_local_attempt < 10000) return;
-            last_local_attempt = now;
-            ++local_attempts;
-            try {
-                std::string conflict;
-                if (!no_legacy_addons(conflict)) throw std::runtime_error(conflict);
-                std::array<wchar_t, 32768> observed_path{};
-                const DWORD length = GetModuleFileNameW(reinterpret_cast<HMODULE>(observed_game),
-                    observed_path.data(), static_cast<DWORD>(observed_path.size()));
-                if (!length || length >= observed_path.size()) throw std::runtime_error("cannot locate loaded game.dll");
-                auto report = armor_local_data::capture(GetCurrentProcess(), observed_game, observed_path.data());
-                std::array<wchar_t, 32768> exe_path{};
-                const auto exe_length = GetModuleFileNameW(nullptr, exe_path.data(), static_cast<DWORD>(exe_path.size()));
-                if (!exe_length || exe_length >= exe_path.size()) throw std::runtime_error("cannot locate game executable");
-                armor_native::attach_evidence(report, GetCurrentProcess(), observed_game,
-                    reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr)), observed_path.data(), exe_path.data());
-                report["snapshot_stage"] = "before_isolation";
-                const auto path = std::filesystem::path(exe_path.data()).parent_path().parent_path() / L"ArmorIsolation.local-game.json";
-                armor_local_data::save(path, report);
-                local_data_saved = true;
-                status("[LOCAL_DATA]", "exported ArmorIsolation.local-game.json in game root for the generator");
-            } catch (const std::exception &error) {
-                status("[LOCAL_DATA]", std::string("cannot save local observation: ") + error.what());
-                if (local_attempts < 6) return;
-                local_data_saved = true;
-            }
-        }
-    }
-    if (!initialize_profiles() || active_profile.targets.empty())
-        return;
-    std::string conflict;
-    if (!no_legacy_addons(conflict)) {
-        fatal_error = true;
-        status("[FAILED]", conflict);
-        return;
-    }
-#endif
     const int enabled = GetPrivateProfileIntW(config_section, L"Enabled", 1, config_path.c_str());
     const int diagnostic = GetPrivateProfileIntW(config_section, L"DiagnosticOnly", 0, config_path.c_str());
     if ((enabled != 0 && enabled != 1) || (diagnostic != 0 && diagnostic != 1)) {
@@ -1005,6 +1160,15 @@ void poll() {
                                    "disabled by configuration; no config write");
         return;
     }
+#if defined(UNIVERSAL_ISOLATION)
+    if (!initialize_profiles()) return;
+    std::string conflict;
+    if (!no_legacy_addons(conflict)) {
+        fatal_error = true;
+        status("[FAILED]", conflict);
+        return;
+    }
+#endif
     const uintptr_t game = reinterpret_cast<uintptr_t>(GetModuleHandleW(L"game.dll"));
     const uintptr_t exe = reinterpret_cast<uintptr_t>(GetModuleHandleW(nullptr));
     if (!game) {
@@ -1012,35 +1176,7 @@ void poll() {
         return;
     }
 #if defined(UNIVERSAL_ISOLATION)
-    if (!native_layout_validated && (active_profile.adaptive ||
-        !module_matches(game, 0x6a86132e, 0x3a6b000) || !module_matches(exe, 0x6a85c636, 0x39f1000))) {
-        const uint64_t now = GetTickCount64();
-        if (last_native_attempt && now - last_native_attempt < 10000) return;
-        last_native_attempt = now;
-        ++native_attempts;
-        try {
-            std::array<wchar_t, 32768> game_path{}, exe_path{};
-            const auto game_length = GetModuleFileNameW(reinterpret_cast<HMODULE>(game), game_path.data(), static_cast<DWORD>(game_path.size()));
-            const auto exe_length = GetModuleFileNameW(nullptr, exe_path.data(), static_cast<DWORD>(exe_path.size()));
-            armor_local_data::require(game_length && game_length < game_path.size() && exe_length && exe_length < exe_path.size(),
-                                      "cannot locate current modules");
-            const auto game_hash = armor_local_data::file_sha256(game_path.data());
-            const auto exe_hash = armor_local_data::file_sha256(exe_path.data());
-            armor_local_data::require(!active_profile.adaptive ||
-                (game_hash == active_profile.expected_game_dll_sha256 && exe_hash == active_profile.compatibility.at("exe_sha256")),
-                "adaptive package belongs to another game build; regenerate against the current game");
-            native_layout = armor_native::discover(GetCurrentProcess(), game, exe);
-            armor_local_data::require(game_hash == armor_local_data::file_sha256(game_path.data()) &&
-                exe_hash == armor_local_data::file_sha256(exe_path.data()), "game files changed during native validation");
-            kit_store_rva = native_layout.kit_store;
-            native_layout_validated = true;
-            status("[ADAPTED]", "native layout signatures and resource manager validated; source guards remain mandatory");
-        } catch (const std::exception &error) {
-            fatal_error = native_attempts >= 6;
-            status(fatal_error ? "FAILED" : "WAIT", std::string("automatic compatibility not ready or unsupported: ") + error.what());
-            return;
-        }
-    }
+    if (!ensure_startup(game, exe) || active_profile.targets.empty()) return;
     if (!native_layout_validated && !code_matches(game)) {
         status("[WAIT]", "verified armor selection code is not available; no config write");
         return;
@@ -1064,9 +1200,23 @@ void poll() {
         return;
     }
     PollResourceCache poll_resources;
+    const auto publication_started = GetTickCount64();
+    size_t publications = 0;
     for (size_t index = 0; index < std::size(profile_targets()); ++index)
+    {
+        const auto previous = target_states[index].publication_count;
         poll_target(game, exe, profile_targets()[index], target_states[index], diagnostic != 0,
                     &kit_index, &poll_resources);
+        publications += target_states[index].publication_count - previous;
+    }
+#if defined(UNIVERSAL_ISOLATION)
+    if (publications)
+        status("[PERF]", "publication_pass_ms=" + std::to_string(GetTickCount64() - publication_started) +
+            " applied=" + std::to_string(publications), performance_status);
+#else
+    (void)publication_started;
+    (void)publications;
+#endif
 }
 
 void on_present(reshade::api::command_queue *, reshade::api::swapchain *, const reshade::api::rect *,
@@ -1075,7 +1225,9 @@ void on_present(reshade::api::command_queue *, reshade::api::swapchain *, const 
         return;
     const uint64_t now = GetTickCount64();
 #if defined(UNIVERSAL_ISOLATION)
-    const bool requested = ui_poll_requested.exchange(false, std::memory_order_acq_rel);
+    const bool requested = ui_poll_requested.exchange(false, std::memory_order_acq_rel) ||
+        (active_enabled.load(std::memory_order_relaxed) && startup_job &&
+         startup_job->ready.load(std::memory_order_acquire));
 #else
     const bool requested = false;
 #endif

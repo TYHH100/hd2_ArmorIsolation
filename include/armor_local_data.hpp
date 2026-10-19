@@ -191,15 +191,30 @@ inline json snapshot(HANDLE process, uintptr_t game, const Discovery &layout) {
     return kits;
 }
 
-inline json capture(HANDLE process, uintptr_t game, const std::filesystem::path &module_path = {}) {
+inline json capture(HANDLE process, uintptr_t game, const std::filesystem::path &module_path = {},
+                    const Discovery *validated_session_layout = nullptr) {
     json report{{"schema", "hd2-local-game-observation/1"}, {"write_authorized", false},
         {"game_runtime_verified", false}, {"source", "read-only loaded game.dll"}};
     try {
         if (!module_path.empty()) report["game_dll_sha256"] = file_sha256(module_path);
         const bool verified_file = report.value("game_dll_sha256", "") ==
             "cc75948d90fdfde259dcb519e9933db7ffa3ccb281ce4fb89e6b1b011557470c";
-        const auto layout = discover(process, game, verified_file);
-        report["discovery"] = verified_file ? "verified_file_and_full_anchor" : "unique_full_anchor_scan";
+        // Only the in-process startup job supplies a layout, from its own complete native
+        // validation. External extraction still discovers it independently; never use a file cache.
+        const auto layout = validated_session_layout ? *validated_session_layout : discover(process, game, verified_file);
+        if (validated_session_layout) {
+            const auto dos = read<IMAGE_DOS_HEADER>(process, game);
+            require(dos.e_magic == IMAGE_DOS_SIGNATURE && dos.e_lfanew >= sizeof(dos) && dos.e_lfanew < 0x10000,
+                    "validated session game module changed");
+            const auto nt = read<IMAGE_NT_HEADERS64>(process, game + dos.e_lfanew);
+            require(nt.Signature == IMAGE_NT_SIGNATURE && nt.FileHeader.Machine == IMAGE_FILE_MACHINE_AMD64 &&
+                nt.OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC &&
+                nt.FileHeader.TimeDateStamp == layout.timestamp && nt.OptionalHeader.SizeOfImage == layout.image_size &&
+                layout.image_size >= 8 && layout.global_rva <= layout.image_size - 8,
+                "validated session game module changed");
+        }
+        report["discovery"] = validated_session_layout ? "validated_session_layout" :
+            (verified_file ? "verified_file_and_full_anchor" : "unique_full_anchor_scan");
         report["pe_timestamp"] = hex(layout.timestamp, 8);
         report["image_size"] = layout.image_size;
         report["kit_store_rva"] = hex(layout.global_rva, 8);

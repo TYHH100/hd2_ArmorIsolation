@@ -21,7 +21,7 @@ Helldivers 2/
 
 ## 加载与发布流程
 
-1. 首次 present 回调读取游戏 data 顶层主补丁的固定尾部与配置，不在 DllMain 中访问文件，不递归备份目录。同包组件配置一致则去重，不同则整组拒绝；旧 JSON 可兼容读取。读取一次后保持不变。
+1. 首次启用时的 present 回调读取游戏 data 顶层主补丁的固定尾部与配置，不在 DllMain 中访问文件，不递归备份目录。同包组件配置一致则去重，不同则整组拒绝；旧 JSON 可兼容读取。读取一次后保持不变。Enabled=0 时不启动本机采集或原生扫描。
 2. 用 nlohmann/json 解析并严格验证 schema、重复键、数据类型、数量与大小。单文件上限 8 MiB、总计 32 MiB、最多 64 包和 402 目标。
 3. 整组验证包 ID、Kit 归属、完整及高 32 位资源 ID 冲突、私有 ID 返回原资源的别名、允许的 Piece 偏移及实际依赖。重复 Kit 或任一损坏配置让整组停止，不先发布一部分。
 4. 配置只声明资源和布局，不接受地址或函数调用。目标体甲/头盔、Body/Piece 及源 Unit 必须与实际游戏配置相符；计划修改的纹理字段也逐 Piece 核对原值。材质到纹理的传递依赖由离线生成器解析，插件核对显式依赖表，不能仅靠 JSON 再解析游戏资源。
@@ -59,9 +59,13 @@ DiagnosticOnly=0
 
 每秒轮询共用一次完整 Kit 表索引；每个目标仍核对当前表、指针及原始数据。字段与资源映射预索引，源数据相同时复用候选配置；发生变化立即重新校验。等待资源时先检查上次未就绪项，遇到未就绪项提前结束，发布前仍重新检查全部依赖及完整源快照，不缓存跨轮询的“已就绪”结论。`checked_ready` 仅表示本次已检查的部分，不能当成总加载进度。
 
+2026-10-13 修正：自身 CAS 发布成功后，仅同步本轮索引中该 Kit 的预期指针；后续目标仍核对整个实时表。多个就绪目标可同轮发布，外部修改不会被接受为正常更新。配置发布仍不主动重建已存在的角色外观；若装备先于发布完成，仍须切换装备。
+
 `ArmorIsolation.log` 每次插件启动的首次成功写入清空旧内容，之后追加本次状态变化；相同状态不会重复写入。首次打开失败会在后续日志调用重试。
 
-启动后、该插件首次发布前，提取稳定 Kit 和原生布局证据，成功后原子覆盖 **游戏根目录** 的 `ArmorIsolation.local-game.json`。文件包含 DLL/EXE SHA-256、Kit 内容摘要及来源阶段。失败保留旧完整文件并记录日志，10 秒间隔最多尝试 6 次；不每秒扫描、不累积历史转储。未知版本检测在代码段中要求唯一完整特征，跨模块引用和资源表也需符合既有布局。
+启动后、该插件首次发布前，用单个只读后台任务识别完整原生布局、计算 DLL/EXE 哈希并提取稳定 Kit，成功后原子覆盖 **游戏根目录** 的 `ArmorIsolation.local-game.json`。任务不调用 ReShade、不修改游戏内存；后台只写自己的结果，present 回调在 acquire/release 完成交接后采用布局，再重新校验源配置和资源。导出和运行时复用同一任务已验证的布局，不重复扫描代码；不会读取旧 JSON 中的地址来授权发布。任务期间增持插件及 game.dll 的模块引用；插件自身只登记一次 `FreeLibraryWhenCallbackReturns`，game.dll 在最后读取后、发布完成状态前用 `FreeLibrary` 释放，DllMain 不等待任务。同一回调重复登记延后释放在本机触发 `0xc000000d`，因此不能把两个模块都交给该 API。
+
+原生布局未就绪时保持无发布，10 秒间隔最多尝试 6 次；不同构建身份直接拒绝。本机快照采集或写盘失败保留旧完整文件并记录日志，原生布局已通过时继续运行时初始化，不再等待六轮导出。发布后不重采集，避免把自己的私有配置提升为原始数据。日志增加 `[PERF] startup background=1 total_ms=... native_ms=... local_export_ms=...` 和有发布时的 `publication_pass_ms=... applied=...`，用于区分扫描耗时与目标发布耗时；数值需要游戏实测。
 
 生成器现在可以消费匹配当前文件哈希的导出，无需保持游戏运行。缺失、损坏或过期则尝试重新提取，失败提示先启动游戏。未知版本外部提取若发现已加载隔离插件，不提升为原始快照；改用新插件在自身发布前导出的文件。生成操作独立绑定游戏身份和快照，发布包前再次检查，输出 v2 配置和 `compatibility/kits.json`。
 
@@ -78,6 +82,8 @@ dist/armor-isolation-runtime/validate_runtime_profile.exe --capture-game <游戏
 桌面工具的“读取本机游戏数据”比较内置基准并报告新增、缺失和变化，保存单份 `local-game-analysis.json`；检查通过也导出游戏根目录的复用文件。当前本机 402 条记录中 2 条不同于原始快照，因此已知版本导出明确使用内置原始 Kit 配合本机布局证据，标记 `verified_baseline`，不会把这两条变化纳入原始数据。
 
 外部接口依据：[ReadProcessMemory](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-readprocessmemory)、[PE 格式](https://learn.microsoft.com/en-us/windows/win32/debug/pe-format)、[fopen 写入模式](https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/fopen-wfopen)。这些文档不证明游戏内部结构兼容。
+
+后台任务的模块生命周期依据：[GetModuleHandleExW](https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-getmodulehandleexw)、[FreeLibraryWhenCallbackReturns](https://learn.microsoft.com/en-us/windows/win32/api/threadpoolapiset/nf-threadpoolapiset-freelibrarywhencallbackreturns)、[FreeLibrary](https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-freelibrary)、[DLL 最佳实践](https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-library-best-practices)。重任务在首次启用时排队，不在 DllMain 中创建或等待。重复登记的拒绝行为由本机 API 复现及游戏转储确认，接口文档没有明确列出这一限制。
 
 `DiagnosticOnly=1` 只检查、不发布新配置；`Enabled=0` 停止继续发布。若已经发布，两个选项都不能恢复旧配置，仍须重启。
 
