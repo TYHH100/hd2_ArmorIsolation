@@ -887,6 +887,109 @@ void test_background_startup() {
     std::puts("BACKGROUND_STARTUP_OK: real module references, unload during work, exception cleanup, no blocking, optional export failure, identity/native/module guards");
 }
 
+void test_startup_options() {
+    TemporaryProfiles temporary;
+    const auto saved_config = config_path;
+    const auto saved_options = startup_options;
+    const auto saved_known = startup_options_known;
+    const auto saved_status = last_status;
+    const auto saved_rva = kit_store_rva;
+    config_path = (temporary.directory / L"ArmorIsolation.ini").wstring();
+    startup_options_known = false;
+    REQUIRE(read_startup_options()); // Missing keys preserve existing defaults.
+    REQUIRE(startup_options.capture_local && startup_options.auto_adapt);
+    REQUIRE(persist_option(L"CaptureLocalSnapshot", false));
+    REQUIRE(persist_option(L"AutoAdapt", false));
+    REQUIRE(read_startup_options());
+    REQUIRE(!configured_capture_local.load() && !configured_auto_adapt.load());
+    REQUIRE(startup_options.capture_local && startup_options.auto_adapt); // Next launch only.
+    startup_options_known = false; // Simulate a fresh session.
+    REQUIRE(read_startup_options());
+    REQUIRE(!startup_options.capture_local && !startup_options.auto_adapt);
+    REQUIRE(WritePrivateProfileStringW(config_section, L"AutoAdapt", L"2", config_path.c_str()));
+    REQUIRE(!read_startup_options());
+    REQUIRE(!startup_options.capture_local && !startup_options.auto_adapt);
+    REQUIRE(persist_option(L"AutoAdapt", false));
+
+    StartupRequest disabled;
+    disabled.game = disabled.exe = 1; // Unmapped: no module reads or hashing are allowed.
+    disabled.options = {false, false};
+    const auto skipped = prepare_startup(disabled);
+    REQUIRE(skipped.error.empty() && !skipped.native_ready && !skipped.local_saved);
+
+    // Actual startup entry: both off skips the worker for the exact built-in build,
+    // but cannot turn a newer build or an adaptive package into an old-offset fallback.
+    const auto image = [](uint32_t stamp, uint32_t size) {
+        std::vector<uint8_t> data(4096);
+        IMAGE_DOS_HEADER dos{};
+        dos.e_magic = IMAGE_DOS_SIGNATURE;
+        dos.e_lfanew = 128;
+        std::memcpy(data.data(), &dos, sizeof(dos));
+        IMAGE_NT_HEADERS64 pe{};
+        pe.Signature = IMAGE_NT_SIGNATURE;
+        pe.FileHeader.Machine = IMAGE_FILE_MACHINE_AMD64;
+        pe.FileHeader.TimeDateStamp = stamp;
+        pe.OptionalHeader.Magic = IMAGE_NT_OPTIONAL_HDR64_MAGIC;
+        pe.OptionalHeader.SizeOfImage = size;
+        std::memcpy(data.data() + dos.e_lfanew, &pe, sizeof(pe));
+        return data;
+    };
+    auto game = image(0x6a86132e, 0x3a6b000), exe = image(0x6a85c636, 0x39f1000);
+    const auto game_base = reinterpret_cast<uintptr_t>(game.data());
+    const auto exe_base = reinterpret_cast<uintptr_t>(exe.data());
+    const auto saved_adaptive = active_profile.adaptive;
+    active_profile.adaptive = false;
+    REQUIRE(ensure_startup(game_base, exe_base));
+    REQUIRE(startup_finished && !startup_job && native_attempts == 0 && !native_layout_validated);
+    startup_finished = false;
+    REQUIRE(!ensure_startup(game_base, game_base));
+    REQUIRE(fatal_error && !startup_job && native_attempts == 0);
+    fatal_error = false;
+    active_profile.adaptive = true;
+    REQUIRE(!ensure_startup(game_base, exe_base));
+    REQUIRE(fatal_error && !startup_job && native_attempts == 0);
+    active_profile.adaptive = saved_adaptive;
+
+    // Completed snapshot-only work must never install its discovered layout.
+    for (bool capture : {false, true}) for (bool adapt : {false, true}) {
+        fatal_error = startup_finished = native_layout_validated = false;
+        startup_job = std::make_unique<StartupJob>();
+        startup_job->request.game = game_base;
+        startup_job->request.exe = exe_base;
+        startup_job->request.options = {capture, adapt};
+        startup_job->result.native_ready = true;
+        startup_job->result.layout.kit_store = 0x123450;
+        startup_job->result.local_saved = capture;
+        startup_job->ready.store(true, std::memory_order_release);
+        kit_store_rva = saved_rva;
+        REQUIRE(consume_startup(game_base, exe_base));
+        REQUIRE(native_layout_validated == adapt);
+        REQUIRE(kit_store_rva == (adapt ? 0x123450 : saved_rva));
+        REQUIRE(!startup_job && startup_finished);
+    }
+    startup_finished = native_layout_validated = false;
+    startup_job = std::make_unique<StartupJob>();
+    startup_job->request.game = game_base;
+    startup_job->request.exe = exe_base;
+    startup_job->request.options = {true, false};
+    startup_job->request.native_required = true;
+    startup_job->result.native_ready = true;
+    startup_job->result.local_saved = true;
+    startup_job->ready.store(true, std::memory_order_release);
+    REQUIRE(!consume_startup(game_base, exe_base));
+    REQUIRE(fatal_error && !native_layout_validated && !startup_finished);
+
+    config_path = saved_config;
+    startup_options = saved_options;
+    startup_options_known = saved_known;
+    configured_capture_local.store(saved_options.capture_local);
+    configured_auto_adapt.store(saved_options.auto_adapt);
+    kit_store_rva = saved_rva;
+    last_status = saved_status;
+    fatal_error = startup_finished = native_layout_validated = false;
+    std::puts("STARTUP_OPTIONS_OK: persisted independent switches, session latch, no-work path, four combinations, no unknown-build fallback");
+}
+
 void test_overlay_snapshot() {
     const auto saved_config = config_path;
     last_status = "[CONFIG] validated packages=2 targets=2 resources=6";
@@ -979,6 +1082,7 @@ int main() {
         test_native_anchors();
         test_background_startup();
         test_ias_compatibility();
+        test_startup_options();
         test_overlay_snapshot();
         REQUIRE(legacy_addon_name(L"CM14Isolation.addon64"));
         REQUIRE(legacy_addon_name(L"B01Isolation.ADDON64"));

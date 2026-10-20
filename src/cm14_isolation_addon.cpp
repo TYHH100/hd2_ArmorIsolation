@@ -118,9 +118,17 @@ uint64_t last_native_attempt = 0;
 size_t native_attempts = 0;
 armor_native::Layout native_layout;
 bool startup_finished = false;
+struct StartupOptions {
+    bool capture_local = true, auto_adapt = true;
+};
+StartupOptions startup_options;
+bool startup_options_known = false;
+std::atomic<bool> configured_capture_local{true}, configured_auto_adapt{true};
+std::string startup_options_status;
 struct StartupRequest {
     uintptr_t game = 0, exe = 0;
     bool native_required = false, adaptive = false;
+    StartupOptions options;
     std::string expected_game_hash, expected_exe_hash;
 };
 struct StartupResult {
@@ -178,6 +186,7 @@ struct UiSnapshot {
     bool profiles_failed = false;
     bool native_adapted = false;
     bool ias_active = false;
+    bool capture_local = true, auto_adapt = true, startup_options_known = false;
     std::string global_state = "PENDING", global_detail;
     uint32_t package_count = 0, target_count = 0, resource_count = 0;
     uint32_t pending_count = 0, waiting_count = 0, ready_count = 0, applied_count = 0, failed_count = 0;
@@ -229,6 +238,9 @@ void publish_ui_snapshot() {
     next.profiles_failed = fatal_error;
     next.native_adapted = native_layout_validated;
     next.ias_active = ias_session.seen;
+    next.capture_local = startup_options.capture_local;
+    next.auto_adapt = startup_options.auto_adapt;
+    next.startup_options_known = startup_options_known;
     next.ias_count = 0;
     const ParsedStatus global = parse_status(last_status);
     next.global_state = global.state;
@@ -546,8 +558,28 @@ bool code_matches(uintptr_t game) noexcept {
 }
 
 #if defined(UNIVERSAL_ISOLATION)
+bool read_startup_options() {
+    const int capture = GetPrivateProfileIntW(config_section, L"CaptureLocalSnapshot", 1, config_path.c_str());
+    const int adapt = GetPrivateProfileIntW(config_section, L"AutoAdapt", 1, config_path.c_str());
+    if ((capture != 0 && capture != 1) || (adapt != 0 && adapt != 1)) {
+        status("[FAILED]", "CaptureLocalSnapshot and AutoAdapt must be 0 or 1");
+        return false;
+    }
+    configured_capture_local.store(capture != 0, std::memory_order_relaxed);
+    configured_auto_adapt.store(adapt != 0, std::memory_order_relaxed);
+    if (!startup_options_known) {
+        startup_options = {capture != 0, adapt != 0};
+        startup_options_known = true;
+        status("[OPTIONS]", "session CaptureLocalSnapshot=" + std::to_string(capture) +
+            " AutoAdapt=" + std::to_string(adapt) + "; changes require a full game restart", startup_options_status);
+    }
+    return true;
+}
+
 StartupResult prepare_startup(const StartupRequest &request) {
     StartupResult result;
+    if (!request.options.capture_local && !request.options.auto_adapt)
+        return result;
     const auto started = GetTickCount64();
     try {
         armor_ias::Peer peer;
@@ -570,7 +602,7 @@ StartupResult prepare_startup(const StartupRequest &request) {
         result.native_ms = GetTickCount64() - started;
         const auto local_started = GetTickCount64();
         armor_local_data::json report;
-        try {
+        if (request.options.capture_local) try {
             armor_ias::Peer current_peer;
             if (current_peer.module())
                 throw std::runtime_error("HD2IAS detected during native preparation; local snapshot export skipped");
@@ -588,7 +620,7 @@ StartupResult prepare_startup(const StartupRequest &request) {
         armor_local_data::require(game_hash == armor_local_data::file_sha256(game_path.data()) &&
             exe_hash == armor_local_data::file_sha256(exe_path.data()), "game files changed during native validation");
         result.native_ready = true;
-        if (result.local_error.empty()) {
+        if (request.options.capture_local && result.local_error.empty()) {
             try {
                 armor_ias::Peer current_peer;
                 if (current_peer.module())
@@ -661,23 +693,28 @@ bool consume_startup(uintptr_t game, uintptr_t exe) {
     timing = "startup background=1 total_ms=" + std::to_string(result.total_ms) +
         " native_ms=" + std::to_string(result.native_ms) + " local_export_ms=" + std::to_string(result.local_ms);
     status("[PERF]", timing, performance_status);
-    if (result.identity_rejected || (!result.native_ready && request.native_required)) {
+    if (result.identity_rejected || (request.options.auto_adapt && !result.native_ready && request.native_required)) {
         fatal_error = result.identity_rejected || native_attempts >= 6;
         status(fatal_error ? "[FAILED]" : "[WAIT]",
                "automatic compatibility not ready or unsupported: " + result.error);
         return false;
     }
-    if (result.native_ready) {
+    if (result.native_ready && request.options.auto_adapt) {
         native_layout = result.layout;
         kit_store_rva = native_layout.kit_store;
         native_layout_validated = true;
         status("[ADAPTED]", "native layout signatures and resource manager validated; source guards remain mandatory");
     }
-    startup_finished = true;
-    status("[LOCAL_DATA]", result.local_saved ?
+    status("[LOCAL_DATA]", !request.options.capture_local ? "local snapshot capture and export disabled for this session" : result.local_saved ?
         "exported ArmorIsolation.local-game.json in game root for the generator" :
         "cannot save local observation; runtime source guards remain active: " +
             (result.local_error.empty() ? result.error : result.local_error));
+    if (!request.options.auto_adapt && request.native_required) {
+        fatal_error = true;
+        status("[FAILED]", "AutoAdapt=0; this game build or adaptive package requires native adaptation; no config write");
+        return false;
+    }
+    startup_finished = true;
     return true;
 }
 
@@ -685,6 +722,18 @@ bool ensure_startup(uintptr_t game, uintptr_t exe) {
     if (!prepare_ias_pass()) return false;
     if (startup_finished) return true;
     if (startup_job) return consume_startup(game, exe);
+    const bool native_required = active_profile.adaptive ||
+        !module_matches(game, 0x6a86132e, 0x3a6b000) || !module_matches(exe, 0x6a85c636, 0x39f1000);
+    if (!startup_options.capture_local && !startup_options.auto_adapt) {
+        if (native_required) {
+            fatal_error = true;
+            status("[FAILED]", "AutoAdapt=0; this game build or adaptive package requires native adaptation; no config write");
+            return false;
+        }
+        startup_finished = true;
+        status("[LOCAL_DATA]", "snapshot capture and automatic adaptation disabled; using guarded built-in layout");
+        return true;
+    }
     const auto now = GetTickCount64();
     if (last_native_attempt && now - last_native_attempt < 10000) return false;
     last_native_attempt = now;
@@ -693,8 +742,8 @@ bool ensure_startup(uintptr_t game, uintptr_t exe) {
     job->request.game = game;
     job->request.exe = exe;
     job->request.adaptive = active_profile.adaptive;
-    job->request.native_required = active_profile.adaptive ||
-        !module_matches(game, 0x6a86132e, 0x3a6b000) || !module_matches(exe, 0x6a85c636, 0x39f1000);
+    job->request.options = startup_options;
+    job->request.native_required = native_required;
     if (active_profile.adaptive) {
         job->request.expected_game_hash = active_profile.expected_game_dll_sha256;
         job->request.expected_exe_hash = active_profile.compatibility.at("exe_sha256").get<std::string>();
@@ -705,7 +754,8 @@ bool ensure_startup(uintptr_t game, uintptr_t exe) {
         return false;
     }
     startup_job = std::move(job);
-    status("[WAIT]", "validating native layout and exporting local data in background; no config write");
+    status("[WAIT]", "preparing in background CaptureLocalSnapshot=" + std::to_string(startup_options.capture_local) +
+        " AutoAdapt=" + std::to_string(startup_options.auto_adapt) + "; no config write");
     return false;
 }
 #endif
@@ -1242,6 +1292,9 @@ void poll_target(uintptr_t game, uintptr_t exe, const TargetKit &target,
 
 void poll() {
     initialize_paths();
+#if defined(UNIVERSAL_ISOLATION)
+    if (!read_startup_options()) return;
+#endif
     if (fatal_error)
         return;
     const int enabled = GetPrivateProfileIntW(config_section, L"Enabled", 1, config_path.c_str());
@@ -1372,6 +1425,7 @@ struct UiStrings {
         *options_unknown, *rejected, *adapted, *targets_empty, *copy_status, *copied_status,
         *status_footer, *write_failed, *target_type, *target_structure, *target_runtime;
     const char *ias;
+    const char *capture_local, *auto_adapt, *startup_help, *startup_effective, *on, *off, *restart_required;
 };
 
 constexpr UiStrings ui_strings_english{
@@ -1399,7 +1453,13 @@ constexpr UiStrings ui_strings_english{
     "Cannot write ArmorIsolation.ini, so the change was not applied. Check that the game folder is writable.",
     "type %s   passive %u", "bodies %u   pieces %u   private Units %u   required resources %u",
     "publications %u",
-    "HD2IAS is the isolation backend. Own Kit writes are stopped. Prepare IAS declarations after exiting the game; see the status below."
+    "HD2IAS is the isolation backend. Own Kit writes are stopped. Prepare IAS declarations after exiting the game; see the status below.",
+    "Capture local snapshot", "Automatic adaptation",
+    "These two options take effect after a full game restart. Snapshot capture includes layout scanning; "
+        "turn both off to skip background scanning, hashing and export. Existing snapshots are kept. "
+        "With adaptation off, only the built-in game version and baseline packages can publish.",
+    "This session: snapshot %s / adaptation %s", "on", "off",
+    "Saved for next launch; full game restart required."
 };
 
 constexpr UiStrings ui_strings_chinese{
@@ -1426,7 +1486,12 @@ constexpr UiStrings ui_strings_chinese{
     "无法写入 ArmorIsolation.ini，改动未生效。请检查游戏目录是否可写。",
     "类型 %s   被动 %u", "Body %u   Piece %u   私有 Unit %u   依赖资源 %u",
     "已发布 %u 次",
-    "已选择 HD2IAS 隔离后端，本插件停止写入 Kit。请在退出游戏后准备 IAS 声明，具体结果见下方状态。"
+    "已选择 HD2IAS 隔离后端，本插件停止写入 Kit。请在退出游戏后准备 IAS 声明，具体结果见下方状态。",
+    "采集本机快照", "自动适配",
+    "这两项需完整重启游戏后生效。快照采集也需要扫描布局；两项都关闭才跳过后台扫描、哈希与导出，已有快照保留。"
+        "关闭自动适配后，仅内置游戏版本与基准包可继续发布。",
+    "本次会话：快照 %s / 适配 %s", "开启", "关闭",
+    "已保存到下次启动，需完整重启游戏。"
 };
 
 // ReShade owns the ImGui context and exposes no way to add a font, so Chinese text is only
@@ -1513,6 +1578,28 @@ void on_overlay(reshade::api::effect_runtime *) {
         }
     }
     ImGui::TextWrapped("%s", text->diagnostic_help);
+    bool capture_local = configured_capture_local.load(std::memory_order_relaxed);
+    bool auto_adapt = configured_auto_adapt.load(std::memory_order_relaxed);
+    if (ImGui::Checkbox(text->capture_local, &capture_local)) {
+        if (persist_option(L"CaptureLocalSnapshot", capture_local)) {
+            configured_capture_local.store(capture_local, std::memory_order_relaxed);
+            ui_poll_requested.store(true, std::memory_order_release);
+        } else write_failed_deadline = now + 5000;
+    }
+    if (ImGui::Checkbox(text->auto_adapt, &auto_adapt)) {
+        if (persist_option(L"AutoAdapt", auto_adapt)) {
+            configured_auto_adapt.store(auto_adapt, std::memory_order_relaxed);
+            ui_poll_requested.store(true, std::memory_order_release);
+        } else write_failed_deadline = now + 5000;
+    }
+    ImGui::TextWrapped("%s", text->startup_help);
+    if (snapshot.startup_options_known) {
+        ImGui::Text(text->startup_effective, snapshot.capture_local ? text->on : text->off,
+            snapshot.auto_adapt ? text->on : text->off);
+        if (configured_capture_local.load(std::memory_order_relaxed) != snapshot.capture_local ||
+            configured_auto_adapt.load(std::memory_order_relaxed) != snapshot.auto_adapt)
+            ImGui::TextWrapped("%s", text->restart_required);
+    }
     ImGui::TextUnformatted(text->language, nullptr);
     ImGui::SameLine(0.0f, 12.0f);
     int language = ui_language == UiLanguage::chinese ? 1 : 0;

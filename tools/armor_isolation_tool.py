@@ -283,7 +283,7 @@ def package_readme(manifest):
 3. 将 `runtime/` 内容按目录结构部署到游戏 `bin/`。需要已启用 add-on 的 ReShade 6.5.1 / API17。新版通用 DLL 只需安装一次；以后安装、切换或卸载模组只操作补丁，无需另外管理 JSON。迁移时停用确认属于旧实验版的 `CM14Isolation`、`B01Isolation` 或 `ArmorIsolation_<包ID>` 插件。
 4. 启动后在军械库加载目标，查看 `bin/ArmorIsolation.log`：无 IAS 时检查各 Kit 的 `APPLIED`；有 IAS 时检查 `IAS_HANDOFF`，由 IAS 完成隔离。若为 `IAS_PAUSED`，按日志退出游戏后处理声明问题。切换装备触发重建，检查体甲两种体型、头盔、混搭以及原本共用资源的其他装备。
 
-新版插件启动后在自身修改前自动导出 `游戏根目录/ArmorIsolation.local-game.json`，EXE 可在游戏退出后复用；DLL/EXE 变化时旧文件失效。关键原生特征或数据结构改变会停止自动适配。适配包附 `compatibility/kits.json`，绑定本次游戏文件与数据，不能跨版本混装。日志每次启动清空一次，导出文件成功后覆盖，不累积历史版本。
+新版插件默认在自身修改前自动导出 `游戏根目录/ArmorIsolation.local-game.json`，EXE 可在游戏退出后复用；DLL/EXE 变化时旧文件失效。插件旁 INI 的 `CaptureLocalSnapshot=0` 关闭快照采集与导出，`AutoAdapt=0` 禁止采用自动发现的运行时布局；覆盖层也可勾选，均需完整重启游戏。两项都关闭才跳过后台扫描及哈希；已有快照保留，桌面工具的手动读取和生成适配不受这两个插件开关控制。关闭适配后仅内置版本与基准包可发布，新版本或适配包停止，不回退旧偏移。关键原生特征或数据结构改变会停止自动适配。适配包附 `compatibility/kits.json`，绑定本次游戏文件与数据，不能跨版本混装。日志每次启动清空一次，导出文件成功后覆盖，不累积历史版本。
 5. 预览通过后再检查舰桥和任务场景。`APPLIED` 仅代表配置发布，不能替代外观验收。
 {ias_notes}
 

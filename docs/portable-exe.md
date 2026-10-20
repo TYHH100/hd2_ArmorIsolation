@@ -2,6 +2,8 @@
 
 分发 `ArmorIsolation.exe` 一个文件即可。适用于 Windows 10/11 x64，内置 Python、Tk、LZ4、游戏数据读取器、装备名称、Kit 快照和通用 ReShade 插件，无需安装 Python 或编译工具。
 
+2026-10-20 启动对照开关版：`dist/portable-startup-options/ArmorIsolation.exe`，内置插件增加独立的 `CaptureLocalSnapshot` / `AutoAdapt` 开关（默认均开启），可在 ReShade 覆盖层或插件旁 INI 设置，完整重启后生效。两项都关闭跳过启动后台扫描、哈希和导出；自动适配关闭后，新版本或适配身份包停止自身发布，不使用旧偏移。开关只控制插件启动流程，不控制桌面工具手动读取/生成或 IAS 自身。四种组合见[通用运行时说明](universal-reshade-runtime.md)，离线验收见[启动开关验证](startup-options-validation.md)。
+
 2026-10-19 IAS 交接版：`dist/portable-ias-handoff/ArmorIsolation.exe`。生成包同时附带 IAS 声明与新版通用插件，窗口显示交接支持结果。安装、卸载或切换隔离模组后，正常退出游戏，在窗口点击“同步已安装模组到 IAS”；该操作只需要游戏目录，按当前 `data` 顶层活动补丁整组同步，不使用刚生成但尚未安装的包。它会更新本工具管理的 IAS 声明，保留原有 IAS 配置；无 IAS 时不修改文件，继续使用自有隔离。
 
 命令行等价入口：`ArmorIsolation.exe --cli prepare-ias --game <游戏目录>`，Python 源码入口为 `python tools/armor_isolation_tool.py prepare-ias --game <游戏目录>`。生成本身不安装补丁、不写 IAS 声明到游戏；同步完成也不代表游戏画面验证通过。生成包内另附先同步再启动游戏的 CMD，直接从 Steam 启动不会执行离线同步。支持范围和许可证见 [IAS 交接说明](ias-compatibility.md)。

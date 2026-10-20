@@ -63,7 +63,7 @@ try {
     if (-not (Test-Path -LiteralPath $taskAddon -PathType Leaf)) { throw "Build output missing: $taskAddon" }
     $taskIni = Join-Path $taskOutput 'ArmorIsolation.ini'
     if (-not (Test-Path -LiteralPath $taskIni)) {
-        [IO.File]::WriteAllText($taskIni, "[ArmorIsolation]`r`nEnabled=1`r`nDiagnosticOnly=0`r`n", [Text.UTF8Encoding]::new($false))
+        [IO.File]::WriteAllText($taskIni, "[ArmorIsolation]`r`nEnabled=1`r`nDiagnosticOnly=0`r`nCaptureLocalSnapshot=1`r`nAutoAdapt=1`r`n", [Text.UTF8Encoding]::new($false))
     }
     $taskLicenses = Join-Path $taskOutput 'licenses'
     New-Item -ItemType Directory -Path $taskLicenses -Force | Out-Null

@@ -1,0 +1,90 @@
+{
+  "schema": "hd2-portable-exe-validation/1",
+  "status": "passed",
+  "exe": "G:\\Temp\\Githud\\hd2_mods-test\\dist\\portable-startup-options\\ArmorIsolation.exe",
+  "exe_sha256": "adadffe141c44f0722caf5db1f0bfe2940e089db97c6a768a76476615f678b74",
+  "source": "G:\\Temp\\HD2ModManager\\Mods\\Mods\\夏安原皮外骨骼替换B27+CE101_f9cf75bf",
+  "game": "G:\\AppData\\SteamLibrary\\steamapps\\common\\Helldivers 2",
+  "targets": [
+    "d2c578e1",
+    "d11da85b",
+    "dee800a8",
+    "89b1b9e3"
+  ],
+  "game_runtime_verified": false,
+  "temporary_files_removed": true,
+  "stages": [
+    {
+      "action": "gui_smoke",
+      "exit_code": 0,
+      "seconds": 2.432
+    },
+    {
+      "action": "prepare-ias",
+      "exit_code": 0,
+      "seconds": 1.885
+    },
+    {
+      "action": "analyze",
+      "exit_code": 0,
+      "seconds": 2.439
+    },
+    {
+      "action": "build",
+      "exit_code": 0,
+      "seconds": 4.88
+    }
+  ],
+  "ias_handoff": {
+    "status": "exported",
+    "format": "IAS isolation_version=1",
+    "directory": "ias/HD2IndependentRig",
+    "game_runtime_verified": false,
+    "declarations": 4,
+    "absent_no_changes": true
+  },
+  "gui_smoke_ok": true,
+  "only_exe_copied": true,
+  "python_environment_removed": true,
+  "path_system_directories_only": true,
+  "independent_empty_cwd": true,
+  "candidates": [
+    {
+      "id": "d2c578e1",
+      "name": "B-27 Fortified Commando",
+      "type": 0,
+      "supported": true
+    },
+    {
+      "id": "d11da85b",
+      "name": "B-27 Fortified Commando",
+      "type": 1,
+      "supported": true
+    },
+    {
+      "id": "dee800a8",
+      "name": "CE-101 Guerilla Gorilla",
+      "type": 0,
+      "supported": true
+    },
+    {
+      "id": "89b1b9e3",
+      "name": "CE-101 Guerilla Gorilla",
+      "type": 1,
+      "supported": true
+    }
+  ],
+  "package_id": "23a947bcfd3cb856b313c4d1",
+  "resource_count": 65,
+  "profile_storage": "hd2-armor-patch-footer/1",
+  "embedded_patch_count": 1,
+  "no_sidecar_json": true,
+  "source_file_count": 5,
+  "source_directory_count": 0,
+  "all_relative_paths_preserved": true,
+  "all_non_patch_bytes_preserved": true,
+  "original_manifest_bytes_preserved": true,
+  "source_unchanged": true,
+  "addon_sha256": "67e75672de9c310067d7aab76f5be2aeff7ab7f2bdf5c8ca4cb34e54f5de8429",
+  "runtime_configuration_result": "PROFILE_OK packages=1 targets=4 resources=65 fields=49 required=97"
+}
